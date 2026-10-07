@@ -6,40 +6,71 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "nombre",
   "cliente",
-  "fecha_inicio",
-  "estado"
+  "tipo",
+  "via",
+  "importe",
+  "estado",
+  "acuerdo_marco"
  ],
  "fields": [
   {
-   "fieldname": "nombre",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "reqd": 1
-  },
-  {
    "fieldname": "cliente",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Cliente",
    "options": "Customer"
-  },
-  {
-   "fieldname": "fecha_inicio",
-   "fieldtype": "Date"
   },
   {
    "fieldname": "estado",
    "fieldtype": "Select",
-   "options": "Abierto\nEn curso\nCerrado"
+   "in_list_view": 1,
+   "label": "Estado",
+   "options": "Oportunidad\nAceptado\nEn curso\nCerrado\nRechazado"
+  },
+  {
+   "fieldname": "tipo",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Tipo ",
+   "options": "Contrato\nContrato basado\nAcuerdo marco\nSubvenci\u00f3n",
+   "reqd": 1
+  },
+  {
+   "fieldname": "via",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "V\u00eda",
+   "options": "Heredada\nContrato menor\nLicitaci\u00f3n p\u00fablica\nSubvenci\u00f3n"
+  },
+  {
+   "fieldname": "importe",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Importe"
+  },
+  {
+   "depends_on": "eval:doc.tipo!=\"Acuerdo Marco\"",
+   "fieldname": "acuerdo_marco",
+   "fieldtype": "Link",
+   "label": "Acuerdo marco",
+   "options": "Proyecto"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-10-06 11:08:41.823985",
+ "links": [
+  {
+   "group": "Subcontratos",
+   "link_doctype": "Proyecto",
+   "link_fieldname": "acuerdo_marco"
+  }
+ ],
+ "modified": "2026-10-07 13:30:38.191444",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Proyecto",
+ "naming_rule": "By script",
  "owner": "Administrator",
  "permissions": [
   {
