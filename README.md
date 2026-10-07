@@ -3,12 +3,14 @@
 App de Frappe que extiende ERPNext con DocTypes propios y un frontend React (SPA) servido por el propio Frappe.
 
 ## Contenido del repositorio
+```
 prototipo/
 ├── prototipo/
 │   ├── hooks.py                  # Integración con Frappe (incluye la ruta de la SPA)
 │   └── prototipo/doctype/
 │       └── proyecto/             # DocType Proyecto: modelo (JSON), controlador (py), formulario (js)
 └── dashboard/                    # SPA React (Vite + Tailwind + frappe-react-sdk), servida en /dashboard
+```
 
 Este repositorio contiene solo el código de la app. No incluye:
 
