@@ -13,7 +13,11 @@
   "importe_consumido",
   "importe_disponible",
   "estado",
-  "acuerdo_marco"
+  "acuerdo_marco",
+  "fecha_alta",
+  "observaciones",
+  "lider_proyecto",
+  "miembros_consorcio"
  ],
  "fields": [
   {
@@ -21,7 +25,8 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Cliente",
-   "options": "Customer"
+   "options": "Customer",
+   "read_only_depends_on": "eval:doc.acuerdo_marco"
   },
   {
    "fieldname": "estado",
@@ -36,6 +41,7 @@
    "in_list_view": 1,
    "label": "Tipo ",
    "options": "Contrato\nContrato basado\nAcuerdo marco\nSubvenci\u00f3n",
+   "read_only_depends_on": "eval:doc.acuerdo_marco",
    "reqd": 1
   },
   {
@@ -43,7 +49,8 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "V\u00eda",
-   "options": "Heredada\nContrato menor\nLicitaci\u00f3n p\u00fablica\nSubvenci\u00f3n"
+   "options": "Heredada\nContrato menor\nLicitaci\u00f3n p\u00fablica\nSubvenci\u00f3n",
+   "read_only_depends_on": "eval:doc.acuerdo_marco || doc.tipo==\"Subvenci\u00f3n\""
   },
   {
    "fieldname": "importe",
@@ -72,18 +79,42 @@
    "label": "Acuerdo marco",
    "options": "Proyecto",
    "read_only": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "fecha_alta",
+   "fieldtype": "Date",
+   "label": "Fecha de alta",
+   "read_only": 1
+  },
+  {
+   "fieldname": "observaciones",
+   "fieldtype": "Text",
+   "label": "Observaciones"
+  },
+  {
+   "depends_on": "eval:doc.tipo==\"Subvenci\u00f3n\"",
+   "fieldname": "lider_proyecto",
+   "fieldtype": "Data",
+   "label": "Lider del proyecto"
+  },
+  {
+   "depends_on": "eval:doc.tipo==\"Subvenci\u00f3n\"",
+   "fieldname": "miembros_consorcio",
+   "fieldtype": "Small Text",
+   "label": "Miembros del consorcio"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [
   {
-   "group": "Subcontratos",
+   "group": "Contratos basados",
    "link_doctype": "Proyecto",
    "link_fieldname": "acuerdo_marco"
   }
  ],
- "modified": "2026-10-08 09:14:54.460609",
+ "modified": "2026-10-08 12:28:23.020263",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Proyecto",
