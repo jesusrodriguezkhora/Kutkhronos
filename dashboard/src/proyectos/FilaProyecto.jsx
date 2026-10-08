@@ -26,7 +26,7 @@ function BotonFlecha({ abierto, onClick }) {
     <button
       onClick={onClick}
       aria-expanded={abierto}
-      aria-label={abierto ? "Plegar subcontratos" : "Desplegar subcontratos"}
+      aria-label={abierto ? "Plegar contratos basados" : "Desplegar contratos basados"}
       className="grid h-7 w-7 place-items-center rounded-md hover:bg-[#fadc6a]"
     >
       <svg
@@ -59,19 +59,19 @@ function BotonEditar({ onClick, codigo }) {
   );
 }
 
-function textoIndicador(acuerdo, subs) {
-  const total = subs.length;
-  const coinciden = subs.filter((s) => s.cumple_filtro).length;
+function textoIndicador(acuerdo, basados) {
+  const total = basados.length;
+  const coinciden = basados.filter((c) => c.cumple_filtro).length;
   const palabraCoincide = coinciden === 1 ? "coincide" : "coinciden";
 
   if (!acuerdo.cumple_filtro) return `${coinciden} ${palabraCoincide}`;
 
-  let texto = `${total} ${total === 1 ? "subcontrato" : "subcontratos"}`;
+  let texto = `${total} ${total === 1 ? "contrato basado" : "contratos basados"}`;
   if (coinciden < total) texto += ` · ${coinciden} ${palabraCoincide}`;
   return texto;
 }
 
-function Fila({ datos, flecha, indicador, esSub, atenuada, onEditar }) {
+function Fila({ datos, flecha, indicador, esBasado, atenuada, onEditar }) {
   const celda = atenuada ? "opacity-40" : "";
 
   return (
@@ -81,7 +81,7 @@ function Fila({ datos, flecha, indicador, esSub, atenuada, onEditar }) {
       <div className={celda}>
         <div
           className={`font-mono font-semibold ${
-            esSub ? "border-l-2 border-[#fadc6a] pl-2" : ""
+            esBasado ? "border-l-2 border-[#fadc6a] pl-2" : ""
           }`}
         >
           {datos.name}
@@ -120,10 +120,10 @@ export default function FilaProyecto({
   desplegado,
   onAlternar,
   onEditar,
-  onAnadirSubcontrato,
+  onAnadirContratoBasado,
 }) {
   const esAcuerdo = proyecto.tipo === "Acuerdo marco";
-  const subs = proyecto.subcontratos ?? [];
+  const basados = proyecto.contratos_basados ?? [];
 
   return (
     <div>
@@ -136,22 +136,22 @@ export default function FilaProyecto({
             <BotonFlecha abierto={desplegado} onClick={onAlternar} />
           ) : null
         }
-        indicador={esAcuerdo ? textoIndicador(proyecto, subs) : null}
+        indicador={esAcuerdo ? textoIndicador(proyecto, basados) : null}
       />
 
       {esAcuerdo && desplegado && (
         <div className="border-t border-black/10 bg-black/[0.03]">
-          {subs.length === 0 ? (
+          {basados.length === 0 ? (
             <p className="py-3 pl-[4.5rem] text-sm text-black/50">
-              Sin subcontratos
+              Sin contratos basados
             </p>
           ) : (
-            subs.map((s) => (
+            basados.map((c) => (
               <Fila
-                key={s.name}
-                datos={s}
-                esSub
-                atenuada={!s.cumple_filtro}
+                key={c.name}
+                datos={c}
+                esBasado
+                atenuada={!c.cumple_filtro}
                 onEditar={onEditar}
               />
             ))
@@ -159,10 +159,10 @@ export default function FilaProyecto({
 
           <div className="py-3 pl-[4.5rem]">
             <button
-              onClick={() => onAnadirSubcontrato(proyecto)}
+              onClick={() => onAnadirContratoBasado(proyecto)}
               className="rounded-lg border border-dashed border-black/30 px-3 py-1.5 text-sm font-medium text-black/70 hover:border-black hover:bg-[#fadc6a] hover:text-black"
             >
-              + Añadir subcontrato
+              + Añadir contrato basado
             </button>
           </div>
         </div>

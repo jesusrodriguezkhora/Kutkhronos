@@ -150,7 +150,7 @@ export default function Proyectos() {
                 desplegado={desplegados.has(p.name)}
                 onAlternar={() => alternar(p.name)}
                 onEditar={(proyecto) => setFormulario({ proyecto })}
-                onAnadirSubcontrato={(acuerdo) => setFormulario({ acuerdoMarco: acuerdo })}
+                onAnadirContratoBasado={(acuerdo) => setFormulario({ acuerdoMarco: acuerdo })}
               />
             ))}
           </div>
