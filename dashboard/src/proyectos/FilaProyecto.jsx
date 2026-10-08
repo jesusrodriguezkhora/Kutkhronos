@@ -1,5 +1,5 @@
 import { GRID } from "./tabla";
-import { formatearImporte } from "./formato";
+import { formatearImporte } from "../lib/formato";
 
 const ESTILOS_ESTADO = {
   Oportunidad: "border border-black/30 text-black",

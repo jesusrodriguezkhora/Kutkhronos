@@ -1,6 +1,6 @@
 import { useFrappeAuth } from "frappe-react-sdk";
-import Login from "./Login";
-import Proyectos from "./Proyectos";
+import Login from "./auth/Login";
+import Proyectos from "./proyectos/Proyectos";
 
 export default function Inicio() {
   const { currentUser, isLoading, login, logout } = useFrappeAuth();
@@ -16,7 +16,7 @@ export default function Inicio() {
   return (
     <div className="min-h-screen bg-white text-black">
       <header className="flex items-center justify-between bg-black px-8 py-4">
-        <span className="text-lg font-bold text-[#fadc6a]">Khronos</span>
+        <span className="text-lg font-bold text-[#fadc6a]">Prototipo</span>
         <div className="flex items-center gap-4 text-sm text-white">
           <span>{currentUser}</span>
           <button

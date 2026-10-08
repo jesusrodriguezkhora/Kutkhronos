@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useFrappeGetCall } from "frappe-react-sdk";
-import { useDebounced } from "./useDebounced";
+import { useDebounced } from "../hooks/useDebounced";
 
-export default function BuscadorCliente({ valor, onChange, claseCampo, claseEtiqueta }) {
+export default function BuscadorCliente({
+  valor,
+  onChange,
+  clases,
+  etiqueta = "Cliente",
+  placeholder = "Todos",
+}) {
   const [texto, setTexto] = useState("");
   const [abierto, setAbierto] = useState(false);
   const [activo, setActivo] = useState(0);
@@ -61,15 +67,15 @@ export default function BuscadorCliente({ valor, onChange, claseCampo, claseEtiq
 
   return (
     <div>
-      <span className={claseEtiqueta}>Cliente</span>
+      <span className={clases.etiqueta}>{etiqueta}</span>
       <div ref={contenedor} className="relative">
         <input
           type="text"
           role="combobox"
           aria-expanded={abierto}
-          aria-label="Buscar cliente"
-          className={`${claseCampo} pr-8`}
-          placeholder={valor ? "" : "Todos"}
+          aria-label={`Buscar ${etiqueta.toLowerCase()}`}
+          className={`${clases.campo} pr-8`}
+          placeholder={valor ? "" : placeholder}
           value={abierto ? texto : valor}
           onFocus={abrir}
           onChange={(e) => {
@@ -82,9 +88,9 @@ export default function BuscadorCliente({ valor, onChange, claseCampo, claseEtiq
         {valor && !abierto && (
           <button
             type="button"
-            aria-label="Quitar filtro de cliente"
+            aria-label={`Quitar ${etiqueta.toLowerCase()}`}
             onClick={() => onChange("")}
-            className="absolute right-2 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded text-black/40 hover:bg-[#fadc6a] hover:text-black"
+            className="absolute right-2 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded text-black/40 hover:bg-black/10 hover:text-black"
           >
             ×
           </button>
@@ -110,7 +116,7 @@ export default function BuscadorCliente({ valor, onChange, claseCampo, claseEtiq
                   elegir(r.valor);
                 }}
                 className={`cursor-pointer px-3 py-2 text-sm ${
-                  i === activo ? "bg-[#fadc6a] text-black" : "text-white"
+                  i === activo ? "bg-white text-black" : "text-white"
                 }`}
               >
                 {r.valor}
