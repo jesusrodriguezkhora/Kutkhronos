@@ -149,6 +149,7 @@ export default function Proyectos() {
                 proyecto={p}
                 desplegado={desplegados.has(p.name)}
                 onAlternar={() => alternar(p.name)}
+                onEditar={(proyecto) => setFormulario({ proyecto })}
               />
             ))}
           </div>

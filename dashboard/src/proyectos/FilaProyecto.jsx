@@ -44,10 +44,12 @@ function BotonFlecha({ abierto, onClick }) {
   );
 }
 
-function BotonEditar() {
+function BotonEditar({ onClick, codigo }) {
   return (
     <button
+      onClick={onClick}
       title="Editar"
+      aria-label={`Editar ${codigo}`}
       className="grid h-8 w-8 place-items-center rounded-lg border border-black/15 hover:bg-[#fadc6a]"
     >
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -62,7 +64,6 @@ function textoIndicador(acuerdo, subs) {
   const coinciden = subs.filter((s) => s.cumple_filtro).length;
   const palabraCoincide = coinciden === 1 ? "coincide" : "coinciden";
 
-  // Acuerdo mostrado solo como contexto: solo trae los subcontratos que coinciden
   if (!acuerdo.cumple_filtro) return `${coinciden} ${palabraCoincide}`;
 
   let texto = `${total} ${total === 1 ? "subcontrato" : "subcontratos"}`;
@@ -70,7 +71,7 @@ function textoIndicador(acuerdo, subs) {
   return texto;
 }
 
-function Fila({ datos, flecha, indicador, esSub, atenuada }) {
+function Fila({ datos, flecha, indicador, esSub, atenuada, onEditar }) {
   const celda = atenuada ? "opacity-40" : "";
 
   return (
@@ -108,13 +109,13 @@ function Fila({ datos, flecha, indicador, esSub, atenuada }) {
       </div>
 
       <div className="flex justify-end">
-        <BotonEditar />
+        <BotonEditar onClick={() => onEditar(datos)} codigo={datos.name} />
       </div>
     </div>
   );
 }
 
-export default function FilaProyecto({ proyecto, desplegado, onAlternar }) {
+export default function FilaProyecto({ proyecto, desplegado, onAlternar, onEditar }) {
   const esAcuerdo = proyecto.tipo === "Acuerdo marco";
   const subs = proyecto.subcontratos ?? [];
 
@@ -123,6 +124,7 @@ export default function FilaProyecto({ proyecto, desplegado, onAlternar }) {
       <Fila
         datos={proyecto}
         atenuada={!proyecto.cumple_filtro}
+        onEditar={onEditar}
         flecha={
           esAcuerdo ? (
             <BotonFlecha abierto={desplegado} onClick={onAlternar} />
@@ -139,7 +141,13 @@ export default function FilaProyecto({ proyecto, desplegado, onAlternar }) {
             </p>
           ) : (
             subs.map((s) => (
-              <Fila key={s.name} datos={s} esSub atenuada={!s.cumple_filtro} />
+              <Fila
+                key={s.name}
+                datos={s}
+                esSub
+                atenuada={!s.cumple_filtro}
+                onEditar={onEditar}
+              />
             ))
           )}
         </div>

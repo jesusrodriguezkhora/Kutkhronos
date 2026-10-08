@@ -141,6 +141,14 @@ export default function FormularioProyecto({ proyecto, onCerrar, onGuardado }) {
               El código se generará automáticamente al guardar.
             </p>
           )}
+          {proyecto?.acuerdo_marco && (
+            <p className="self-end text-xs text-black/50">
+              Subcontrato del acuerdo marco{" "}
+              <span className="font-mono font-semibold text-black">
+                {proyecto.acuerdo_marco}
+              </span>
+            </p>
+          )}
         </div>
 
         {error && (
