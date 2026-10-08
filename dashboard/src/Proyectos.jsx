@@ -1,59 +1,75 @@
-import { useFrappeGetDocList } from "frappe-react-sdk";
-
-const coloresEstado = {
-  Abierto: "bg-sky-500/20 text-sky-300",
-  "En curso": "bg-amber-500/20 text-amber-300",
-  Cerrado: "bg-emerald-500/20 text-emerald-300",
-};
+import { useState } from "react";
+import { useFrappeGetCall } from "frappe-react-sdk";
+import FilaProyecto from "./FilaProyecto";
+import { GRID } from "./tabla";
 
 export default function Proyectos() {
-  const { data, error, isLoading } = useFrappeGetDocList("Proyecto", {
-    fields: ["name", "nombre", "cliente", "estado", "fecha_inicio"],
-    orderBy: { field: "creation", order: "desc" },
-    limit: 50,
-  });
+  const { data, error, isLoading } = useFrappeGetCall(
+    "prototipo.api.obtener_proyectos"
+  );
 
-  if (isLoading) {
-    return <p className="text-slate-400">Cargando proyectos…</p>;
-  }
+  // Códigos de los acuerdos marco desplegados. Vacío al inicio: todo plegado.
+  const [desplegados, setDesplegados] = useState(() => new Set());
 
-  if (error) {
-    return (
-      <p className="text-red-400">
-        Error al cargar proyectos: {error.message}
-      </p>
-    );
-  }
+  const alternar = (codigo) => {
+    setDesplegados((anterior) => {
+      const nuevo = new Set(anterior); // copia: React necesita un objeto nuevo
+      if (nuevo.has(codigo)) nuevo.delete(codigo);
+      else nuevo.add(codigo);
+      return nuevo;
+    });
+  };
 
-  if (!data || data.length === 0) {
-    return <p className="text-slate-400">No hay proyectos todavía.</p>;
-  }
+  const proyectos = data?.message ?? [];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {data.map((p) => (
-        <div
-          key={p.name}
-          className="rounded-xl border border-white/10 bg-white/5 p-5"
-        >
-          <div className="flex items-start justify-between gap-2">
-            <h2 className="text-lg font-semibold">{p.nombre}</h2>
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs ${
-                coloresEstado[p.estado] || "bg-white/10"
-              }`}
-            >
-              {p.estado || "Sin estado"}
-            </span>
+    <section>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Proyectos</h1>
+        <button className="rounded-full bg-[#fadc6a] px-5 py-2.5 text-sm font-semibold text-black hover:bg-black hover:text-[#fadc6a]">
+          + Nuevo proyecto
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <div className="min-w-[960px] overflow-hidden rounded-xl border border-black/10">
+          <div
+            className={`${GRID} bg-black px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[#fadc6a]`}
+          >
+            <span />
+            <span>Código</span>
+            <span>Cliente</span>
+            <span>Tipo</span>
+            <span>Vía</span>
+            <span className="text-right">Importe</span>
+            <span>Estado</span>
+            <span />
           </div>
-          <p className="mt-2 text-sm text-slate-400">
-            Cliente: {p.cliente || "—"}
-          </p>
-          <p className="text-sm text-slate-400">
-            Inicio: {p.fecha_inicio || "—"}
-          </p>
+
+          {isLoading && (
+            <p className="px-4 py-6 text-sm text-black/50">Cargando proyectos…</p>
+          )}
+          {error && (
+            <p className="px-4 py-6 text-sm text-red-600">
+              Error al cargar proyectos: {error.message}
+            </p>
+          )}
+          {!isLoading && !error && proyectos.length === 0 && (
+            <p className="px-4 py-6 text-sm text-black/50">No hay proyectos.</p>
+          )}
+
+          <div className="divide-y divide-black/10 bg-white">
+            {proyectos.map((p) => (
+              <FilaProyecto
+                key={p.name}
+                proyecto={p}
+                desplegado={desplegados.has(p.name)}
+                onAlternar={() => alternar(p.name)}
+              />
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
+      </div>
+    </section>
   );
 }
