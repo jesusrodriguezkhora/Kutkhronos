@@ -16,7 +16,7 @@ export default function Inicio() {
   return (
     <div className="min-h-screen bg-white text-black">
       <header className="flex items-center justify-between bg-black px-8 py-4">
-        <span className="text-lg font-bold text-[#fadc6a]">Prototipo</span>
+        <span className="text-lg font-bold text-[#fadc6a]">Khronos</span>
         <div className="flex items-center gap-4 text-sm text-white">
           <span>{currentUser}</span>
           <button

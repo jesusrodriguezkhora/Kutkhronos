@@ -1,5 +1,5 @@
-import { useFrappeGetDocList } from "frappe-react-sdk";
 import { TIPOS, VIAS, ESTADOS } from "./opciones";
+import BuscadorCliente from "./BuscadorCliente";
 
 const CAMPO =
   "w-full rounded-lg border border-white/10 bg-white px-3 py-2 text-sm text-black outline-none focus:ring-2 focus:ring-[#fadc6a]";
@@ -26,7 +26,6 @@ function Selector({ etiqueta, valor, opciones, onChange }) {
 }
 
 function CampoImporte({ etiqueta, valor, onChange }) {
-  // Se muestra con separador de miles; se guarda solo con dígitos
   const mostrado = valor === "" ? "" : miles.format(Number(valor));
 
   return (
@@ -49,22 +48,14 @@ function CampoImporte({ etiqueta, valor, onChange }) {
 }
 
 export default function Filtros({ filtros, onCambiar, onLimpiar }) {
-  const { data: clientes } = useFrappeGetDocList("Customer", {
-    fields: ["name"],
-    orderBy: { field: "name", order: "asc" },
-    limit: 0,
-  });
-
-  const nombresClientes = (clientes ?? []).map((c) => c.name);
-
   return (
     <div className="mb-6 rounded-xl bg-black p-5">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <Selector
-          etiqueta="Cliente"
+        <BuscadorCliente
           valor={filtros.cliente}
-          opciones={nombresClientes}
           onChange={(v) => onCambiar("cliente", v)}
+          claseCampo={CAMPO}
+          claseEtiqueta={ETIQUETA}
         />
         <Selector
           etiqueta="Tipo"
@@ -99,7 +90,7 @@ export default function Filtros({ filtros, onCambiar, onLimpiar }) {
       <div className="mt-4 flex justify-end">
         <button
           onClick={onLimpiar}
-          className="text-sm font-medium text-white underline-offset-4 hover:text-[#fadc6a] hover:underline"
+          className="text-sm font-medium text-white/60 underline-offset-4 hover:text-[#fadc6a] hover:underline"
         >
           Limpiar filtros
         </button>
