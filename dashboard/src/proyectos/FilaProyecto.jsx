@@ -115,7 +115,13 @@ function Fila({ datos, flecha, indicador, esSub, atenuada, onEditar }) {
   );
 }
 
-export default function FilaProyecto({ proyecto, desplegado, onAlternar, onEditar }) {
+export default function FilaProyecto({
+  proyecto,
+  desplegado,
+  onAlternar,
+  onEditar,
+  onAnadirSubcontrato,
+}) {
   const esAcuerdo = proyecto.tipo === "Acuerdo marco";
   const subs = proyecto.subcontratos ?? [];
 
@@ -150,6 +156,15 @@ export default function FilaProyecto({ proyecto, desplegado, onAlternar, onEdita
               />
             ))
           )}
+
+          <div className="py-3 pl-[4.5rem]">
+            <button
+              onClick={() => onAnadirSubcontrato(proyecto)}
+              className="rounded-lg border border-dashed border-black/30 px-3 py-1.5 text-sm font-medium text-black/70 hover:border-black hover:bg-[#fadc6a] hover:text-black"
+            >
+              + Añadir subcontrato
+            </button>
+          </div>
         </div>
       )}
     </div>

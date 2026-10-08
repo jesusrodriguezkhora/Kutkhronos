@@ -150,6 +150,7 @@ export default function Proyectos() {
                 desplegado={desplegados.has(p.name)}
                 onAlternar={() => alternar(p.name)}
                 onEditar={(proyecto) => setFormulario({ proyecto })}
+                onAnadirSubcontrato={(acuerdo) => setFormulario({ acuerdoMarco: acuerdo })}
               />
             ))}
           </div>
@@ -158,6 +159,7 @@ export default function Proyectos() {
       {formulario && (
         <FormularioProyecto
           proyecto={formulario.proyecto}
+          acuerdoMarco={formulario.acuerdoMarco}
           onCerrar={() => setFormulario(null)}
           onGuardado={() => {
             setFormulario(null);

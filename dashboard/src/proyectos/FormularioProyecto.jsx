@@ -3,6 +3,7 @@ import { useFrappeCreateDoc, useFrappeUpdateDoc } from "frappe-react-sdk";
 import { TIPOS, VIAS, ESTADOS } from "./opciones";
 import { ESTILOS } from "../lib/estilos";
 import { mensajeDeError } from "../lib/errores";
+import { formatearImporte } from "../lib/formato";
 import BuscadorCliente from "../componentes/BuscadorCliente";
 import CampoImporte from "../componentes/CampoImporte";
 
@@ -29,12 +30,18 @@ function Selector({ etiqueta, valor, opciones, onChange, disabled, vacio }) {
   );
 }
 
-export default function FormularioProyecto({ proyecto, onCerrar, onGuardado }) {
+// Tres modos según las props:
+//   - nuevo proyecto:     sin proyecto ni acuerdoMarco
+//   - editar:             con proyecto
+//   - nuevo subcontrato:  con acuerdoMarco (el acuerdo completo)
+export default function FormularioProyecto({ proyecto, acuerdoMarco, onCerrar, onGuardado }) {
   const esNuevo = !proyecto;
+  const esNuevoSubcontrato = esNuevo && !!acuerdoMarco;
+  const esSubcontrato = esNuevoSubcontrato || !!proyecto?.acuerdo_marco;
 
   const [datos, setDatos] = useState({
-    tipo: proyecto?.tipo ?? "",
-    cliente: proyecto?.cliente ?? "",
+    tipo: proyecto?.tipo ?? (esNuevoSubcontrato ? "Contrato basado" : ""),
+    cliente: proyecto?.cliente ?? acuerdoMarco?.cliente ?? "",
     via: proyecto?.via ?? "",
     importe: proyecto?.importe ?? "",
     estado: proyecto?.estado ?? "Oportunidad",
@@ -44,6 +51,11 @@ export default function FormularioProyecto({ proyecto, onCerrar, onGuardado }) {
   const { createDoc, loading: creando } = useFrappeCreateDoc();
   const { updateDoc, loading: actualizando } = useFrappeUpdateDoc();
   const guardando = creando || actualizando;
+
+  // Un subcontrato nunca puede ser un acuerdo marco
+  const tiposDisponibles = esSubcontrato
+    ? TIPOS.filter((t) => t !== "Acuerdo marco")
+    : TIPOS;
 
   const cambiar = (campo, valor) => setDatos((d) => ({ ...d, [campo]: valor }));
 
@@ -67,7 +79,11 @@ export default function FormularioProyecto({ proyecto, onCerrar, onGuardado }) {
 
     try {
       if (esNuevo) {
-        await createDoc("Proyecto", { ...valores, tipo: datos.tipo });
+        await createDoc("Proyecto", {
+          ...valores,
+          tipo: datos.tipo,
+          ...(esNuevoSubcontrato && { acuerdo_marco: acuerdoMarco.name }),
+        });
       } else {
         // El tipo no se envía al editar: es "Set Only Once" en el DocType
         await updateDoc("Proyecto", proyecto.name, valores);
@@ -77,6 +93,10 @@ export default function FormularioProyecto({ proyecto, onCerrar, onGuardado }) {
       setError(mensajeDeError(err));
     }
   };
+
+  let titulo = "Nuevo proyecto";
+  if (esNuevoSubcontrato) titulo = `Nuevo subcontrato de ${acuerdoMarco.name}`;
+  else if (!esNuevo) titulo = `Editar ${proyecto.name}`;
 
   return (
     <div
@@ -88,9 +108,7 @@ export default function FormularioProyecto({ proyecto, onCerrar, onGuardado }) {
         className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"
       >
         <div className="flex items-center justify-between bg-black px-6 py-4">
-          <h2 className="text-lg font-bold text-[#fadc6a]">
-            {esNuevo ? "Nuevo proyecto" : `Editar ${proyecto.name}`}
-          </h2>
+          <h2 className="text-lg font-bold text-[#fadc6a]">{titulo}</h2>
           <button
             type="button"
             onClick={onCerrar}
@@ -101,14 +119,23 @@ export default function FormularioProyecto({ proyecto, onCerrar, onGuardado }) {
           </button>
         </div>
 
+        {esNuevoSubcontrato && (
+          <div className="flex items-center justify-between border-b border-black/10 bg-[#fadc6a]/30 px-6 py-3 text-sm">
+            <span className="text-black/70">Saldo disponible del acuerdo</span>
+            <span className="font-semibold tabular-nums text-black">
+              {formatearImporte(acuerdoMarco.importe_disponible)}
+            </span>
+          </div>
+        )}
+
         <div className="grid gap-5 p-6 sm:grid-cols-2">
           <Selector
             etiqueta="Tipo"
             valor={datos.tipo}
-            opciones={TIPOS}
+            opciones={tiposDisponibles}
             onChange={(v) => cambiar("tipo", v)}
             disabled={!esNuevo}
-            vacio={esNuevo ? "Selecciona un tipo" : null}
+            vacio={esNuevo && !esNuevoSubcontrato ? "Selecciona un tipo" : null}
           />
           <BuscadorCliente
             valor={datos.cliente}
@@ -139,8 +166,11 @@ export default function FormularioProyecto({ proyecto, onCerrar, onGuardado }) {
           {esNuevo && (
             <p className="self-end text-xs text-black/50">
               El código se generará automáticamente al guardar.
+              {esNuevoSubcontrato &&
+                " Solo restan del saldo los subcontratos aceptados, en curso o cerrados."}
             </p>
           )}
+
           {proyecto?.acuerdo_marco && (
             <p className="self-end text-xs text-black/50">
               Subcontrato del acuerdo marco{" "}
