@@ -44,16 +44,16 @@ function BotonFlecha({ abierto, onClick }) {
   );
 }
 
-function BotonEditar({ onClick, codigo }) {
+function BotonDetalle({ onClick, codigo }) {
   return (
     <button
       onClick={onClick}
-      title="Editar"
-      aria-label={`Editar ${codigo}`}
+      title="Ver detalle"
+      aria-label={`Ver detalle de ${codigo}`}
       className="grid h-8 w-8 place-items-center rounded-lg border border-black/15 hover:bg-[#fadc6a]"
     >
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-        <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+        <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
       </svg>
     </button>
   );
@@ -71,7 +71,7 @@ function textoIndicador(acuerdo, basados) {
   return texto;
 }
 
-function Fila({ datos, flecha, indicador, esBasado, atenuada, onEditar }) {
+function Fila({ datos, flecha, indicador, esBasado, atenuada, onVerDetalle }) {
   const celda = atenuada ? "opacity-40" : "";
 
   return (
@@ -109,7 +109,7 @@ function Fila({ datos, flecha, indicador, esBasado, atenuada, onEditar }) {
       </div>
 
       <div className="flex justify-end">
-        <BotonEditar onClick={() => onEditar(datos)} codigo={datos.name} />
+        <BotonDetalle onClick={() => onVerDetalle(datos)} codigo={datos.name} />
       </div>
     </div>
   );
@@ -119,7 +119,7 @@ export default function FilaProyecto({
   proyecto,
   desplegado,
   onAlternar,
-  onEditar,
+  onVerDetalle,
   onAnadirContratoBasado,
 }) {
   const esAcuerdo = proyecto.tipo === "Acuerdo marco";
@@ -130,7 +130,7 @@ export default function FilaProyecto({
       <Fila
         datos={proyecto}
         atenuada={!proyecto.cumple_filtro}
-        onEditar={onEditar}
+        onVerDetalle={onVerDetalle}
         flecha={
           esAcuerdo ? (
             <BotonFlecha abierto={desplegado} onClick={onAlternar} />
@@ -152,7 +152,7 @@ export default function FilaProyecto({
                 datos={c}
                 esBasado
                 atenuada={!c.cumple_filtro}
-                onEditar={onEditar}
+                onVerDetalle={onVerDetalle}
               />
             ))
           )}

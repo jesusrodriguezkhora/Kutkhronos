@@ -1,0 +1,421 @@
+import { useEffect, useState } from "react";
+import { useFrappeCreateDoc, useFrappeUpdateDoc } from "frappe-react-sdk";
+import { TIPOS_SUELTOS, VIAS_NO_SUBVENCION, ESTADOS } from "./opciones";
+import { ESTILOS } from "../lib/estilos";
+import { mensajeDeError } from "../lib/errores";
+import { formatearImporte, formatearFecha } from "../lib/formato";
+import BuscadorCliente from "../componentes/BuscadorCliente";
+import CampoImporte from "../componentes/CampoImporte";
+import AreaTexto from "../componentes/AreaTexto";
+
+const clases = ESTILOS.claro;
+
+// Valores del formulario a partir de un proyecto existente o de un acuerdo marco (nuevo contrato basado)
+function valoresIniciales(proyecto, acuerdoMarco) {
+  const esNuevoBasado = !proyecto && !!acuerdoMarco;
+  return {
+    tipo: proyecto?.tipo ?? (esNuevoBasado ? "Contrato basado" : ""),
+    cliente: proyecto?.cliente ?? acuerdoMarco?.cliente ?? "",
+    via: proyecto?.via ?? acuerdoMarco?.via ?? "",
+    importe: proyecto?.importe ?? "",
+    estado: proyecto?.estado ?? "Oportunidad",
+    observaciones: proyecto?.observaciones ?? "",
+    lider_proyecto: proyecto?.lider_proyecto ?? "",
+    miembros_consorcio: proyecto?.miembros_consorcio ?? "",
+  };
+}
+
+// --- Piezas del modo detalle ---
+
+function Dato({ etiqueta, children, ancho }) {
+  return (
+    <div className={ancho ? "sm:col-span-2" : ""}>
+      <dt className={clases.etiqueta}>{etiqueta}</dt>
+      <dd className="whitespace-pre-line text-sm text-black">{children || "—"}</dd>
+    </div>
+  );
+}
+
+function TituloSeccion({ children }) {
+  return (
+    <h3 className="border-t border-black/10 pt-4 text-sm font-bold sm:col-span-2">{children}</h3>
+  );
+}
+
+// --- Piezas del modo edición ---
+
+function Selector({ etiqueta, valor, opciones, onChange, vacio }) {
+  return (
+    <label className="block">
+      <span className={clases.etiqueta}>{etiqueta}</span>
+      <select className={clases.campo} value={valor} onChange={(e) => onChange(e.target.value)}>
+        {vacio && <option value="">{vacio}</option>}
+        {opciones.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+// Campo que no se puede modificar en edición (heredado, fijo o "Set Only Once")
+function CampoLectura({ etiqueta, valor }) {
+  return (
+    <div>
+      <span className={clases.etiqueta}>{etiqueta}</span>
+      <div className="w-full cursor-not-allowed rounded-lg border border-black/10 bg-black/5 px-3 py-2 text-sm text-black/60">
+        {valor || "—"}
+      </div>
+    </div>
+  );
+}
+
+// Modos según las props:
+//   - detalle de un proyecto: con proyecto (empieza en modo detalle; botón Editar)
+//   - nuevo proyecto:         sin proyecto ni acuerdoMarco (empieza en edición)
+//   - nuevo contrato basado:  con acuerdoMarco (empieza en edición)
+export default function FichaProyecto({
+  proyecto: proyectoInicial,
+  acuerdoMarco,
+  onCerrar,
+  onCreado,
+  onActualizado,
+}) {
+  // Copia local: tras guardar se sustituye por lo que devuelve el servidor
+  const [proyecto, setProyecto] = useState(proyectoInicial);
+  const esNuevo = !proyecto;
+  const esNuevoBasado = esNuevo && !!acuerdoMarco;
+  const esBasado = esNuevoBasado || !!proyecto?.acuerdo_marco;
+
+  const [editando, setEditando] = useState(esNuevo);
+  const [datos, setDatos] = useState(() => valoresIniciales(proyectoInicial, acuerdoMarco));
+  const [error, setError] = useState(null);
+
+  const { createDoc, loading: creando } = useFrappeCreateDoc();
+  const { updateDoc, loading: actualizando } = useFrappeUpdateDoc();
+  const guardando = creando || actualizando;
+
+  const esSubvencion = datos.tipo === "Subvención";
+  const hayCambios =
+    JSON.stringify(datos) !== JSON.stringify(valoresIniciales(proyecto, acuerdoMarco));
+
+  const cambiar = (campo, valor) => setDatos((d) => ({ ...d, [campo]: valor }));
+
+  // Al elegir tipo, la vía sigue la regla Subvención ⟺ vía Subvención
+  const cambiarTipo = (tipo) =>
+    setDatos((d) => ({
+      ...d,
+      tipo,
+      via: tipo === "Subvención" ? "Subvención" : d.via === "Subvención" ? "" : d.via,
+    }));
+
+  const cerrar = () => {
+    if (editando && hayCambios && !window.confirm("Hay cambios sin guardar. ¿Descartarlos?")) {
+      return;
+    }
+    onCerrar();
+  };
+
+  const empezarEdicion = () => {
+    setDatos(valoresIniciales(proyecto));
+    setError(null);
+    setEditando(true);
+  };
+
+  const cancelarEdicion = () => {
+    if (esNuevo) return cerrar();
+    setDatos(valoresIniciales(proyecto));
+    setError(null);
+    setEditando(false);
+  };
+
+  // Cerrar con Escape
+  useEffect(() => {
+    const alPulsar = (e) => e.key === "Escape" && cerrar();
+    document.addEventListener("keydown", alPulsar);
+    return () => document.removeEventListener("keydown", alPulsar);
+  });
+
+  const guardar = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    const valores = {
+      importe: datos.importe === "" ? 0 : Number(datos.importe),
+      estado: datos.estado,
+      observaciones: datos.observaciones || null,
+    };
+    // Cliente y vía de un contrato basado los fija el servidor (herencia del acuerdo)
+    if (!esBasado) {
+      valores.cliente = datos.cliente || null;
+      valores.via = datos.via || null;
+    }
+    if (esSubvencion) {
+      valores.lider_proyecto = datos.lider_proyecto || null;
+      valores.miembros_consorcio = datos.miembros_consorcio || null;
+    }
+
+    try {
+      if (esNuevo) {
+        await createDoc("Proyecto", {
+          ...valores,
+          tipo: datos.tipo,
+          ...(esNuevoBasado && { acuerdo_marco: acuerdoMarco.name }),
+        });
+        onCreado();
+      } else {
+        const guardado = await updateDoc("Proyecto", proyecto.name, valores);
+        // Conservamos lo que solo existe en la lista (contratos_basados, cumple_filtro)
+        setProyecto((p) => ({ ...p, ...guardado }));
+        setEditando(false);
+        onActualizado();
+      }
+    } catch (err) {
+      setError(mensajeDeError(err));
+    }
+  };
+
+  // --- Cabecera ---
+  let titulo = "Nuevo proyecto";
+  if (esNuevoBasado) titulo = `Nuevo contrato basado de ${acuerdoMarco.name}`;
+  else if (!esNuevo) titulo = proyecto.name;
+
+  const subtitulo = esNuevo ? null : editando ? "Editando" : proyecto.tipo;
+  const etiquetaCliente = esSubvencion ? "Donante" : "Cliente";
+  const puedeGuardar = !guardando && datos.tipo && datos.via;
+
+  // --- Cuerpo en modo detalle ---
+  const vistaDetalle = !esNuevo && (
+    <dl className="grid gap-5 overflow-y-auto p-6 sm:grid-cols-2">
+      <Dato etiqueta="Tipo">{proyecto.tipo}</Dato>
+      <Dato etiqueta={proyecto.tipo === "Subvención" ? "Donante" : "Cliente"}>
+        {proyecto.cliente}
+      </Dato>
+      <Dato etiqueta="Vía">{proyecto.via}</Dato>
+      <Dato etiqueta="Estado">{proyecto.estado}</Dato>
+      <Dato etiqueta="Importe">{formatearImporte(proyecto.importe)}</Dato>
+      <Dato etiqueta="Fecha de alta">{formatearFecha(proyecto.fecha_alta)}</Dato>
+
+      {proyecto.tipo === "Acuerdo marco" && (
+        <>
+          <Dato etiqueta="Importe consumido">{formatearImporte(proyecto.importe_consumido)}</Dato>
+          <Dato etiqueta="Importe disponible">{formatearImporte(proyecto.importe_disponible)}</Dato>
+        </>
+      )}
+
+      {proyecto.acuerdo_marco && (
+        <Dato etiqueta="Acuerdo marco">
+          <span className="font-mono font-semibold">{proyecto.acuerdo_marco}</span>
+        </Dato>
+      )}
+
+      {proyecto.tipo === "Subvención" && (
+        <>
+          <TituloSeccion>Datos de la subvención</TituloSeccion>
+          <Dato etiqueta="Líder del proyecto" ancho>
+            {proyecto.lider_proyecto}
+          </Dato>
+          <Dato etiqueta="Miembros del consorcio" ancho>
+            {proyecto.miembros_consorcio}
+          </Dato>
+        </>
+      )}
+
+      <TituloSeccion>Observaciones</TituloSeccion>
+      <Dato etiqueta="" ancho>
+        {proyecto.observaciones}
+      </Dato>
+    </dl>
+  );
+
+  // --- Cuerpo en modo edición ---
+  const vistaEdicion = (
+    <div className="grid gap-5 overflow-y-auto p-6 sm:grid-cols-2">
+      {/* Tipo: solo se elige al crear un proyecto suelto */}
+      {esNuevo && !esBasado ? (
+        <Selector
+          etiqueta="Tipo"
+          valor={datos.tipo}
+          opciones={TIPOS_SUELTOS}
+          onChange={cambiarTipo}
+          vacio="Selecciona un tipo"
+        />
+      ) : (
+        <CampoLectura etiqueta="Tipo" valor={datos.tipo} />
+      )}
+
+      {/* Cliente: heredado en los contratos basados */}
+      {esBasado ? (
+        <CampoLectura etiqueta="Cliente" valor={datos.cliente} />
+      ) : (
+        <BuscadorCliente
+          valor={datos.cliente}
+          onChange={(v) => cambiar("cliente", v)}
+          clases={clases}
+          etiqueta={etiquetaCliente}
+          placeholder={`Selecciona un ${etiquetaCliente.toLowerCase()}`}
+        />
+      )}
+
+      {/* Vía: heredada en contratos basados, fija en subvenciones */}
+      {esBasado || esSubvencion ? (
+        <CampoLectura etiqueta="Vía" valor={datos.via} />
+      ) : (
+        <Selector
+          etiqueta="Vía"
+          valor={datos.via}
+          opciones={VIAS_NO_SUBVENCION}
+          onChange={(v) => cambiar("via", v)}
+          vacio="Selecciona una vía"
+        />
+      )}
+
+      <Selector
+        etiqueta="Estado"
+        valor={datos.estado}
+        opciones={ESTADOS}
+        onChange={(v) => cambiar("estado", v)}
+      />
+
+      <CampoImporte
+        etiqueta="Importe"
+        valor={datos.importe}
+        onChange={(v) => cambiar("importe", v)}
+        clases={clases}
+      />
+
+      <CampoLectura
+        etiqueta="Fecha de alta"
+        valor={esNuevo ? "Se asignará al guardar" : formatearFecha(proyecto.fecha_alta)}
+      />
+
+      {esSubvencion && (
+        <>
+          <TituloSeccion>Datos de la subvención</TituloSeccion>
+          <label className="block sm:col-span-2">
+            <span className={clases.etiqueta}>Líder del proyecto</span>
+            <input
+              type="text"
+              className={clases.campo}
+              placeholder="Entidad que lidera la ejecución (p. ej., un ayuntamiento)"
+              value={datos.lider_proyecto}
+              onChange={(e) => cambiar("lider_proyecto", e.target.value)}
+            />
+          </label>
+          <div className="sm:col-span-2">
+            <AreaTexto
+              etiqueta="Miembros del consorcio"
+              valor={datos.miembros_consorcio}
+              onChange={(v) => cambiar("miembros_consorcio", v)}
+              clases={clases}
+              filas={2}
+              placeholder="Resto de entidades participantes (informativo)"
+            />
+          </div>
+        </>
+      )}
+
+      <div className="sm:col-span-2">
+        <AreaTexto
+          etiqueta="Observaciones"
+          valor={datos.observaciones}
+          onChange={(v) => cambiar("observaciones", v)}
+          clases={clases}
+        />
+      </div>
+
+      <p className="text-xs text-black/50 sm:col-span-2">
+        {esNuevo && "El código se generará automáticamente al guardar. "}
+        {esBasado && (
+          <>
+            Contrato basado del acuerdo marco{" "}
+            <span className="font-mono font-semibold text-black">
+              {acuerdoMarco?.name ?? proyecto?.acuerdo_marco}
+            </span>
+            : tipo, cliente y vía se heredan del acuerdo.{" "}
+          </>
+        )}
+        {esNuevoBasado &&
+          "Solo restan del saldo los contratos basados aceptados, en curso o cerrados."}
+      </p>
+    </div>
+  );
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onMouseDown={(e) => e.target === e.currentTarget && cerrar()}
+    >
+      <form
+        onSubmit={guardar}
+        className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+      >
+        <div className="flex items-center justify-between bg-black px-6 py-4">
+          <div>
+            <h2 className="font-mono text-lg font-bold text-[#fadc6a]">{titulo}</h2>
+            {subtitulo && <p className="text-xs text-white/60">{subtitulo}</p>}
+          </div>
+          <button
+            type="button"
+            onClick={cerrar}
+            aria-label="Cerrar"
+            className="grid h-8 w-8 place-items-center rounded-lg text-white/60 hover:bg-[#fadc6a] hover:text-black"
+          >
+            ×
+          </button>
+        </div>
+
+        {esNuevoBasado && (
+          <div className="flex items-center justify-between border-b border-black/10 bg-[#fadc6a]/30 px-6 py-3 text-sm">
+            <span className="text-black/70">Saldo disponible del acuerdo</span>
+            <span className="font-semibold tabular-nums text-black">
+              {formatearImporte(acuerdoMarco.importe_disponible)}
+            </span>
+          </div>
+        )}
+
+        {editando ? vistaEdicion : vistaDetalle}
+
+        {error && (
+          <p className="mx-6 mb-2 whitespace-pre-line rounded-lg border-l-4 border-black bg-[#fadc6a]/40 px-3 py-2 text-sm text-black">
+            {error}
+          </p>
+        )}
+
+                <div className="flex justify-end gap-3 border-t border-black/10 px-6 py-4">
+                {editando ? (
+                    <>
+                        <button
+                        key="cancelar"
+                        type="button"
+                        onClick={cancelarEdicion}
+                        className="rounded-lg px-4 py-2 text-sm font-medium text-black/60 hover:bg-black/5 hover:text-black"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        key="guardar"
+                        type="submit"
+                        disabled={!puedeGuardar}
+                        className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-[#fadc6a] hover:bg-[#fadc6a] hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                        {guardando ? "Guardando…" : "Guardar"}
+                    </button>
+                </>
+            ) : (
+                <button
+                    key="editar"
+                    type="button"
+                    onClick={empezarEdicion}
+                    className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-[#fadc6a] hover:bg-[#fadc6a] hover:text-black"
+                >
+                Editar
+            </button>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+}
