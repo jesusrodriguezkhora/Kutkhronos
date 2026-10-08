@@ -10,6 +10,8 @@
   "tipo",
   "via",
   "importe",
+  "importe_consumido",
+  "importe_disponible",
   "estado",
   "acuerdo_marco"
  ],
@@ -50,11 +52,26 @@
    "label": "Importe"
   },
   {
-   "depends_on": "eval:doc.tipo!=\"Acuerdo Marco\"",
+   "depends_on": "eval:doc.tipo==\"Acuerdo marco\"",
+   "fieldname": "importe_consumido",
+   "fieldtype": "Currency",
+   "label": "Consumido",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.tipo==\"Acuerdo marco\"",
+   "fieldname": "importe_disponible",
+   "fieldtype": "Currency",
+   "label": "Disponible",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.acuerdo_marco",
    "fieldname": "acuerdo_marco",
    "fieldtype": "Link",
    "label": "Acuerdo marco",
-   "options": "Proyecto"
+   "options": "Proyecto",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -66,7 +83,7 @@
    "link_fieldname": "acuerdo_marco"
   }
  ],
- "modified": "2026-10-07 13:30:38.191444",
+ "modified": "2026-10-08 09:14:54.460609",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Proyecto",
