@@ -4,6 +4,7 @@ from frappe.utils import flt
 CAMPOS = [
 	"name",
 	"creation",
+	"fecha_alta",
 	"cliente",
 	"tipo",
 	"via",
@@ -12,6 +13,9 @@ CAMPOS = [
 	"importe_consumido",
 	"importe_disponible",
 	"acuerdo_marco",
+	"observaciones",
+	"lider_proyecto",
+	"miembros_consorcio",
 ]
 
 # Filtros que aceptamos por igualdad exacta
@@ -43,7 +47,7 @@ def listar(condiciones, order_by="creation desc"):
 
 @frappe.whitelist()
 def obtener_proyectos(filtros=None):
-	"""Proyectos principales con sus subcontratos, aplicando las reglas de filtrado jerárquico."""
+	"""Proyectos principales con sus contratos basados, aplicando las reglas de filtrado jerárquico."""
 	filtros = frappe.parse_json(filtros) or {}
 	condiciones = construir_condiciones(filtros)
 
@@ -52,31 +56,31 @@ def obtener_proyectos(filtros=None):
 	for p in principales:
 		p["cumple_filtro"] = True
 
-	# 2. Subcontratos que cumplen el filtro, de cualquier acuerdo
-	subs_que_cumplen = listar([["acuerdo_marco", "is", "set"], *condiciones])
-	nombres_que_cumplen = {s.name for s in subs_que_cumplen}
+	# 2. Contratos basados que cumplen el filtro, de cualquier acuerdo
+	basados_que_cumplen = listar([["acuerdo_marco", "is", "set"], *condiciones])
+	nombres_que_cumplen = {c.name for c in basados_que_cumplen}
 
-	# 3. Acuerdos que solo aparecen como contexto de algún subcontrato que cumple
+	# 3. Acuerdos que solo aparecen como contexto de algún contrato basado que cumple
 	presentes = {p.name for p in principales}
-	acuerdos_contexto = {s.acuerdo_marco for s in subs_que_cumplen} - presentes
+	acuerdos_contexto = {c.acuerdo_marco for c in basados_que_cumplen} - presentes
 	if acuerdos_contexto:
 		for p in listar([["name", "in", list(acuerdos_contexto)]]):
 			p["cumple_filtro"] = False
 			principales.append(p)
 
-	# 4. Todos los subcontratos de los acuerdos que se van a mostrar
+	# 4. Todos los contratos basados de los acuerdos que se van a mostrar
 	ids_acuerdos = [p.name for p in principales if p.tipo == "Acuerdo marco"]
 	por_acuerdo = {}
 	if ids_acuerdos:
-		for s in listar([["acuerdo_marco", "in", ids_acuerdos]], order_by="name asc"):
-			s["cumple_filtro"] = s.name in nombres_que_cumplen
-			por_acuerdo.setdefault(s.acuerdo_marco, []).append(s)
+		for c in listar([["acuerdo_marco", "in", ids_acuerdos]], order_by="name asc"):
+			c["cumple_filtro"] = c.name in nombres_que_cumplen
+			por_acuerdo.setdefault(c.acuerdo_marco, []).append(c)
 
 	for p in principales:
 		if p.tipo == "Acuerdo marco":
-			subs = por_acuerdo.get(p.name, [])
+			basados = por_acuerdo.get(p.name, [])
 			# Si el acuerdo solo está como contexto, mostramos únicamente los que cumplen
-			p["subcontratos"] = subs if p.cumple_filtro else [s for s in subs if s.cumple_filtro]
+			p["contratos_basados"] = basados if p.cumple_filtro else [c for c in basados if c.cumple_filtro]
 
 	principales.sort(key=lambda p: p.creation, reverse=True)
 	return principales
