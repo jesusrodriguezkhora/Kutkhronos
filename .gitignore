@@ -53,3 +53,7 @@ jspm_packages/
 
 # Aider AI Chat
 .aider*
+
+# Build de la SPA: se genera con bench build al construir la imagen
+prototipo/public/dashboard/
+prototipo/www/dashboard.html
