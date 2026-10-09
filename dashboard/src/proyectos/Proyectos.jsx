@@ -47,7 +47,7 @@ export default function Proyectos() {
   const hayFiltros = Object.keys(filtrosAplicados).length > 0;
 
   const { data, error, isLoading, isValidating, mutate } = useFrappeGetCall(
-    "prototipo.api.obtener_proyectos",
+    "prototipo.api.proyectos.obtener_proyectos",
     hayFiltros ? { filtros: JSON.stringify(filtrosAplicados) } : undefined,
     undefined,
     { keepPreviousData: true }
