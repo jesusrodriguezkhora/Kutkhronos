@@ -29,7 +29,7 @@ export default function Login({ onLogin }) {
 
         <input
           className="w-full rounded-lg border border-black/15 px-3 py-2.5 outline-none focus:border-black focus:ring-2 focus:ring-[#fadc6a]"
-          placeholder="Usuario o email"
+          placeholder="Email"
           autoComplete="username"
           value={usuario}
           onChange={(e) => setUsuario(e.target.value)}

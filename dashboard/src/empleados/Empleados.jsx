@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useFrappeGetCall } from "frappe-react-sdk";
 import FilaEmpleado from "./FilaEmpleado";
+import AltaEmpleado from "./AltaEmpleado";
 import { GRID } from "./tabla";
 import { ESTILOS } from "../lib/estilos";
 
@@ -25,8 +26,11 @@ function IconoBuscar() {
 }
 
 export default function Empleados() {
-  const { data, error, isLoading } = useFrappeGetCall("prototipo.api.empleados.listar_empleados");
+  const { data, error, isLoading, mutate } = useFrappeGetCall(
+    "prototipo.api.empleados.listar_empleados"
+  );
   const [busqueda, setBusqueda] = useState("");
+  const [altaAbierta, setAltaAbierta] = useState(false);
 
   // Si la petición falló, no mostramos datos anteriores
   const empleados = error ? [] : data?.message ?? [];
@@ -65,7 +69,10 @@ export default function Empleados() {
               onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
-          <button className="rounded-full bg-[#fadc6a] px-5 py-2.5 text-sm font-semibold text-black hover:bg-black hover:text-[#fadc6a]">
+          <button
+            onClick={() => setAltaAbierta(true)}
+            className="rounded-full bg-[#fadc6a] px-5 py-2.5 text-sm font-semibold text-black hover:bg-black hover:text-[#fadc6a]"
+          >
             Nuevo empleado
           </button>
         </div>
@@ -105,6 +112,10 @@ export default function Empleados() {
           </div>
         </div>
       </div>
+
+      {altaAbierta && (
+        <AltaEmpleado onCerrar={() => setAltaAbierta(false)} onCreado={() => mutate()} />
+      )}
     </section>
   );
 }
