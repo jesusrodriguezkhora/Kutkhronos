@@ -20,7 +20,11 @@ export default function Inicio() {
         <div className="flex items-center gap-4 text-sm text-white">
           <span>{currentUser}</span>
           <button
-            onClick={logout}
+            onClick={async () => {
+              await logout();
+              // Recargar borra toda la memoria de la página (caché incluida) antes del siguiente usuario
+              window.location.reload();
+            }}
             className="rounded-lg border border-white/20 px-3 py-1.5 hover:bg-[#fadc6a] hover:text-black"
           >
             Cerrar sesión
