@@ -26,7 +26,7 @@ function BotonFlecha({ abierto, onClick }) {
     <button
       onClick={onClick}
       aria-expanded={abierto}
-      aria-label={abierto ? "Plegar subcontratos" : "Desplegar subcontratos"}
+      aria-label={abierto ? "Plegar contratos basados" : "Desplegar contratos basados"}
       className="grid h-7 w-7 place-items-center rounded-md hover:bg-[#fadc6a]"
     >
       <svg
@@ -44,34 +44,34 @@ function BotonFlecha({ abierto, onClick }) {
   );
 }
 
-function BotonEditar({ onClick, codigo }) {
+function BotonDetalle({ onClick, codigo }) {
   return (
     <button
       onClick={onClick}
-      title="Editar"
-      aria-label={`Editar ${codigo}`}
+      title="Ver detalle"
+      aria-label={`Ver detalle de ${codigo}`}
       className="grid h-8 w-8 place-items-center rounded-lg border border-black/15 hover:bg-[#fadc6a]"
     >
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-        <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+        <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
       </svg>
     </button>
   );
 }
 
-function textoIndicador(acuerdo, subs) {
-  const total = subs.length;
-  const coinciden = subs.filter((s) => s.cumple_filtro).length;
+function textoIndicador(acuerdo, basados) {
+  const total = basados.length;
+  const coinciden = basados.filter((c) => c.cumple_filtro).length;
   const palabraCoincide = coinciden === 1 ? "coincide" : "coinciden";
 
   if (!acuerdo.cumple_filtro) return `${coinciden} ${palabraCoincide}`;
 
-  let texto = `${total} ${total === 1 ? "subcontrato" : "subcontratos"}`;
+  let texto = `${total} ${total === 1 ? "contrato basado" : "contratos basados"}`;
   if (coinciden < total) texto += ` · ${coinciden} ${palabraCoincide}`;
   return texto;
 }
 
-function Fila({ datos, flecha, indicador, esSub, atenuada, onEditar }) {
+function Fila({ datos, flecha, indicador, esBasado, atenuada, onVerDetalle }) {
   const celda = atenuada ? "opacity-40" : "";
 
   return (
@@ -81,7 +81,7 @@ function Fila({ datos, flecha, indicador, esSub, atenuada, onEditar }) {
       <div className={celda}>
         <div
           className={`font-mono font-semibold ${
-            esSub ? "border-l-2 border-[#fadc6a] pl-2" : ""
+            esBasado ? "border-l-2 border-[#fadc6a] pl-2" : ""
           }`}
         >
           {datos.name}
@@ -109,7 +109,7 @@ function Fila({ datos, flecha, indicador, esSub, atenuada, onEditar }) {
       </div>
 
       <div className="flex justify-end">
-        <BotonEditar onClick={() => onEditar(datos)} codigo={datos.name} />
+        <BotonDetalle onClick={() => onVerDetalle(datos)} codigo={datos.name} />
       </div>
     </div>
   );
@@ -119,50 +119,50 @@ export default function FilaProyecto({
   proyecto,
   desplegado,
   onAlternar,
-  onEditar,
-  onAnadirSubcontrato,
+  onVerDetalle,
+  onAnadirContratoBasado,
 }) {
   const esAcuerdo = proyecto.tipo === "Acuerdo marco";
-  const subs = proyecto.subcontratos ?? [];
+  const basados = proyecto.contratos_basados ?? [];
 
   return (
     <div>
       <Fila
         datos={proyecto}
         atenuada={!proyecto.cumple_filtro}
-        onEditar={onEditar}
+        onVerDetalle={onVerDetalle}
         flecha={
           esAcuerdo ? (
             <BotonFlecha abierto={desplegado} onClick={onAlternar} />
           ) : null
         }
-        indicador={esAcuerdo ? textoIndicador(proyecto, subs) : null}
+        indicador={esAcuerdo ? textoIndicador(proyecto, basados) : null}
       />
 
       {esAcuerdo && desplegado && (
         <div className="border-t border-black/10 bg-black/[0.03]">
-          {subs.length === 0 ? (
+          {basados.length === 0 ? (
             <p className="py-3 pl-[4.5rem] text-sm text-black/50">
-              Sin subcontratos
+              Sin contratos basados
             </p>
           ) : (
-            subs.map((s) => (
+            basados.map((c) => (
               <Fila
-                key={s.name}
-                datos={s}
-                esSub
-                atenuada={!s.cumple_filtro}
-                onEditar={onEditar}
+                key={c.name}
+                datos={c}
+                esBasado
+                atenuada={!c.cumple_filtro}
+                onVerDetalle={onVerDetalle}
               />
             ))
           )}
 
           <div className="py-3 pl-[4.5rem]">
             <button
-              onClick={() => onAnadirSubcontrato(proyecto)}
+              onClick={() => onAnadirContratoBasado(proyecto)}
               className="rounded-lg border border-dashed border-black/30 px-3 py-1.5 text-sm font-medium text-black/70 hover:border-black hover:bg-[#fadc6a] hover:text-black"
             >
-              + Añadir subcontrato
+              + Añadir contrato basado
             </button>
           </div>
         </div>

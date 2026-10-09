@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useFrappeGetCall } from "frappe-react-sdk";
 import FilaProyecto from "./FilaProyecto";
 import Filtros from "./Filtros";
+import FichaProyecto from "./FichaProyecto";
 import { GRID } from "./tabla";
 import { useDebounced } from "../hooks/useDebounced";
-import FormularioProyecto from "./FormularioProyecto";
 
 const FILTROS_VACIOS = {
   cliente: "",
@@ -38,14 +38,16 @@ export default function Proyectos() {
   const [filtros, setFiltros] = useState(FILTROS_VACIOS);
   const [panelAbierto, setPanelAbierto] = useState(false);
   const [desplegados, setDesplegados] = useState(() => new Set());
-  const [formulario, setFormulario] = useState(null);
+
+  // Ficha abierta: null (ninguna), {} (nuevo), { proyecto } (detalle) o { acuerdoMarco } (nuevo contrato basado)
+  const [ficha, setFicha] = useState(null);
 
   // Los filtros llegan al servidor solo cuando el usuario deja de modificarlos
   const filtrosAplicados = soloActivos(useDebounced(filtros, 400));
   const hayFiltros = Object.keys(filtrosAplicados).length > 0;
 
   const { data, error, isLoading, isValidating, mutate } = useFrappeGetCall(
-    "prototipo.api.obtener_proyectos",
+    "prototipo.api.proyectos.obtener_proyectos",
     hayFiltros ? { filtros: JSON.stringify(filtrosAplicados) } : undefined,
     undefined,
     { keepPreviousData: true }
@@ -70,7 +72,7 @@ export default function Proyectos() {
     });
   };
 
-  const proyectos = data?.message ?? [];
+  const proyectos = error ? [] : data?.message ?? [];
   const numFiltros = Object.keys(soloActivos(filtros)).length;
 
   return (
@@ -78,10 +80,11 @@ export default function Proyectos() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Proyectos</h1>
         <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setFormulario({})}
-            className="rounded-full bg-[#fadc6a] px-5 py-2.5 text-sm font-semibold text-black hover:bg-black hover:text-[#fadc6a]">
-            + Nuevo proyecto
+          <button
+            onClick={() => setFicha({})}
+            className="rounded-full bg-[#fadc6a] px-5 py-2.5 text-sm font-semibold text-black hover:bg-black hover:text-[#fadc6a]"
+          >
+            Nuevo proyecto
           </button>
           <button
             onClick={() => setPanelAbierto((abierto) => !abierto)}
@@ -149,22 +152,24 @@ export default function Proyectos() {
                 proyecto={p}
                 desplegado={desplegados.has(p.name)}
                 onAlternar={() => alternar(p.name)}
-                onEditar={(proyecto) => setFormulario({ proyecto })}
-                onAnadirSubcontrato={(acuerdo) => setFormulario({ acuerdoMarco: acuerdo })}
+                onVerDetalle={(proyecto) => setFicha({ proyecto })}
+                onAnadirContratoBasado={(acuerdo) => setFicha({ acuerdoMarco: acuerdo })}
               />
             ))}
           </div>
         </div>
       </div>
-      {formulario && (
-        <FormularioProyecto
-          proyecto={formulario.proyecto}
-          acuerdoMarco={formulario.acuerdoMarco}
-          onCerrar={() => setFormulario(null)}
-          onGuardado={() => {
-            setFormulario(null);
+
+      {ficha && (
+        <FichaProyecto
+          proyecto={ficha.proyecto}
+          acuerdoMarco={ficha.acuerdoMarco}
+          onCerrar={() => setFicha(null)}
+          onCreado={() => {
+            setFicha(null);
             mutate();
           }}
+          onActualizado={() => mutate()}
         />
       )}
     </section>
