@@ -84,7 +84,7 @@ export default function Proyectos() {
             onClick={() => setFicha({})}
             className="rounded-full bg-[#fadc6a] px-5 py-2.5 text-sm font-semibold text-black hover:bg-black hover:text-[#fadc6a]"
           >
-            Nuevo proyecto
+            HOLA
           </button>
           <button
             onClick={() => setPanelAbierto((abierto) => !abierto)}
