@@ -1,11 +1,12 @@
 import { NavLink } from "react-router-dom";
+import { NOMBRE_APP } from "../lib/marca";
 
 export default function Cabecera({ nombre, modulos, onCerrarSesion }) {
   return (
     <header className="bg-black">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-8 px-8">
         <div className="flex items-center gap-10">
-          <span className="py-4 text-lg font-bold text-amarillo">Prototipo</span>
+          <span className="py-4 text-lg font-bold text-amarillo">{NOMBRE_APP}</span>
 
           <nav aria-label="Módulos" className="flex gap-1">
             {modulos.map((m) => (

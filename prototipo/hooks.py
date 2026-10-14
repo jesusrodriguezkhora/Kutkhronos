@@ -1,5 +1,5 @@
-app_name = "prototipo"
-app_title = "Prototipo"
+app_name = "Khronos"
+app_title = "Khronos"
 app_publisher = "aaaa"
 app_description = "aaaa"
 app_email = "aaaa@gmail.com"

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { NOMBRE_APP } from "../lib/marca";
 
 export default function Login({ onLogin }) {
   const [usuario, setUsuario] = useState("");
@@ -23,7 +24,7 @@ export default function Login({ onLogin }) {
       >
         <div>
           <div className="mb-4 h-1.5 w-12 rounded-full bg-amarillo" />
-          <h1 className="text-2xl font-bold text-black">Prototipo</h1>
+          <h1 className="text-2xl font-bold text-black">{NOMBRE_APP}</h1>
           <p className="mt-1 text-sm text-black/50">Inicia sesión para continuar</p>
         </div>
 
