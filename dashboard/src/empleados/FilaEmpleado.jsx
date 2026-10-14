@@ -12,11 +12,11 @@ function iniciales(nombre) {
 
 function Rol({ esCoordinador }) {
   return esCoordinador ? (
-    <span className="inline-block rounded-full bg-black px-2.5 py-0.5 text-xs font-medium text-amarillo">
+    <span className="inline-block rounded-full bg-salvia-900 px-2.5 py-0.5 text-xs font-medium text-salvia-200">
       Coordinador
     </span>
   ) : (
-    <span className="inline-block rounded-full border border-black/30 px-2.5 py-0.5 text-xs font-medium">
+    <span className="inline-block rounded-full border border-salvia-900/30 px-2.5 py-0.5 text-xs font-medium">
       Empleado
     </span>
   );
@@ -32,24 +32,24 @@ export default function FilaEmpleado({ empleado }) {
         }`}
       >
       <div className="flex items-center gap-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-salvia text-xs font-bold text-black">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-salvia text-xs font-bold text-salvia-950">
           {iniciales(empleado.full_name)}
         </span>
         <span className="font-medium">{empleado.full_name}</span>
       </div>
 
-      <div className="truncate text-black/70">{empleado.email}</div>
-      <div className="tabular-nums text-black/70">{empleado.mobile_no || "—"}</div>
+      <div className="truncate text-salvia-950/70">{empleado.email}</div>
+      <div className="tabular-nums text-salvia-950/70">{empleado.mobile_no || "—"}</div>
 
       <div>
         <Rol esCoordinador={empleado.es_coordinador} />
       </div>
 
-      <div className={activo ? "text-black" : "text-black/50"}>
+      <div className={activo ? "text-salvia-950" : "text-salvia-950/50"}>
         {activo ? "Activo" : "Desactivado"}
       </div>
 
-      <div className="tabular-nums text-black/70">
+      <div className="tabular-nums text-salvia-950/70">
         {formatearFecha(empleado.creation?.slice(0, 10))}
       </div>
     </div>

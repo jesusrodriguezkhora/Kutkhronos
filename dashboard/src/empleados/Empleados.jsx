@@ -49,7 +49,7 @@ export default function Empleados() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Empleados</h1>
           {!isLoading && !error && (
-            <p className="mt-1 text-sm text-black/50">
+            <p className="mt-1 text-sm text-salvia-950/50">
               {empleados.length} {empleados.length === 1 ? "cuenta" : "cuentas"}
             </p>
           )}
@@ -57,7 +57,7 @@ export default function Empleados() {
 
         <div className="flex items-center gap-3">
           <div className="relative w-72">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-black/40">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-salvia-950/40">
               <IconoBuscar />
             </span>
             <input
@@ -71,7 +71,7 @@ export default function Empleados() {
           </div>
           <button
             onClick={() => setAltaAbierta(true)}
-            className="rounded-full bg-amarillo px-5 py-2.5 text-sm font-semibold text-black hover:bg-black hover:text-amarillo"
+            className="rounded-full bg-salvia px-5 py-2.5 text-sm font-semibold text-salvia-950 hover:bg-salvia-900 hover:text-salvia-200"
           >
             Nuevo empleado
           </button>
@@ -79,9 +79,9 @@ export default function Empleados() {
       </div>
 
       <div className="overflow-x-auto">
-        <div className="min-w-[900px] overflow-hidden rounded-xl border border-black/10">
+        <div className="min-w-[900px] overflow-hidden rounded-xl border border-salvia-900/10">
           <div
-            className={`${GRID} bg-black px-4 py-3 text-xs font-semibold uppercase tracking-wider text-amarillo`}
+            className={`${GRID} bg-salvia-900 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-salvia-200`}
           >
             <span>Nombre</span>
             <span>Correo</span>
@@ -92,7 +92,7 @@ export default function Empleados() {
           </div>
 
           {isLoading && (
-            <p className="px-4 py-6 text-sm text-black/50">Cargando empleados…</p>
+            <p className="px-4 py-6 text-sm text-salvia-950/50">Cargando empleados…</p>
           )}
           {error && (
             <p className="px-4 py-6 text-sm text-red-600">
@@ -100,12 +100,12 @@ export default function Empleados() {
             </p>
           )}
           {!isLoading && !error && filtrados.length === 0 && (
-            <p className="px-4 py-6 text-sm text-black/50">
+            <p className="px-4 py-6 text-sm text-salvia-950/50">
               {busqueda ? "Ningún empleado coincide con la búsqueda." : "Todavía no hay empleados."}
             </p>
           )}
 
-          <div className="divide-y divide-black/10 bg-white">
+          <div className="divide-y divide-salvia-900/10 bg-white">
             {filtrados.map((e) => (
               <FilaEmpleado key={e.name} empleado={e} />
             ))}

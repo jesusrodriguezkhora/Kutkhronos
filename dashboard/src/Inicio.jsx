@@ -9,7 +9,7 @@ function Aplicacion({ onCerrarSesion }) {
   const { data, error, isLoading } = useFrappeGetCall("prototipo.api.sesion.mi_perfil");
 
   if (isLoading) {
-    return <p className="p-8 text-black/50">Cargando…</p>;
+    return <p className="p-8 text-salvia-950/50">Cargando…</p>;
   }
 
   if (error) {
@@ -27,7 +27,7 @@ function Aplicacion({ onCerrarSesion }) {
   const disponibles = MODULOS.filter((m) => perfil.modulos.includes(m.clave));
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-salvia-50 text-salvia-950">
       <Cabecera nombre={perfil.nombre} modulos={disponibles} onCerrarSesion={onCerrarSesion} />
 
       <main className="mx-auto max-w-7xl px-8 py-10">
@@ -62,7 +62,7 @@ export default function Inicio() {
   };
 
   if (isLoading) {
-    return <p className="p-8 text-black/50">Cargando…</p>;
+    return <p className="p-8 text-salvia-950/50">Cargando…</p>;
   }
 
   if (!currentUser) {

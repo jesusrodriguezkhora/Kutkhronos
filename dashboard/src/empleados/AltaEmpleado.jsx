@@ -28,7 +28,7 @@ function Campo({ etiqueta, obligatorio, ...props }) {
     <label className="block">
       <span className={clases.etiqueta}>
         {etiqueta}
-        {obligatorio && <span className="text-black"> *</span>}
+        {obligatorio && <span className="text-salvia-950"> *</span>}
       </span>
       <input className={clases.campo} {...props} />
     </label>
@@ -52,13 +52,13 @@ function Copiable({ etiqueta, valor }) {
     <div>
       <span className={clases.etiqueta}>{etiqueta}</span>
       <div className="flex gap-2">
-        <code className="flex-1 break-all rounded-lg bg-black/5 px-3 py-2 font-mono text-sm">
+        <code className="flex-1 break-all rounded-lg bg-salvia-900/5 px-3 py-2 font-mono text-sm">
           {valor}
         </code>
         <button
           type="button"
           onClick={copiar}
-          className="w-24 rounded-lg border border-black/15 text-sm font-medium hover:bg-amarillo"
+          className="w-24 rounded-lg border border-salvia-900/15 text-sm font-medium hover:bg-salvia"
         >
           {copiado ? "Copiado ✓" : "Copiar"}
         </button>
@@ -118,19 +118,19 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
     return (
       <Modal titulo="Cuenta creada" onCerrar={onCerrar} ancho="max-w-lg">
         <div className="space-y-5 p-6">
-          <p className="text-sm text-black/70">
+          <p className="text-sm text-salvia-950/70">
             Comunica estos datos de acceso al empleado. Por seguridad, la contraseña{" "}
-            <strong className="text-black">no se volverá a mostrar</strong>.
+            <strong className="text-salvia-950">no se volverá a mostrar</strong>.
           </p>
           <Copiable etiqueta="Correo (usuario)" valor={creado.email} />
           <Copiable etiqueta="Contraseña" valor={creado.password} />
         </div>
-        <div className="flex justify-end border-t border-black/10 px-6 py-4">
+        <div className="flex justify-end border-t border-salvia-900/10 px-6 py-4">
           <button
             key="hecho"
             type="button"
             onClick={onCerrar}
-            className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-amarillo hover:bg-amarillo hover:text-black"
+            className="rounded-lg bg-salvia-900 px-5 py-2 text-sm font-semibold text-salvia-200 hover:bg-salvia hover:text-salvia-950"
           >
             Hecho
           </button>
@@ -171,9 +171,9 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
             onChange={(e) => cambiar("telefono", e.target.value)}
           />
 
-          <div className="border-t border-black/10 pt-4 sm:col-span-2">
+          <div className="border-t border-salvia-900/10 pt-4 sm:col-span-2">
             <h3 className="text-sm font-bold">Contraseña inicial</h3>
-            <p className="mt-1 text-xs text-black/50">
+            <p className="mt-1 text-xs text-salvia-950/50">
               La defines tú y se la comunicas al empleado.
             </p>
           </div>
@@ -199,35 +199,35 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
             <button
               type="button"
               onClick={() => setVerPassword((v) => !v)}
-              className="rounded-lg border border-black/15 px-3 py-1.5 text-sm font-medium hover:bg-black/5"
+              className="rounded-lg border border-salvia-900/15 px-3 py-1.5 text-sm font-medium hover:bg-salvia-900/5"
             >
               {verPassword ? "Ocultar" : "Mostrar"}
             </button>
             <button
               type="button"
               onClick={generar}
-              className="rounded-lg border border-dashed border-black/30 px-3 py-1.5 text-sm font-medium hover:border-black hover:bg-amarillo"
+              className="rounded-lg border border-dashed border-salvia-900/30 px-3 py-1.5 text-sm font-medium hover:border-salvia-900 hover:bg-salvia"
             >
               Generar contraseña segura
             </button>
             {datos.confirmacion && !coinciden && (
-              <span className="text-sm text-black/70">Las contraseñas no coinciden.</span>
+              <span className="text-sm text-salvia-950/70">Las contraseñas no coinciden.</span>
             )}
           </div>
         </div>
 
         {error && (
-          <p className="mx-6 mb-2 whitespace-pre-line rounded-lg border-l-4 border-black bg-amarillo/40 px-3 py-2 text-sm text-black">
+          <p className="mx-6 mb-2 whitespace-pre-line rounded-lg border-l-4 border-salvia-900 bg-salvia-100 px-3 py-2 text-sm text-salvia-950">
             {error}
           </p>
         )}
 
-        <div className="flex justify-end gap-3 border-t border-black/10 px-6 py-4">
+        <div className="flex justify-end gap-3 border-t border-salvia-900/10 px-6 py-4">
           <button
             key="cancelar"
             type="button"
             onClick={cerrar}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-black/60 hover:bg-black/5 hover:text-black"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-salvia-950/60 hover:bg-salvia-900/5 hover:text-salvia-950"
           >
             Cancelar
           </button>
@@ -235,7 +235,7 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
             key="crear"
             type="submit"
             disabled={!puedeGuardar}
-            className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-amarillo hover:bg-amarillo hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg bg-salvia-900 px-5 py-2 text-sm font-semibold text-salvia-200 hover:bg-salvia hover:text-salvia-950 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {loading ? "Creando…" : "Crear cuenta"}
           </button>

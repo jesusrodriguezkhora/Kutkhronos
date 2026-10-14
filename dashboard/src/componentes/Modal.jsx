@@ -15,22 +15,22 @@ export default function Modal({ titulo, subtitulo, onCerrar, children, ancho = "
       role="dialog"
       aria-modal="true"
       aria-label={titulo}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-salvia-900/60 p-4"
       onMouseDown={(e) => e.target === e.currentTarget && onCerrar()}
     >
       <div
         className={`flex max-h-[90vh] w-full ${ancho} flex-col overflow-hidden rounded-2xl bg-white shadow-2xl`}
       >
-        <div className="flex items-center justify-between bg-black px-6 py-4">
+        <div className="flex items-center justify-between bg-salvia-900 px-6 py-4">
           <div>
-            <h2 className="text-lg font-bold text-amarillo">{titulo}</h2>
+            <h2 className="text-lg font-bold text-salvia-200">{titulo}</h2>
             {subtitulo && <p className="text-xs text-white/60">{subtitulo}</p>}
           </div>
           <button
             type="button"
             onClick={onCerrar}
             aria-label="Cerrar"
-            className="grid h-8 w-8 place-items-center rounded-lg text-white/60 hover:bg-amarillo hover:text-black"
+            className="grid h-8 w-8 place-items-center rounded-lg text-white/60 hover:bg-salvia hover:text-salvia-950"
           >
             ×
           </button>

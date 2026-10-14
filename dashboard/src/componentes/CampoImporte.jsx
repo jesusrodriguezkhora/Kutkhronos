@@ -16,7 +16,7 @@ export default function CampoImporte({ etiqueta, valor, onChange, clases, disabl
           value={mostrado}
           onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
         />
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-black/40">
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-salvia-950/40">
           €
         </span>
       </div>
