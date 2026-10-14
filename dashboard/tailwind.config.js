@@ -2,7 +2,12 @@
 export default {
   content: ["./src/**/*.{html,jsx,tsx,vue,js,ts}"],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        amarillo: "#fadc6a",
+        salvia: "#95bdb4",
+      },
+    },
   },
   plugins: [],
 }

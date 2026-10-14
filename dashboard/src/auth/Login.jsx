@@ -22,13 +22,13 @@ export default function Login({ onLogin }) {
         className="w-full max-w-sm space-y-5 rounded-2xl bg-white p-8 shadow-2xl"
       >
         <div>
-          <div className="mb-4 h-1.5 w-12 rounded-full bg-[#fadc6a]" />
+          <div className="mb-4 h-1.5 w-12 rounded-full bg-amarillo" />
           <h1 className="text-2xl font-bold text-black">Prototipo</h1>
           <p className="mt-1 text-sm text-black/50">Inicia sesión para continuar</p>
         </div>
 
         <input
-          className="w-full rounded-lg border border-black/15 px-3 py-2.5 outline-none focus:border-black focus:ring-2 focus:ring-[#fadc6a]"
+          className="w-full rounded-lg border border-black/15 px-3 py-2.5 outline-none focus:border-black focus:ring-2 focus:ring-amarillo"
           placeholder="Email"
           autoComplete="username"
           value={usuario}
@@ -36,7 +36,7 @@ export default function Login({ onLogin }) {
         />
         <input
           type="password"
-          className="w-full rounded-lg border border-black/15 px-3 py-2.5 outline-none focus:border-black focus:ring-2 focus:ring-[#fadc6a]"
+          className="w-full rounded-lg border border-black/15 px-3 py-2.5 outline-none focus:border-black focus:ring-2 focus:ring-amarillo"
           placeholder="Contraseña"
           autoComplete="current-password"
           value={password}
@@ -44,12 +44,12 @@ export default function Login({ onLogin }) {
         />
 
         {error && (
-          <p className="rounded-lg border-l-4 border-black bg-[#fadc6a]/40 px-3 py-2 text-sm text-black">
+          <p className="rounded-lg border-l-4 border-black bg-amarillo/40 px-3 py-2 text-sm text-black">
             {error}
           </p>
         )}
 
-        <button className="w-full rounded-lg bg-black py-2.5 font-semibold text-[#fadc6a] hover:bg-[#fadc6a] hover:text-black">
+        <button className="w-full rounded-lg bg-black py-2.5 font-semibold text-amarillo hover:bg-amarillo hover:text-black">
           Entrar
         </button>
       </form>

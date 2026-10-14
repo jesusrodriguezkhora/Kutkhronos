@@ -12,7 +12,7 @@ function iniciales(nombre) {
 
 function Rol({ esCoordinador }) {
   return esCoordinador ? (
-    <span className="inline-block rounded-full bg-black px-2.5 py-0.5 text-xs font-medium text-[#fadc6a]">
+    <span className="inline-block rounded-full bg-black px-2.5 py-0.5 text-xs font-medium text-amarillo">
       Coordinador
     </span>
   ) : (
@@ -26,9 +26,13 @@ export default function FilaEmpleado({ empleado }) {
   const activo = Boolean(empleado.enabled);
 
   return (
-    <div className={`${GRID} px-4 py-3 text-sm ${activo ? "" : "opacity-50"}`}>
+     <div
+        className={`${GRID} px-4 py-3 text-sm transition-colors hover:bg-salvia/15 ${
+          activo ? "" : "opacity-50"
+        }`}
+      >
       <div className="flex items-center gap-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#fadc6a] text-xs font-bold text-black">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-salvia text-xs font-bold text-black">
           {iniciales(empleado.full_name)}
         </span>
         <span className="font-medium">{empleado.full_name}</span>

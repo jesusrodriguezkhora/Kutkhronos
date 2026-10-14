@@ -23,14 +23,14 @@ export default function Modal({ titulo, subtitulo, onCerrar, children, ancho = "
       >
         <div className="flex items-center justify-between bg-black px-6 py-4">
           <div>
-            <h2 className="text-lg font-bold text-[#fadc6a]">{titulo}</h2>
+            <h2 className="text-lg font-bold text-amarillo">{titulo}</h2>
             {subtitulo && <p className="text-xs text-white/60">{subtitulo}</p>}
           </div>
           <button
             type="button"
             onClick={onCerrar}
             aria-label="Cerrar"
-            className="grid h-8 w-8 place-items-center rounded-lg text-white/60 hover:bg-[#fadc6a] hover:text-black"
+            className="grid h-8 w-8 place-items-center rounded-lg text-white/60 hover:bg-amarillo hover:text-black"
           >
             ×
           </button>

@@ -354,21 +354,21 @@ export default function FichaProyecto({
       >
         <div className="flex items-center justify-between bg-black px-6 py-4">
           <div>
-            <h2 className="font-mono text-lg font-bold text-[#fadc6a]">{titulo}</h2>
+            <h2 className="font-mono text-lg font-bold text-amarillo">{titulo}</h2>
             {subtitulo && <p className="text-xs text-white/60">{subtitulo}</p>}
           </div>
           <button
             type="button"
             onClick={cerrar}
             aria-label="Cerrar"
-            className="grid h-8 w-8 place-items-center rounded-lg text-white/60 hover:bg-[#fadc6a] hover:text-black"
+            className="grid h-8 w-8 place-items-center rounded-lg text-white/60 hover:bg-amarillo hover:text-black"
           >
             ×
           </button>
         </div>
 
         {esNuevoBasado && (
-          <div className="flex items-center justify-between border-b border-black/10 bg-[#fadc6a]/30 px-6 py-3 text-sm">
+           <div className="flex items-center justify-between border-b border-black/10 bg-salvia/40 px-6 py-3 text-sm">
             <span className="text-black/70">Saldo disponible del acuerdo</span>
             <span className="font-semibold tabular-nums text-black">
               {formatearImporte(acuerdoMarco.importe_disponible)}
@@ -379,7 +379,7 @@ export default function FichaProyecto({
         {editando ? vistaEdicion : vistaDetalle}
 
         {error && (
-          <p className="mx-6 mb-2 whitespace-pre-line rounded-lg border-l-4 border-black bg-[#fadc6a]/40 px-3 py-2 text-sm text-black">
+          <p className="mx-6 mb-2 whitespace-pre-line rounded-lg border-l-4 border-black bg-amarillo/40 px-3 py-2 text-sm text-black">
             {error}
           </p>
         )}
@@ -399,7 +399,7 @@ export default function FichaProyecto({
                         key="guardar"
                         type="submit"
                         disabled={!puedeGuardar}
-                        className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-[#fadc6a] hover:bg-[#fadc6a] hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-amarillo hover:bg-amarillo hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         {guardando ? "Guardando…" : "Guardar"}
                     </button>
@@ -409,7 +409,7 @@ export default function FichaProyecto({
                     key="editar"
                     type="button"
                     onClick={empezarEdicion}
-                    className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-[#fadc6a] hover:bg-[#fadc6a] hover:text-black"
+                    className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-amarillo hover:bg-amarillo hover:text-black"
                 >
                 Editar
             </button>

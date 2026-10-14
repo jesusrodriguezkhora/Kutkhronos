@@ -82,9 +82,9 @@ export default function Proyectos() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setFicha({})}
-            className="rounded-full bg-[#fadc6a] px-5 py-2.5 text-sm font-semibold text-black hover:bg-black hover:text-[#fadc6a]"
+            className="rounded-full bg-amarillo px-5 py-2.5 text-sm font-semibold text-black hover:bg-black hover:text-amarillo"
           >
-            HOLA
+            Nuevo proyecto
           </button>
           <button
             onClick={() => setPanelAbierto((abierto) => !abierto)}
@@ -92,13 +92,13 @@ export default function Proyectos() {
             title="Filtros"
             className={`relative grid h-10 w-10 place-items-center rounded-lg border ${
               panelAbierto || numFiltros > 0
-                ? "border-black bg-black text-[#fadc6a]"
-                : "border-black/15 hover:bg-[#fadc6a]"
+                ? "border-black bg-black text-amarillo"
+                : "border-black/15 hover:bg-amarillo"
             }`}
           >
             <IconoFiltro />
             {numFiltros > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[#fadc6a] text-xs font-bold text-black ring-2 ring-white">
+              <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-amarillo text-xs font-bold text-black ring-2 ring-white">
                 {numFiltros}
               </span>
             )}
@@ -117,7 +117,7 @@ export default function Proyectos() {
           }`}
         >
           <div
-            className={`${GRID} bg-black px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[#fadc6a]`}
+            className={`${GRID} bg-black px-4 py-3 text-xs font-semibold uppercase tracking-wider text-amarillo`}
           >
             <span />
             <span>Código</span>

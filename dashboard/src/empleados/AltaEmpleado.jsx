@@ -58,7 +58,7 @@ function Copiable({ etiqueta, valor }) {
         <button
           type="button"
           onClick={copiar}
-          className="w-24 rounded-lg border border-black/15 text-sm font-medium hover:bg-[#fadc6a]"
+          className="w-24 rounded-lg border border-black/15 text-sm font-medium hover:bg-amarillo"
         >
           {copiado ? "Copiado ✓" : "Copiar"}
         </button>
@@ -130,7 +130,7 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
             key="hecho"
             type="button"
             onClick={onCerrar}
-            className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-[#fadc6a] hover:bg-[#fadc6a] hover:text-black"
+            className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-amarillo hover:bg-amarillo hover:text-black"
           >
             Hecho
           </button>
@@ -206,7 +206,7 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
             <button
               type="button"
               onClick={generar}
-              className="rounded-lg border border-dashed border-black/30 px-3 py-1.5 text-sm font-medium hover:border-black hover:bg-[#fadc6a]"
+              className="rounded-lg border border-dashed border-black/30 px-3 py-1.5 text-sm font-medium hover:border-black hover:bg-amarillo"
             >
               Generar contraseña segura
             </button>
@@ -217,7 +217,7 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
         </div>
 
         {error && (
-          <p className="mx-6 mb-2 whitespace-pre-line rounded-lg border-l-4 border-black bg-[#fadc6a]/40 px-3 py-2 text-sm text-black">
+          <p className="mx-6 mb-2 whitespace-pre-line rounded-lg border-l-4 border-black bg-amarillo/40 px-3 py-2 text-sm text-black">
             {error}
           </p>
         )}
@@ -235,7 +235,7 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
             key="crear"
             type="submit"
             disabled={!puedeGuardar}
-            className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-[#fadc6a] hover:bg-[#fadc6a] hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-amarillo hover:bg-amarillo hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
           >
             {loading ? "Creando…" : "Crear cuenta"}
           </button>

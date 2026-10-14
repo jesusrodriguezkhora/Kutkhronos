@@ -3,8 +3,8 @@ import { formatearImporte } from "../lib/formato";
 
 const ESTILOS_ESTADO = {
   Oportunidad: "border border-black/30 text-black",
-  Aceptado: "bg-[#fadc6a] text-black",
-  "En curso": "bg-black text-[#fadc6a]",
+  Aceptado: "bg-salvia text-black",
+  "En curso": "bg-black text-amarillo",
   Cerrado: "bg-black/10 text-black",
   Rechazado: "border border-black/15 text-black/40 line-through",
 };
@@ -27,7 +27,7 @@ function BotonFlecha({ abierto, onClick }) {
       onClick={onClick}
       aria-expanded={abierto}
       aria-label={abierto ? "Plegar contratos basados" : "Desplegar contratos basados"}
-      className="grid h-7 w-7 place-items-center rounded-md hover:bg-[#fadc6a]"
+      className="grid h-7 w-7 place-items-center rounded-md hover:bg-amarillo"
     >
       <svg
         viewBox="0 0 20 20"
@@ -50,7 +50,7 @@ function BotonDetalle({ onClick, codigo }) {
       onClick={onClick}
       title="Ver detalle"
       aria-label={`Ver detalle de ${codigo}`}
-      className="grid h-8 w-8 place-items-center rounded-lg border border-black/15 hover:bg-[#fadc6a]"
+      className="grid h-8 w-8 place-items-center rounded-lg border border-black/15 hover:bg-amarillo"
     >
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
         <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
@@ -75,13 +75,13 @@ function Fila({ datos, flecha, indicador, esBasado, atenuada, onVerDetalle }) {
   const celda = atenuada ? "opacity-40" : "";
 
   return (
-    <div className={`${GRID} px-4 py-3 text-sm`}>
+    <div className={`${GRID} px-4 py-3 text-sm transition-colors hover:bg-salvia/15`}>
       <div className="flex justify-center">{flecha}</div>
 
       <div className={celda}>
         <div
           className={`font-mono font-semibold ${
-            esBasado ? "border-l-2 border-[#fadc6a] pl-2" : ""
+            esBasado ? "border-l-2 border-salvia pl-2" : ""
           }`}
         >
           {datos.name}
@@ -160,7 +160,7 @@ export default function FilaProyecto({
           <div className="py-3 pl-[4.5rem]">
             <button
               onClick={() => onAnadirContratoBasado(proyecto)}
-              className="rounded-lg border border-dashed border-black/30 px-3 py-1.5 text-sm font-medium text-black/70 hover:border-black hover:bg-[#fadc6a] hover:text-black"
+              className="rounded-lg border border-dashed border-black/30 px-3 py-1.5 text-sm font-medium text-black/70 hover:border-black hover:bg-amarillo hover:text-black"
             >
               + Añadir contrato basado
             </button>

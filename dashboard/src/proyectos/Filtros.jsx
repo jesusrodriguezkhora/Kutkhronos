@@ -50,7 +50,7 @@ export default function Filtros({ filtros, onCambiar, onLimpiar }) {
       <div className="mt-4 flex justify-end">
         <button
           onClick={onLimpiar}
-          className="text-sm font-medium text-white/60 underline-offset-4 hover:text-[#fadc6a] hover:underline"
+          className="text-sm font-medium text-white/60 underline-offset-4 hover:text-amarillo hover:underline"
         >
           Limpiar filtros
         </button>

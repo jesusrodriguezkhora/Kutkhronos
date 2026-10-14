@@ -71,7 +71,7 @@ export default function Empleados() {
           </div>
           <button
             onClick={() => setAltaAbierta(true)}
-            className="rounded-full bg-[#fadc6a] px-5 py-2.5 text-sm font-semibold text-black hover:bg-black hover:text-[#fadc6a]"
+            className="rounded-full bg-amarillo px-5 py-2.5 text-sm font-semibold text-black hover:bg-black hover:text-amarillo"
           >
             Nuevo empleado
           </button>
@@ -81,7 +81,7 @@ export default function Empleados() {
       <div className="overflow-x-auto">
         <div className="min-w-[900px] overflow-hidden rounded-xl border border-black/10">
           <div
-            className={`${GRID} bg-black px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[#fadc6a]`}
+            className={`${GRID} bg-black px-4 py-3 text-xs font-semibold uppercase tracking-wider text-amarillo`}
           >
             <span>Nombre</span>
             <span>Correo</span>
