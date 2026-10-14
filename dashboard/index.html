@@ -9,7 +9,7 @@
   <body>
     <div id="root"></div>
 		<script>
-			window.csrf_token = '{{ csrf_token }}';
+			window.csrf_token = '{{ frappe.session.csrf_token }}';
 			// TODO: load boot data here (context file is created in `www` directory)
 		</script>
     <script type="module" src="/src/main.jsx"></script>
