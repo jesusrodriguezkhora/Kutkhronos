@@ -2,18 +2,18 @@ import { GRID } from "./tabla";
 import { formatearImporte } from "../lib/formato";
 
 const ESTILOS_ESTADO = {
-  Oportunidad: "border border-black/30 text-black",
-  Aceptado: "bg-salvia text-black",
-  "En curso": "bg-black text-amarillo",
-  Cerrado: "bg-black/10 text-black",
-  Rechazado: "border border-black/15 text-black/40 line-through",
+  Oportunidad: "border border-salvia-900/30 text-salvia-950",
+  Aceptado: "bg-salvia text-salvia-950",
+  "En curso": "bg-salvia-900 text-salvia-200",
+  Cerrado: "bg-salvia-900/10 text-salvia-950",
+  Rechazado: "border border-salvia-900/15 text-salvia-950/40 line-through",
 };
 
 function Estado({ valor }) {
   return (
     <span
       className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        ESTILOS_ESTADO[valor] || "bg-black/5"
+        ESTILOS_ESTADO[valor] || "bg-salvia-900/5"
       }`}
     >
       {valor || "—"}
@@ -27,7 +27,7 @@ function BotonFlecha({ abierto, onClick }) {
       onClick={onClick}
       aria-expanded={abierto}
       aria-label={abierto ? "Plegar contratos basados" : "Desplegar contratos basados"}
-      className="grid h-7 w-7 place-items-center rounded-md hover:bg-amarillo"
+      className="grid h-7 w-7 place-items-center rounded-md hover:bg-salvia"
     >
       <svg
         viewBox="0 0 20 20"
@@ -50,7 +50,7 @@ function BotonDetalle({ onClick, codigo }) {
       onClick={onClick}
       title="Ver detalle"
       aria-label={`Ver detalle de ${codigo}`}
-      className="grid h-8 w-8 place-items-center rounded-lg border border-black/15 hover:bg-amarillo"
+      className="grid h-8 w-8 place-items-center rounded-lg border border-salvia-900/15 hover:bg-salvia"
     >
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
         <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
@@ -87,7 +87,7 @@ function Fila({ datos, flecha, indicador, esBasado, atenuada, onVerDetalle }) {
           {datos.name}
         </div>
         {indicador && (
-          <div className="mt-0.5 text-xs text-black/50">{indicador}</div>
+          <div className="mt-0.5 text-xs text-salvia-950/50">{indicador}</div>
         )}
       </div>
 
@@ -98,7 +98,7 @@ function Fila({ datos, flecha, indicador, esBasado, atenuada, onVerDetalle }) {
       <div className={`${celda} text-right tabular-nums`}>
         <div className="font-medium">{formatearImporte(datos.importe)}</div>
         {datos.tipo === "Acuerdo marco" && (
-          <div className="text-xs text-black/50">
+          <div className="text-xs text-salvia-950/50">
             Disp. {formatearImporte(datos.importe_disponible)}
           </div>
         )}
@@ -140,9 +140,9 @@ export default function FilaProyecto({
       />
 
       {esAcuerdo && desplegado && (
-        <div className="border-t border-black/10 bg-black/[0.03]">
+        <div className="border-t border-salvia-900/10 bg-salvia-900/[0.03]">
           {basados.length === 0 ? (
-            <p className="py-3 pl-[4.5rem] text-sm text-black/50">
+            <p className="py-3 pl-[4.5rem] text-sm text-salvia-950/50">
               Sin contratos basados
             </p>
           ) : (
@@ -160,7 +160,7 @@ export default function FilaProyecto({
           <div className="py-3 pl-[4.5rem]">
             <button
               onClick={() => onAnadirContratoBasado(proyecto)}
-              className="rounded-lg border border-dashed border-black/30 px-3 py-1.5 text-sm font-medium text-black/70 hover:border-black hover:bg-amarillo hover:text-black"
+              className="rounded-lg border border-dashed border-salvia-900/30 px-3 py-1.5 text-sm font-medium text-salvia-950/70 hover:border-salvia-900 hover:bg-salvia hover:text-salvia-950"
             >
               + Añadir contrato basado
             </button>

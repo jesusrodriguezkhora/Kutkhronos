@@ -31,14 +31,14 @@ function Dato({ etiqueta, children, ancho }) {
   return (
     <div className={ancho ? "sm:col-span-2" : ""}>
       <dt className={clases.etiqueta}>{etiqueta}</dt>
-      <dd className="whitespace-pre-line text-sm text-black">{children || "—"}</dd>
+      <dd className="whitespace-pre-line text-sm text-salvia-950">{children || "—"}</dd>
     </div>
   );
 }
 
 function TituloSeccion({ children }) {
   return (
-    <h3 className="border-t border-black/10 pt-4 text-sm font-bold sm:col-span-2">{children}</h3>
+    <h3 className="border-t border-salvia-900/10 pt-4 text-sm font-bold sm:col-span-2">{children}</h3>
   );
 }
 
@@ -65,7 +65,7 @@ function CampoLectura({ etiqueta, valor }) {
   return (
     <div>
       <span className={clases.etiqueta}>{etiqueta}</span>
-      <div className="w-full cursor-not-allowed rounded-lg border border-black/10 bg-black/5 px-3 py-2 text-sm text-black/60">
+      <div className="w-full cursor-not-allowed rounded-lg border border-salvia-900/10 bg-salvia-900/5 px-3 py-2 text-sm text-salvia-950/60">
         {valor || "—"}
       </div>
     </div>
@@ -326,12 +326,12 @@ export default function FichaProyecto({
         />
       </div>
 
-      <p className="text-xs text-black/50 sm:col-span-2">
+      <p className="text-xs text-salvia-950/50 sm:col-span-2">
         {esNuevo && "El código se generará automáticamente al guardar. "}
         {esBasado && (
           <>
             Contrato basado del acuerdo marco{" "}
-            <span className="font-mono font-semibold text-black">
+            <span className="font-mono font-semibold text-salvia-950">
               {acuerdoMarco?.name ?? proyecto?.acuerdo_marco}
             </span>
             : tipo, cliente y vía se heredan del acuerdo.{" "}
@@ -345,32 +345,32 @@ export default function FichaProyecto({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-salvia-900/60 p-4"
       onMouseDown={(e) => e.target === e.currentTarget && cerrar()}
     >
       <form
         onSubmit={guardar}
         className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
       >
-        <div className="flex items-center justify-between bg-black px-6 py-4">
+        <div className="flex items-center justify-between bg-salvia-900 px-6 py-4">
           <div>
-            <h2 className="font-mono text-lg font-bold text-amarillo">{titulo}</h2>
+            <h2 className="font-mono text-lg font-bold text-salvia-200">{titulo}</h2>
             {subtitulo && <p className="text-xs text-white/60">{subtitulo}</p>}
           </div>
           <button
             type="button"
             onClick={cerrar}
             aria-label="Cerrar"
-            className="grid h-8 w-8 place-items-center rounded-lg text-white/60 hover:bg-amarillo hover:text-black"
+            className="grid h-8 w-8 place-items-center rounded-lg text-white/60 hover:bg-salvia hover:text-salvia-950"
           >
             ×
           </button>
         </div>
 
         {esNuevoBasado && (
-           <div className="flex items-center justify-between border-b border-black/10 bg-salvia/40 px-6 py-3 text-sm">
-            <span className="text-black/70">Saldo disponible del acuerdo</span>
-            <span className="font-semibold tabular-nums text-black">
+           <div className="flex items-center justify-between border-b border-salvia-900/10 bg-salvia/40 px-6 py-3 text-sm">
+            <span className="text-salvia-950/70">Saldo disponible del acuerdo</span>
+            <span className="font-semibold tabular-nums text-salvia-950">
               {formatearImporte(acuerdoMarco.importe_disponible)}
             </span>
           </div>
@@ -379,19 +379,19 @@ export default function FichaProyecto({
         {editando ? vistaEdicion : vistaDetalle}
 
         {error && (
-          <p className="mx-6 mb-2 whitespace-pre-line rounded-lg border-l-4 border-black bg-amarillo/40 px-3 py-2 text-sm text-black">
+          <p className="mx-6 mb-2 whitespace-pre-line rounded-lg border-l-4 border-salvia-900 bg-salvia-100 px-3 py-2 text-sm text-salvia-950">
             {error}
           </p>
         )}
 
-                <div className="flex justify-end gap-3 border-t border-black/10 px-6 py-4">
+                <div className="flex justify-end gap-3 border-t border-salvia-900/10 px-6 py-4">
                 {editando ? (
                     <>
                         <button
                         key="cancelar"
                         type="button"
                         onClick={cancelarEdicion}
-                        className="rounded-lg px-4 py-2 text-sm font-medium text-black/60 hover:bg-black/5 hover:text-black"
+                        className="rounded-lg px-4 py-2 text-sm font-medium text-salvia-950/60 hover:bg-salvia-900/5 hover:text-salvia-950"
                     >
                         Cancelar
                     </button>
@@ -399,7 +399,7 @@ export default function FichaProyecto({
                         key="guardar"
                         type="submit"
                         disabled={!puedeGuardar}
-                        className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-amarillo hover:bg-amarillo hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-lg bg-salvia-900 px-5 py-2 text-sm font-semibold text-salvia-200 hover:bg-salvia hover:text-salvia-950 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         {guardando ? "Guardando…" : "Guardar"}
                     </button>
@@ -409,7 +409,7 @@ export default function FichaProyecto({
                     key="editar"
                     type="button"
                     onClick={empezarEdicion}
-                    className="rounded-lg bg-black px-5 py-2 text-sm font-semibold text-amarillo hover:bg-amarillo hover:text-black"
+                    className="rounded-lg bg-salvia-900 px-5 py-2 text-sm font-semibold text-salvia-200 hover:bg-salvia hover:text-salvia-950"
                 >
                 Editar
             </button>

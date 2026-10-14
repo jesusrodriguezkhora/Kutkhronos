@@ -82,9 +82,9 @@ export default function Proyectos() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setFicha({})}
-            className="rounded-full bg-amarillo px-5 py-2.5 text-sm font-semibold text-black hover:bg-black hover:text-amarillo"
+            className="rounded-full bg-salvia px-5 py-2.5 text-sm font-semibold text-salvia-950 hover:bg-salvia-900 hover:text-salvia-200"
           >
-            Nuevo proyecto Prueba de Juan
+            Nuevo proyecto
           </button>
           <button
             onClick={() => setPanelAbierto((abierto) => !abierto)}
@@ -92,13 +92,13 @@ export default function Proyectos() {
             title="Filtros"
             className={`relative grid h-10 w-10 place-items-center rounded-lg border ${
               panelAbierto || numFiltros > 0
-                ? "border-black bg-black text-amarillo"
-                : "border-black/15 hover:bg-amarillo"
+                ? "border-salvia-900 bg-salvia-900 text-salvia-200"
+                : "border-salvia-900/15 hover:bg-salvia"
             }`}
           >
             <IconoFiltro />
             {numFiltros > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-amarillo text-xs font-bold text-black ring-2 ring-white">
+              <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-salvia text-xs font-bold text-salvia-950 ring-2 ring-white">
                 {numFiltros}
               </span>
             )}
@@ -112,12 +112,12 @@ export default function Proyectos() {
 
       <div className="overflow-x-auto">
         <div
-          className={`min-w-[960px] overflow-hidden rounded-xl border border-black/10 transition-opacity ${
+          className={`min-w-[960px] overflow-hidden rounded-xl border border-salvia-900/10 transition-opacity ${
             isValidating && !isLoading ? "opacity-60" : ""
           }`}
         >
           <div
-            className={`${GRID} bg-black px-4 py-3 text-xs font-semibold uppercase tracking-wider text-amarillo`}
+            className={`${GRID} bg-salvia-900 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-salvia-200`}
           >
             <span />
             <span>Código</span>
@@ -130,7 +130,7 @@ export default function Proyectos() {
           </div>
 
           {isLoading && (
-            <p className="px-4 py-6 text-sm text-black/50">Cargando proyectos…</p>
+            <p className="px-4 py-6 text-sm text-salvia-950/50">Cargando proyectos…</p>
           )}
           {error && (
             <p className="px-4 py-6 text-sm text-red-600">
@@ -138,14 +138,14 @@ export default function Proyectos() {
             </p>
           )}
           {!isLoading && !error && proyectos.length === 0 && (
-            <p className="px-4 py-6 text-sm text-black/50">
+            <p className="px-4 py-6 text-sm text-salvia-950/50">
               {hayFiltros
                 ? "Ningún proyecto coincide con los filtros."
                 : "No hay proyectos."}
             </p>
           )}
 
-          <div className="divide-y divide-black/10 bg-white">
+          <div className="divide-y divide-salvia-900/10 bg-white">
             {proyectos.map((p) => (
               <FilaProyecto
                 key={p.name}

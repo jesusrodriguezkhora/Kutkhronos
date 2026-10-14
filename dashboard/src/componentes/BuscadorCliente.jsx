@@ -90,7 +90,7 @@ export default function BuscadorCliente({
             type="button"
             aria-label={`Quitar ${etiqueta.toLowerCase()}`}
             onClick={() => onChange("")}
-            className="absolute right-2 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded text-black/40 hover:bg-black/10 hover:text-black"
+            className="absolute right-2 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded text-salvia-950/40 hover:bg-salvia-900/10 hover:text-salvia-950"
           >
             ×
           </button>
@@ -99,7 +99,7 @@ export default function BuscadorCliente({
         {abierto && (
           <ul
             role="listbox"
-            className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg bg-black py-1 shadow-xl ring-1 ring-white/10"
+            className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg bg-salvia-900 py-1 shadow-xl ring-1 ring-white/10"
           >
             {isLoading && <li className="px-3 py-2 text-sm text-white/50">Buscando…</li>}
             {!isLoading && resultados.length === 0 && (
@@ -116,7 +116,7 @@ export default function BuscadorCliente({
                   elegir(r.valor);
                 }}
                 className={`cursor-pointer px-3 py-2 text-sm ${
-                  i === activo ? "bg-white text-black" : "text-white"
+                  i === activo ? "bg-white text-salvia-950" : "text-white"
                 }`}
               >
                 {r.valor}
