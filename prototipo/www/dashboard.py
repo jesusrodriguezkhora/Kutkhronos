@@ -4,9 +4,13 @@ from frappe.utils import get_system_timezone
 no_cache = 1
 
 
-def get_context():
+def get_context(context):
+	# Token CSRF de la sesión actual. Servir la página es una petición GET, en la que Frappe
+	# no confirma cambios automáticamente: si el token se acaba de generar, hay que guardarlo.
 	csrf_token = frappe.sessions.get_csrf_token()
-	context = frappe._dict()
+	frappe.db.commit()
+
+	context.csrf_token = csrf_token
 	context.boot = get_boot()
 	context.boot.csrf_token = csrf_token
 	return context
