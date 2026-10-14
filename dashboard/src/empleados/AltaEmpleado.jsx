@@ -13,7 +13,51 @@ const VACIO = {
   telefono: "",
   password: "",
   confirmacion: "",
+  rol: "Empleado",
 };
+
+const ROLES = [
+  { valor: "Empleado", descripcion: "Imputa horas en los proyectos." },
+  { valor: "Coordinador", descripcion: "Además, gestiona proyectos y empleados." },
+];
+
+function SelectorRol({ valor, onChange }) {
+  return (
+    <fieldset className="sm:col-span-2">
+      <legend className={clases.etiqueta}>
+        Rol<span className="text-salvia-950"> *</span>
+      </legend>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {ROLES.map((r) => {
+          const elegido = valor === r.valor;
+          return (
+            <label
+              key={r.valor}
+              className={`flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3 transition-colors ${
+                elegido
+                  ? "border-salvia-700 bg-salvia-100 ring-2 ring-salvia"
+                  : "border-salvia-900/15 hover:bg-salvia-50"
+              }`}
+            >
+              <input
+                type="radio"
+                name="rol"
+                value={r.valor}
+                checked={elegido}
+                onChange={() => onChange(r.valor)}
+                className="mt-0.5 accent-salvia-700"
+              />
+              <span>
+                <span className="block text-sm font-semibold">{r.valor}</span>
+                <span className="block text-xs text-salvia-950/60">{r.descripcion}</span>
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
 
 // Sin caracteres que se confunden al leerlos o dictarlos (I, l, 1, O, 0)
 const CARACTERES = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*?";
@@ -105,6 +149,7 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
         email: datos.email,
         password: datos.password,
         telefono: datos.telefono,
+        rol: datos.rol,
       });
       setCreado({ email: datos.email.trim().toLowerCase(), password: datos.password });
       onCreado();
@@ -141,7 +186,7 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
 
   // --- Formulario de alta ---
   return (
-    <Modal titulo="Nuevo empleado" subtitulo="Se creará una cuenta con el rol Empleado" onCerrar={cerrar}>
+    <Modal titulo="Nuevo empleado" subtitulo={`Se creará una cuenta con el rol ${datos.rol}`} onCerrar={cerrar}>
       <form onSubmit={guardar} className="flex min-h-0 flex-col">
         <div className="grid gap-5 overflow-y-auto p-6 sm:grid-cols-2">
           <Campo
@@ -170,6 +215,8 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
             value={datos.telefono}
             onChange={(e) => cambiar("telefono", e.target.value)}
           />
+
+          <SelectorRol valor={datos.rol} onChange={(v) => cambiar("rol", v)} />
 
           <div className="border-t border-salvia-900/10 pt-4 sm:col-span-2">
             <h3 className="text-sm font-bold">Contraseña inicial</h3>

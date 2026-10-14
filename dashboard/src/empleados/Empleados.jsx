@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { useFrappeGetCall } from "frappe-react-sdk";
+import { useFrappeAuth, useFrappeGetCall } from "frappe-react-sdk";
 import FilaEmpleado from "./FilaEmpleado";
 import AltaEmpleado from "./AltaEmpleado";
+import EliminarEmpleado from "./EliminarEmpleado";
 import { GRID } from "./tabla";
 import { ESTILOS } from "../lib/estilos";
 
@@ -31,6 +32,8 @@ export default function Empleados() {
   );
   const [busqueda, setBusqueda] = useState("");
   const [altaAbierta, setAltaAbierta] = useState(false);
+  const [aEliminar, setAEliminar] = useState(null); // empleado pendiente de confirmar borrado
+  const { currentUser } = useFrappeAuth();
 
   // Si la petición falló, no mostramos datos anteriores
   const empleados = error ? [] : data?.message ?? [];
@@ -89,6 +92,7 @@ export default function Empleados() {
             <span>Rol</span>
             <span>Estado</span>
             <span>Alta</span>
+            <span className="sr-only">Acciones</span>
           </div>
 
           {isLoading && (
@@ -107,7 +111,12 @@ export default function Empleados() {
 
           <div className="divide-y divide-salvia-900/10 bg-white">
             {filtrados.map((e) => (
-              <FilaEmpleado key={e.name} empleado={e} />
+              <FilaEmpleado
+                key={e.name}
+                empleado={e}
+                puedeEliminar={e.name !== currentUser}
+                onEliminar={() => setAEliminar(e)}
+              />
             ))}
           </div>
         </div>
@@ -115,6 +124,14 @@ export default function Empleados() {
 
       {altaAbierta && (
         <AltaEmpleado onCerrar={() => setAltaAbierta(false)} onCreado={() => mutate()} />
+      )}
+
+      {aEliminar && (
+        <EliminarEmpleado
+          empleado={aEliminar}
+          onCerrar={() => setAEliminar(null)}
+          onEliminado={() => mutate()}
+        />
       )}
     </section>
   );
