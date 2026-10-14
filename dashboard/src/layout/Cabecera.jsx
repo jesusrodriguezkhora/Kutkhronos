@@ -1,13 +1,12 @@
 import { NavLink } from "react-router-dom";
 import { NOMBRE_APP } from "../lib/marca";
-import logo from "../images/Khora_Symbol_CMYK.svg";
 
 export default function Cabecera({ nombre, modulos, onCerrarSesion }) {
   return (
     <header className="bg-salvia-900">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-8 px-8">
         <div className="flex items-center gap-10">
-          <img src={logo} alt={NOMBRE_APP} className="h-9 w-auto py-0.5" />
+          <span className="py-4 text-lg font-bold text-salvia-200">{NOMBRE_APP}</span>
 
           <nav aria-label="Módulos" className="flex gap-1">
             {modulos.map((m) => (

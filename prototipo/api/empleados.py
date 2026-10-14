@@ -1,7 +1,7 @@
 import frappe
 from frappe.utils import validate_email_address
 
-from prototipo.roles import ROL_CEO, ROL_COORDINADOR, ROL_EMPLEADO, ROLES_GESTION, exigir_rol
+from prototipo.roles import ROL_COORDINADOR, ROL_EMPLEADO, ROLES_GESTION, exigir_rol
 
 CAMPOS_USUARIO = [
 	"name",
@@ -46,16 +46,9 @@ def listar_empleados():
 
 
 @frappe.whitelist(methods=["POST"])
-def crear_empleado(nombre, apellidos, email, password, telefono=None, rol=ROL_EMPLEADO):
-	"""Crea una cuenta de empleado o coordinador. Solo para coordinadores y CEO.
-
-	Los coordinadores también llevan el rol Empleado, para que aparezcan en el listado e imputen horas.
-	"""
+def crear_empleado(nombre, apellidos, email, password, telefono=None):
+	"""Crea una cuenta con el rol Empleado. Solo para coordinadores y CEO."""
 	exigir_rol(*ROLES_GESTION)
-
-	if rol not in (ROL_EMPLEADO, ROL_COORDINADOR):
-		frappe.throw("El rol debe ser Empleado o Coordinador.")
-	roles = [ROL_EMPLEADO] if rol == ROL_EMPLEADO else [ROL_EMPLEADO, ROL_COORDINADOR]
 
 	nombre = (nombre or "").strip()
 	apellidos = (apellidos or "").strip()
@@ -81,33 +74,9 @@ def crear_empleado(nombre, apellidos, email, password, telefono=None, rol=ROL_EM
 			"mobile_no": telefono,
 			"send_welcome_email": 0,
 			"new_password": password,
-			"roles": [{"role": r} for r in roles],
+			"roles": [{"role": ROL_EMPLEADO}],
 		}
 	)
 	usuario.insert(ignore_permissions=True)
 
 	return {"name": usuario.name}
-
-
-@frappe.whitelist(methods=["POST"])
-def eliminar_empleado(usuario):
-	"""Borra definitivamente la cuenta de un empleado o coordinador. Solo para coordinadores y CEO."""
-	exigir_rol(*ROLES_GESTION)
-
-	if usuario in USUARIOS_SISTEMA:
-		frappe.throw("Esta cuenta es del sistema y no se puede eliminar.")
-	if usuario == frappe.session.user:
-		frappe.throw("No puedes eliminar tu propia cuenta.")
-	if not frappe.db.exists("User", usuario) or usuario not in usuarios_con_rol(ROL_EMPLEADO):
-		frappe.throw("No existe ningún empleado con esa cuenta.")
-	if usuario in usuarios_con_rol(ROL_CEO):
-		frappe.throw("Las cuentas con el rol CEO no se pueden eliminar desde aquí.")
-
-	try:
-		frappe.delete_doc("User", usuario, ignore_permissions=True)
-	except frappe.LinkExistsError:
-		frappe.throw(
-			"No se puede eliminar porque la cuenta tiene registros asociados. Desactívala en su lugar."
-		)
-
-	return {"name": usuario}
