@@ -269,3 +269,9 @@ fixtures = [
 	{"dt": "Role", "filters": [["name", "in", ["Empleado", "Coordinador", "CEO"]]]},
 	{"dt": "Custom DocPerm", "filters": [["parent", "=", "Customer"]]},
 ]
+
+role_home_page = {
+	"Empleado": "dashboard",
+	"Coordinador": "dashboard",
+	"CEO": "dashboard",
+}
