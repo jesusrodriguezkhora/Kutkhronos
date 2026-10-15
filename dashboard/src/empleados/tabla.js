@@ -1,4 +1,8 @@
-// Plantilla de columnas compartida por cabecera y filas:
+// Plantillas de columnas compartidas por cabecera y filas:
 // nombre | correo | teléfono | rol | estado | alta | acciones
 export const GRID =
   "grid grid-cols-[minmax(12rem,1.5fr)_minmax(14rem,1.5fr)_9rem_8rem_7rem_7rem_9rem] items-center gap-x-4";
+
+// Con los datos laborales: nombre | correo | teléfono | rol | posición | coste/h | estado | alta | acciones
+export const GRID_LABORAL =
+  "grid grid-cols-[minmax(12rem,1.5fr)_minmax(14rem,1.5fr)_9rem_8rem_9rem_6rem_7rem_7rem_9rem] items-center gap-x-4";

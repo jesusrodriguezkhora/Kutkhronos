@@ -1,5 +1,5 @@
-import { GRID } from "./tabla";
-import { formatearFecha } from "../lib/formato";
+import { GRID, GRID_LABORAL } from "./tabla";
+import { formatearCosteHora, formatearFecha } from "../lib/formato";
 
 function iniciales(nombre) {
   return (nombre || "?")
@@ -22,12 +22,12 @@ function Rol({ rol }) {
   );
 }
 
-export default function FilaEmpleado({ empleado, onEditar, onEliminar }) {
+export default function FilaEmpleado({ empleado, veLaborales, onEditar, onEliminar }) {
   const activo = Boolean(empleado.enabled);
 
   return (
     <div
-      className={`${GRID} px-4 py-3 text-sm transition-colors hover:bg-salvia/15 ${
+      className={`${veLaborales ? GRID_LABORAL : GRID} px-4 py-3 text-sm transition-colors hover:bg-salvia/15 ${
         activo ? "" : "opacity-50"
       }`}
     >
@@ -44,6 +44,15 @@ export default function FilaEmpleado({ empleado, onEditar, onEliminar }) {
       <div>
         <Rol rol={empleado.rol} />
       </div>
+
+      {veLaborales && (
+        <>
+          <div className="text-salvia-950/70">{empleado.posicion || "—"}</div>
+          <div className="tabular-nums text-salvia-950/70">
+            {formatearCosteHora(empleado.coste_hora)}
+          </div>
+        </>
+      )}
 
       <div className={activo ? "text-salvia-950" : "text-salvia-950/50"}>
         {activo ? "Activo" : "Desactivado"}

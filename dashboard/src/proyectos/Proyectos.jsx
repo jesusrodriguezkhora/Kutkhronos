@@ -5,6 +5,7 @@ import Filtros from "./Filtros";
 import FichaProyecto from "./FichaProyecto";
 import { GRID } from "./tabla";
 import { useDebounced } from "../hooks/useDebounced";
+import { mensajeDeError } from "../lib/errores";
 
 const FILTROS_VACIOS = {
   cliente: "",
@@ -134,7 +135,7 @@ export default function Proyectos() {
           )}
           {error && (
             <p className="px-4 py-6 text-sm text-red-600">
-              Error al cargar proyectos: {error.message}
+              Error al cargar proyectos: {mensajeDeError(error)}
             </p>
           )}
           {!isLoading && !error && proyectos.length === 0 && (

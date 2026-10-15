@@ -16,3 +16,16 @@ export function formatearFecha(valor) {
   const [anio, mes, dia] = valor.split("-");
   return `${dia}/${mes}/${anio}`;
 }
+
+const eurosConDecimales = new Intl.NumberFormat("es-ES", {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+  useGrouping: "always",
+});
+
+export function formatearCosteHora(valor) {
+  if (valor === null || valor === undefined) return "—";
+  return `${eurosConDecimales.format(valor)}/h`;
+}

@@ -14,8 +14,12 @@ ROLES_GESTION = (ROL_COORDINADOR, ROL_CEO, ROL_ADMINISTRACION)
 # System Manager es el rol de administrador de Frappe (el usuario Administrator siempre lo tiene).
 ROLES_DIRECCION = (ROL_CEO, ROL_ADMINISTRACION, "System Manager")
 
+# Roles que ven y editan los datos laborales (posición, salario, horas, coste por hora)
+ROLES_DATOS_LABORALES = ROLES_DIRECCION
+
 # Rol que se elige en la SPA → roles de Frappe que recibe la cuenta.
 # Los coordinadores también son empleados (imputan horas).
+# CEO no se puede asignar desde la SPA (ver roles_asignables), pero se mantiene en las cuentas que ya lo tienen.
 ROLES_ASIGNABLES = {
 	ROL_EMPLEADO: [ROL_EMPLEADO],
 	ROL_COORDINADOR: [ROL_EMPLEADO, ROL_COORDINADOR],
@@ -44,7 +48,7 @@ def rol_principal(roles):
 
 
 def roles_asignables():
-	"""Roles que el usuario de la sesión puede dar a otras cuentas. Los de dirección, solo dirección."""
+	"""Roles que el usuario de la sesión puede dar a otras cuentas. CEO no se asigna desde la SPA."""
 	if tiene_rol(*ROLES_DIRECCION):
-		return list(ORDEN_ROLES[::-1])
+		return [ROL_EMPLEADO, ROL_COORDINADOR, ROL_ADMINISTRACION]
 	return [ROL_EMPLEADO, ROL_COORDINADOR]

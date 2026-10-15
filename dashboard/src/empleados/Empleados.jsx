@@ -5,9 +5,10 @@ import AltaEmpleado from "./AltaEmpleado";
 import EditarEmpleado from "./EditarEmpleado";
 import ConfirmarEliminacion from "../componentes/ConfirmarEliminacion";
 import IconoBuscar from "../componentes/IconoBuscar";
-import { GRID } from "./tabla";
+import { GRID, GRID_LABORAL } from "./tabla";
 import { ESTILOS } from "../lib/estilos";
 import { normalizar } from "../lib/texto";
+import { mensajeDeError } from "../lib/errores";
 
 export default function Empleados() {
   const { data, error, isLoading, mutate } = useFrappeGetCall(
@@ -21,6 +22,7 @@ export default function Empleados() {
   // Ya cargado por Inicio, así que sale de la caché sin otra petición
   const { data: perfil } = useFrappeGetCall("prototipo.api.sesion.mi_perfil");
   const roles = perfil?.message?.roles_asignables ?? [];
+  const veLaborales = Boolean(perfil?.message?.ve_datos_laborales);
 
   // Si la petición falló, no mostramos datos anteriores
   const empleados = useMemo(() => (error ? [] : data?.message ?? []), [data, error]);
@@ -29,7 +31,7 @@ export default function Empleados() {
     const texto = normalizar(busqueda.trim());
     if (!texto) return empleados;
     return empleados.filter((e) =>
-      normalizar(`${e.full_name} ${e.email} ${e.mobile_no ?? ""} ${e.rol}`).includes(texto)
+      normalizar(`${e.full_name} ${e.email} ${e.mobile_no ?? ""} ${e.rol} ${e.posicion ?? ""}`).includes(texto)
     );
   }, [empleados, busqueda]);
 
@@ -69,14 +71,24 @@ export default function Empleados() {
       </div>
 
       <div className="overflow-x-auto">
-        <div className="min-w-[1050px] overflow-hidden rounded-xl border border-salvia-900/10">
+        <div
+          className={`${
+            veLaborales ? "min-w-[1300px]" : "min-w-[1050px]"
+          } overflow-hidden rounded-xl border border-salvia-900/10`}
+        >
           <div
-            className={`${GRID} bg-salvia-900 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-salvia-200`}
+            className={`${veLaborales ? GRID_LABORAL : GRID} bg-salvia-900 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-salvia-200`}
           >
             <span>Nombre</span>
             <span>Correo</span>
             <span>Teléfono</span>
             <span>Rol</span>
+            {veLaborales && (
+              <>
+                <span>Posición</span>
+                <span>Coste/h</span>
+              </>
+            )}
             <span>Estado</span>
             <span>Alta</span>
             <span />
@@ -87,7 +99,7 @@ export default function Empleados() {
           )}
           {error && (
             <p className="px-4 py-6 text-sm text-red-600">
-              Error al cargar empleados: {error.message}
+              Error al cargar empleados: {mensajeDeError(error)}
             </p>
           )}
           {!isLoading && !error && filtrados.length === 0 && (
@@ -101,6 +113,7 @@ export default function Empleados() {
               <FilaEmpleado
                 key={e.name}
                 empleado={e}
+                veLaborales={veLaborales}
                 onEditar={setAEditar}
                 onEliminar={setAEliminar}
               />
@@ -112,6 +125,7 @@ export default function Empleados() {
       {altaAbierta && (
         <AltaEmpleado
           roles={roles}
+          veLaborales={veLaborales}
           onCerrar={() => setAltaAbierta(false)}
           onCreado={() => mutate()}
         />
@@ -121,6 +135,7 @@ export default function Empleados() {
         <EditarEmpleado
           empleado={aEditar}
           roles={roles}
+          veLaborales={veLaborales}
           onCerrar={() => setAEditar(null)}
           onGuardado={() => mutate()}
         />

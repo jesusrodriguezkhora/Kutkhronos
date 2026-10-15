@@ -1,0 +1,107 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:usuario",
+ "creation": "2026-10-15 17:00:00.000000",
+ "description": "Datos laborales de una cuenta. Solo los ven CEO, Administracion y System Manager.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "usuario",
+  "posicion",
+  "salario_anual",
+  "horas_semanales",
+  "coste_hora"
+ ],
+ "fields": [
+  {
+   "fieldname": "usuario",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Usuario",
+   "options": "User",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "posicion",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Posici\u00f3n",
+   "options": "\nPr\u00e1cticas\nConsultor Junior\nConsultor Senior\nCoordinador\nCEO"
+  },
+  {
+   "fieldname": "salario_anual",
+   "fieldtype": "Currency",
+   "label": "Salario bruto anual",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "horas_semanales",
+   "fieldtype": "Float",
+   "label": "Horas semanales",
+   "non_negative": 1
+  },
+  {
+   "description": "Salario anual / (horas semanales \u00d7 52). Se calcula al guardar.",
+   "fieldname": "coste_hora",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Coste por hora",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-15 17:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Prototipo",
+ "name": "Datos Laborales",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CEO",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Administracion",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

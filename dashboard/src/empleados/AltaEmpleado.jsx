@@ -3,8 +3,8 @@ import { useFrappePostCall } from "frappe-react-sdk";
 import Modal from "../componentes/Modal";
 import { mensajeDeError } from "../lib/errores";
 import { completarDominio } from "../lib/correo";
-import { Campo, Copiable, SelectorRol } from "./campos";
-import { generarContrasena } from "./formulario";
+import { CamposLaborales, Campo, Copiable, SelectorRol } from "./campos";
+import { generarContrasena, laboralesIniciales } from "./formulario";
 
 const VACIO = {
   nombre: "",
@@ -12,11 +12,12 @@ const VACIO = {
   email: "",
   telefono: "",
   rol: "Empleado",
+  ...laboralesIniciales(null),
   password: "",
   confirmacion: "",
 };
 
-export default function AltaEmpleado({ roles, onCerrar, onCreado }) {
+export default function AltaEmpleado({ roles, veLaborales, onCerrar, onCreado }) {
   const [datos, setDatos] = useState(VACIO);
   const [verPassword, setVerPassword] = useState(false);
   const [error, setError] = useState(null);
@@ -55,6 +56,12 @@ export default function AltaEmpleado({ roles, onCerrar, onCreado }) {
         password: datos.password,
         telefono: datos.telefono,
         rol: datos.rol,
+        // Solo quien puede verlos los envía; si no, el servidor rechazaría la petición
+        ...(veLaborales && {
+          posicion: datos.posicion,
+          salario_anual: datos.salario_anual,
+          horas_semanales: datos.horas_semanales,
+        }),
       });
       setCreado({ email: datos.email.trim().toLowerCase(), password: datos.password });
       onCreado();
@@ -123,6 +130,8 @@ export default function AltaEmpleado({ roles, onCerrar, onCreado }) {
           <div className="sm:col-span-2">
             <SelectorRol roles={roles} valor={datos.rol} onCambiar={(rol) => cambiar("rol", rol)} />
           </div>
+
+          {veLaborales && <CamposLaborales datos={datos} onCambiar={cambiar} />}
 
           <div className="border-t border-salvia-900/10 pt-4 sm:col-span-2">
             <h3 className="text-sm font-bold">Contraseña inicial</h3>

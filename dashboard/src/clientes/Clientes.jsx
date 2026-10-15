@@ -7,6 +7,7 @@ import IconoBuscar from "../componentes/IconoBuscar";
 import { GRID } from "./tabla";
 import { ESTILOS } from "../lib/estilos";
 import { normalizar } from "../lib/texto";
+import { mensajeDeError } from "../lib/errores";
 
 export default function Clientes() {
   const { data, error, isLoading, mutate } = useFrappeGetCall(
@@ -79,7 +80,7 @@ export default function Clientes() {
           )}
           {error && (
             <p className="px-4 py-6 text-sm text-red-600">
-              Error al cargar clientes: {error.message}
+              Error al cargar clientes: {mensajeDeError(error)}
             </p>
           )}
           {!isLoading && !error && filtrados.length === 0 && (

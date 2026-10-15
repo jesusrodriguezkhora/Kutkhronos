@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useFrappePostCall } from "frappe-react-sdk";
 import Modal from "../componentes/Modal";
 import { mensajeDeError } from "../lib/errores";
-import { Campo, Copiable, SelectorRol } from "./campos";
-import { clases, generarContrasena } from "./formulario";
+import { CamposLaborales, Campo, Copiable, SelectorRol } from "./campos";
+import { clases, generarContrasena, laboralesIniciales } from "./formulario";
 
 function datosIniciales(empleado) {
   return {
@@ -12,11 +12,14 @@ function datosIniciales(empleado) {
     telefono: empleado.mobile_no || "",
     rol: empleado.rol,
     activo: Boolean(empleado.enabled),
+    ...laboralesIniciales(empleado),
     password: "",
   };
 }
 
-export default function EditarEmpleado({ empleado, roles, onCerrar, onGuardado }) {
+export default function EditarEmpleado({ empleado, roles, veLaborales, onCerrar, onGuardado }) {
+  // Una cuenta puede conservar un rol que ya no se asigna desde aquí (CEO)
+  const opcionesRol = roles.includes(empleado.rol) ? roles : [...roles, empleado.rol];
   const [inicial] = useState(() => datosIniciales(empleado));
   const [datos, setDatos] = useState(inicial);
   const [verPassword, setVerPassword] = useState(false);
@@ -54,6 +57,12 @@ export default function EditarEmpleado({ empleado, roles, onCerrar, onGuardado }
         rol: datos.rol,
         activo: datos.activo ? 1 : 0,
         password: datos.password || null,
+        // Solo quien puede verlos los envía; si no, el servidor rechazaría la petición
+        ...(veLaborales && {
+          posicion: datos.posicion,
+          salario_anual: datos.salario_anual,
+          horas_semanales: datos.horas_semanales,
+        }),
       });
       onGuardado();
       if (datos.password) {
@@ -129,8 +138,10 @@ export default function EditarEmpleado({ empleado, roles, onCerrar, onGuardado }
           </div>
 
           <div className="sm:col-span-2">
-            <SelectorRol roles={roles} valor={datos.rol} onCambiar={(rol) => cambiar("rol", rol)} />
+            <SelectorRol roles={opcionesRol} valor={datos.rol} onCambiar={(rol) => cambiar("rol", rol)} />
           </div>
+
+          {veLaborales && <CamposLaborales datos={datos} onCambiar={cambiar} />}
 
           <div className="border-t border-salvia-900/10 pt-4 sm:col-span-2">
             <h3 className="text-sm font-bold">Cambiar contraseña</h3>

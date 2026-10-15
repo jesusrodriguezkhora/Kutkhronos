@@ -41,6 +41,15 @@ def actualizar_saldo(acuerdo, excluir=None):
 	)
 
 
+def continuar_serie(nueva, anterior):
+	"""Crea el contador de la serie nueva con el valor del de la anterior, si la nueva aún no existe."""
+	if frappe.db.sql("select 1 from `tabSeries` where name = %s", nueva):
+		return
+	actual = frappe.db.sql("select current from `tabSeries` where name = %s", anterior)
+	if actual:
+		frappe.db.sql("insert into `tabSeries` (name, current) values (%s, %s)", (nueva, actual[0][0]))
+
+
 class Proyecto(Document):
 	# begin: auto-generated types
 	# ... (conserva aquí el bloque de tu fichero)
@@ -51,8 +60,12 @@ class Proyecto(Document):
 			# Contrato basado: código del acuerdo + correlativo propio de ese acuerdo
 			self.name = f"{self.acuerdo_marco}-{getseries(self.acuerdo_marco + '-', 2)}"
 		elif self.tipo in PREFIJOS:
+			prefijo = PREFIJOS[self.tipo]
 			anio = nowdate()[:4]
-			self.name = make_autoname(f"{PREFIJOS[self.tipo]}-{anio}-.###")
+			# Año en dos cifras (CON-26-001). La serie sigue la numeración que ya tuviera
+			# ese año con el formato anterior de cuatro cifras (CON-2026-001)
+			continuar_serie(f"{prefijo}-{anio[2:]}-", f"{prefijo}-{anio}-")
+			self.name = make_autoname(f"{prefijo}-{anio[2:]}-.###")
 		else:
 			frappe.throw("Un contrato basado solo puede crearse desde un acuerdo marco.")
 
