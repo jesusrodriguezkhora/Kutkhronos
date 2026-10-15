@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useFrappeAuth, useFrappeGetCall } from "frappe-react-sdk";
 import Login from "./auth/Login";
@@ -7,6 +8,13 @@ import { MODULOS } from "./modulos";
 
 function Aplicacion({ onCerrarSesion }) {
   const { data, error, isLoading } = useFrappeGetCall("prototipo.api.sesion.mi_perfil");
+
+  // Reserva el hueco de la barra de desplazamiento: así la cabecera y el contenido miden lo mismo
+  // en páginas cortas (sin barra) y largas (con barra)
+  useEffect(() => {
+    document.documentElement.classList.add("con-aplicacion");
+    return () => document.documentElement.classList.remove("con-aplicacion");
+  }, []);
 
   if (isLoading) {
     return <p className="p-8 text-salvia-950/50">Cargando…</p>;

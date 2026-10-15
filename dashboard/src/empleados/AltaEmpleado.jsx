@@ -1,71 +1,20 @@
 import { useState } from "react";
 import { useFrappePostCall } from "frappe-react-sdk";
 import Modal from "../componentes/Modal";
-import { ESTILOS } from "../lib/estilos";
 import { mensajeDeError } from "../lib/errores";
-
-const clases = ESTILOS.claro;
+import { completarDominio } from "../lib/correo";
+import { Campo, Copiable, SelectorRol } from "./campos";
+import { generarContrasena } from "./formulario";
 
 const VACIO = {
   nombre: "",
   apellidos: "",
   email: "",
   telefono: "",
+  rol: "Empleado",
   password: "",
   confirmacion: "",
 };
-
-// Sin caracteres que se confunden al leerlos o dictarlos (I, l, 1, O, 0)
-const CARACTERES = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*?";
-
-function generarContrasena(longitud = 14) {
-  const aleatorios = crypto.getRandomValues(new Uint32Array(longitud));
-  return Array.from(aleatorios, (n) => CARACTERES[n % CARACTERES.length]).join("");
-}
-
-function Campo({ etiqueta, obligatorio, ...props }) {
-  return (
-    <label className="block">
-      <span className={clases.etiqueta}>
-        {etiqueta}
-        {obligatorio && <span className="text-salvia-950"> *</span>}
-      </span>
-      <input className={clases.campo} {...props} />
-    </label>
-  );
-}
-
-function Copiable({ etiqueta, valor }) {
-  const [copiado, setCopiado] = useState(false);
-
-  const copiar = async () => {
-    try {
-      await navigator.clipboard.writeText(valor);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2000);
-    } catch {
-      window.alert("No se ha podido copiar. Selecciona el texto y cópialo manualmente.");
-    }
-  };
-
-  return (
-    <div>
-      <span className={clases.etiqueta}>{etiqueta}</span>
-      <div className="flex gap-2">
-        <code className="flex-1 break-all rounded-lg bg-salvia-900/5 px-3 py-2 font-mono text-sm">
-          {valor}
-        </code>
-        <button
-          type="button"
-          onClick={copiar}
-          className="w-24 rounded-lg border border-salvia-900/15 text-sm font-medium hover:bg-salvia"
-        >
-          {copiado ? "Copiado ✓" : "Copiar"}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 export default function AltaEmpleado({ onCerrar, onCreado }) {
   const [datos, setDatos] = useState(VACIO);
@@ -105,6 +54,7 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
         email: datos.email,
         password: datos.password,
         telefono: datos.telefono,
+        rol: datos.rol,
       });
       setCreado({ email: datos.email.trim().toLowerCase(), password: datos.password });
       onCreado();
@@ -141,7 +91,7 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
 
   // --- Formulario de alta ---
   return (
-    <Modal titulo="Nuevo empleado" subtitulo="Se creará una cuenta con el rol Empleado" onCerrar={cerrar}>
+    <Modal titulo="Nuevo empleado" subtitulo="Se creará una cuenta con el rol elegido" onCerrar={cerrar}>
       <form onSubmit={guardar} className="flex min-h-0 flex-col">
         <div className="grid gap-5 overflow-y-auto p-6 sm:grid-cols-2">
           <Campo
@@ -161,7 +111,7 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
             type="email"
             autoComplete="off"
             value={datos.email}
-            onChange={(e) => cambiar("email", e.target.value)}
+            onChange={(e) => cambiar("email", completarDominio(datos.email, e.target.value))}
           />
           <Campo
             etiqueta="Teléfono"
@@ -170,6 +120,9 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
             value={datos.telefono}
             onChange={(e) => cambiar("telefono", e.target.value)}
           />
+          <div className="sm:col-span-2">
+            <SelectorRol valor={datos.rol} onCambiar={(rol) => cambiar("rol", rol)} />
+          </div>
 
           <div className="border-t border-salvia-900/10 pt-4 sm:col-span-2">
             <h3 className="text-sm font-bold">Contraseña inicial</h3>

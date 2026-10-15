@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NOMBRE_APP } from "../lib/marca";
+import { DOMINIO_CORREO, completarDominio } from "../lib/correo";
 import logo from "../images/Khora_Symbol_CMYK.svg";
 import RecuperarPassword from "./RecuperarPassword";
 
@@ -64,12 +65,12 @@ export default function Login({ onLogin }) {
                   </span>
                   <input
                     className={CAMPO}
-                    placeholder="nombre@empresa.com"
+                    placeholder={`nombre@${DOMINIO_CORREO}`}
                     autoComplete="username"
                     autoFocus
                     required
                     value={usuario}
-                    onChange={(e) => setUsuario(e.target.value)}
+                    onChange={(e) => setUsuario(completarDominio(usuario, e.target.value))}
                   />
                 </label>
 

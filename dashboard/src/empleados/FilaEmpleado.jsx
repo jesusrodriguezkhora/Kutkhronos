@@ -1,4 +1,4 @@
-import { GRID, GRID_ADMIN } from "./tabla";
+import { GRID } from "./tabla";
 import { formatearFecha } from "../lib/formato";
 
 function iniciales(nombre) {
@@ -22,12 +22,12 @@ function Rol({ esCoordinador }) {
   );
 }
 
-export default function FilaEmpleado({ empleado, onEliminar }) {
+export default function FilaEmpleado({ empleado, onEditar, onEliminar }) {
   const activo = Boolean(empleado.enabled);
 
   return (
     <div
-      className={`${onEliminar ? GRID_ADMIN : GRID} px-4 py-3 text-sm transition-colors hover:bg-salvia/15 ${
+      className={`${GRID} px-4 py-3 text-sm transition-colors hover:bg-salvia/15 ${
         activo ? "" : "opacity-50"
       }`}
     >
@@ -53,17 +53,27 @@ export default function FilaEmpleado({ empleado, onEliminar }) {
         {formatearFecha(empleado.creation?.slice(0, 10))}
       </div>
 
-      {onEliminar && (
-        <div className="text-right">
-          <button
-            type="button"
-            onClick={() => onEliminar(empleado)}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50"
-          >
-            Eliminar
-          </button>
-        </div>
-      )}
+      {/* Sin botones en la cuenta propia ni en las de dirección (si no eres de dirección) */}
+      <div className="flex justify-end gap-1">
+        {empleado.editable && (
+          <>
+            <button
+              type="button"
+              onClick={() => onEditar(empleado)}
+              className="rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-salvia-900/5"
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              onClick={() => onEliminar(empleado)}
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50"
+            >
+              Eliminar
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

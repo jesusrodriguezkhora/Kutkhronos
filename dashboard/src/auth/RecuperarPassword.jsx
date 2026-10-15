@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useFrappePostCall } from "frappe-react-sdk";
 import { CAMPO, BOTON_PRINCIPAL, ENLACE } from "./Login";
+import { DOMINIO_CORREO, completarDominio } from "../lib/correo";
 
 export default function RecuperarPassword({ logo, emailInicial, onVolver }) {
   const [email, setEmail] = useState(emailInicial || "");
@@ -63,10 +64,10 @@ export default function RecuperarPassword({ logo, emailInicial, onVolver }) {
           required
           autoFocus
           className={CAMPO}
-          placeholder="nombre@empresa.com"
+          placeholder={`nombre@${DOMINIO_CORREO}`}
           autoComplete="username"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => setEmail(completarDominio(email, e.target.value))}
         />
       </label>
 

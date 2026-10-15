@@ -266,7 +266,7 @@ app_license = "mit"
 website_route_rules = [{'from_route': '/dashboard/<path:app_path>', 'to_route': 'dashboard'},]
 
 fixtures = [
-	{"dt": "Role", "filters": [["name", "in", ["Empleado", "Coordinador", "CEO"]]]},
+	{"dt": "Role", "filters": [["name", "in", ["Empleado", "Coordinador", "CEO", "Administracion"]]]},
 	{"dt": "Custom DocPerm", "filters": [["parent", "=", "Customer"]]},
 ]
 
@@ -274,4 +274,5 @@ role_home_page = {
 	"Empleado": "dashboard",
 	"Coordinador": "dashboard",
 	"CEO": "dashboard",
+	"Administracion": "dashboard",
 }
