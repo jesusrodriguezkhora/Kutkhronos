@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ROLES, clases } from "./formulario";
+import { clases } from "./formulario";
 
 // Campos compartidos por los formularios de alta y edición de empleados
 
@@ -15,14 +15,15 @@ export function Campo({ etiqueta, obligatorio, ...props }) {
   );
 }
 
-export function SelectorRol({ valor, onCambiar }) {
+// `roles`: los que el usuario puede asignar (mi_perfil.roles_asignables)
+export function SelectorRol({ roles, valor, onCambiar }) {
   return (
     <div>
       <span className={clases.etiqueta}>
         Rol<span className="text-salvia-950"> *</span>
       </span>
       <div role="radiogroup" aria-label="Rol" className="flex gap-2">
-        {ROLES.map((rol) => (
+        {roles.map((rol) => (
           <button
             key={rol}
             type="button"

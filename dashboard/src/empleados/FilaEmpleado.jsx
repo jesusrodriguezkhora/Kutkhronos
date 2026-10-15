@@ -10,14 +10,14 @@ function iniciales(nombre) {
     .join("");
 }
 
-function Rol({ esCoordinador }) {
-  return esCoordinador ? (
-    <span className="inline-block rounded-full bg-salvia-900 px-2.5 py-0.5 text-xs font-medium text-salvia-200">
-      Coordinador
-    </span>
-  ) : (
+function Rol({ rol }) {
+  return rol === "Empleado" ? (
     <span className="inline-block rounded-full border border-salvia-900/30 px-2.5 py-0.5 text-xs font-medium">
       Empleado
+    </span>
+  ) : (
+    <span className="inline-block rounded-full bg-salvia-900 px-2.5 py-0.5 text-xs font-medium text-salvia-200">
+      {rol}
     </span>
   );
 }
@@ -42,7 +42,7 @@ export default function FilaEmpleado({ empleado, onEditar, onEliminar }) {
       <div className="tabular-nums text-salvia-950/70">{empleado.mobile_no || "—"}</div>
 
       <div>
-        <Rol esCoordinador={empleado.es_coordinador} />
+        <Rol rol={empleado.rol} />
       </div>
 
       <div className={activo ? "text-salvia-950" : "text-salvia-950/50"}>

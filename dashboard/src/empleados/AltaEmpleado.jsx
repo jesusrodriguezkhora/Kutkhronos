@@ -16,7 +16,7 @@ const VACIO = {
   confirmacion: "",
 };
 
-export default function AltaEmpleado({ onCerrar, onCreado }) {
+export default function AltaEmpleado({ roles, onCerrar, onCreado }) {
   const [datos, setDatos] = useState(VACIO);
   const [verPassword, setVerPassword] = useState(false);
   const [error, setError] = useState(null);
@@ -121,7 +121,7 @@ export default function AltaEmpleado({ onCerrar, onCreado }) {
             onChange={(e) => cambiar("telefono", e.target.value)}
           />
           <div className="sm:col-span-2">
-            <SelectorRol valor={datos.rol} onCambiar={(rol) => cambiar("rol", rol)} />
+            <SelectorRol roles={roles} valor={datos.rol} onCambiar={(rol) => cambiar("rol", rol)} />
           </div>
 
           <div className="border-t border-salvia-900/10 pt-4 sm:col-span-2">

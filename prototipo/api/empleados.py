@@ -2,11 +2,13 @@ import frappe
 from frappe.utils import cint, validate_email_address
 
 from prototipo.roles import (
-	ROL_COORDINADOR,
-	ROL_EMPLEADO,
+	ROLES_APP,
+	ROLES_ASIGNABLES,
 	ROLES_DIRECCION,
 	ROLES_GESTION,
 	exigir_rol,
+	rol_principal,
+	roles_asignables,
 	tiene_rol,
 )
 
@@ -23,23 +25,18 @@ CAMPOS_USUARIO = [
 
 USUARIOS_SISTEMA = ("Administrator", "Guest")
 
-# Roles que se pueden elegir desde la SPA y los roles de Frappe que recibe la cuenta.
-# Los coordinadores también son empleados (imputan horas y salen en la lista).
-ROLES_ASIGNABLES = {
-	ROL_EMPLEADO: [ROL_EMPLEADO],
-	ROL_COORDINADOR: [ROL_EMPLEADO, ROL_COORDINADOR],
-}
 
-
-def usuarios_con_rol(*roles):
-	"""Nombres de los usuarios que tienen alguno de los roles (se guardan en la tabla hija Has Role)."""
-	return set(
-		frappe.get_all(
-			"Has Role",
-			filters={"role": ["in", roles], "parenttype": "User"},
-			pluck="parent",
-		)
-	)
+def roles_por_usuario(*roles):
+	"""{usuario: {roles}} de los usuarios que tienen alguno de los roles indicados
+	(los roles de un usuario se guardan en la tabla hija Has Role)."""
+	resultado = {}
+	for fila in frappe.get_all(
+		"Has Role",
+		filters={"role": ["in", roles], "parenttype": "User"},
+		fields=["parent", "role"],
+	):
+		resultado.setdefault(fila.parent, set()).add(fila.role)
+	return resultado
 
 
 def comprobar_gestionable(usuario):
@@ -52,8 +49,8 @@ def comprobar_gestionable(usuario):
 		frappe.throw("La cuenta no existe.")
 
 	roles = set(frappe.get_roles(usuario))
-	if ROL_EMPLEADO not in roles:
-		frappe.throw("Solo se pueden gestionar cuentas de empleados.")
+	if not roles & set(ROLES_APP):
+		frappe.throw("Solo se pueden gestionar cuentas de la aplicación.")
 	if roles & set(ROLES_DIRECCION) and not tiene_rol(*ROLES_DIRECCION):
 		frappe.throw("No tienes permiso para modificar esta cuenta.", frappe.PermissionError)
 
@@ -66,41 +63,41 @@ def limpiar_datos(nombre, apellidos, telefono, rol):
 
 	if not nombre:
 		frappe.throw("El nombre es obligatorio.")
-	if rol not in ROLES_ASIGNABLES:
-		frappe.throw("El rol debe ser Empleado o Coordinador.")
+	if rol not in roles_asignables():
+		frappe.throw("No puedes asignar ese rol.", frappe.PermissionError)
 
 	return nombre, apellidos, telefono
 
 
 @frappe.whitelist()
 def listar_empleados():
-	"""Lista de cuentas con el rol Empleado. Solo para los roles de gestión."""
+	"""Todas las cuentas con algún rol de la aplicación. Solo para los roles de gestión."""
 	exigir_rol(*ROLES_GESTION)
 
-	empleados = usuarios_con_rol(ROL_EMPLEADO) - set(USUARIOS_SISTEMA)
-	if not empleados:
+	roles = roles_por_usuario(*ROLES_APP, *ROLES_DIRECCION)
+	cuentas = [u for u, r in roles.items() if r & set(ROLES_APP) and u not in USUARIOS_SISTEMA]
+	if not cuentas:
 		return []
 
-	coordinadores = usuarios_con_rol(ROL_COORDINADOR)
-	direccion = usuarios_con_rol(*ROLES_DIRECCION)
 	soy_direccion = tiene_rol(*ROLES_DIRECCION)
-
 	usuarios = frappe.get_all(
 		"User",
-		filters={"name": ["in", list(empleados)]},
+		filters={"name": ["in", cuentas]},
 		fields=CAMPOS_USUARIO,
 		order_by="full_name asc",
 	)
 	for u in usuarios:
-		u["es_coordinador"] = u.name in coordinadores
+		u["rol"] = rol_principal(roles[u.name])
 		# Mismas reglas que comprobar_gestionable, para que la SPA solo muestre los botones útiles
-		u["editable"] = u.name != frappe.session.user and (soy_direccion or u.name not in direccion)
+		u["editable"] = u.name != frappe.session.user and (
+			soy_direccion or not roles[u.name] & set(ROLES_DIRECCION)
+		)
 	return usuarios
 
 
 @frappe.whitelist(methods=["POST"])
-def crear_empleado(nombre, apellidos, email, password, telefono=None, rol=ROL_EMPLEADO):
-	"""Crea una cuenta de empleado o coordinador. Solo para los roles de gestión."""
+def crear_empleado(nombre, apellidos, email, password, telefono=None, rol="Empleado"):
+	"""Crea una cuenta con el rol elegido. Solo para los roles de gestión."""
 	exigir_rol(*ROLES_GESTION)
 
 	nombre, apellidos, telefono = limpiar_datos(nombre, apellidos, telefono, rol)
@@ -132,8 +129,8 @@ def crear_empleado(nombre, apellidos, email, password, telefono=None, rol=ROL_EM
 
 
 @frappe.whitelist(methods=["POST"])
-def modificar_empleado(usuario, nombre, apellidos=None, telefono=None, rol=ROL_EMPLEADO, activo=1, password=None):
-	"""Modifica los datos, el rol, el estado y, opcionalmente, la contraseña de una cuenta de empleado.
+def modificar_empleado(usuario, nombre, apellidos=None, telefono=None, rol="Empleado", activo=1, password=None):
+	"""Modifica los datos, el rol, el estado y, opcionalmente, la contraseña de una cuenta.
 	Solo para los roles de gestión."""
 	exigir_rol(*ROLES_GESTION)
 	comprobar_gestionable(usuario)
@@ -148,19 +145,18 @@ def modificar_empleado(usuario, nombre, apellidos=None, telefono=None, rol=ROL_E
 	if password:
 		doc.new_password = password
 
-	# Solo se añade o quita Coordinador; el resto de roles de la cuenta no se tocan
-	es_coordinador = any(r.role == ROL_COORDINADOR for r in doc.roles)
-	if rol == ROL_COORDINADOR and not es_coordinador:
-		doc.append("roles", {"role": ROL_COORDINADOR})
-	elif rol == ROL_EMPLEADO and es_coordinador:
-		doc.set("roles", [r for r in doc.roles if r.role != ROL_COORDINADOR])
+	# Si cambia el rol, se sustituyen los roles de la aplicación; el resto (System Manager…) se mantienen
+	if rol != rol_principal({r.role for r in doc.roles}):
+		doc.set("roles", [r for r in doc.roles if r.role not in ROLES_APP])
+		for r in ROLES_ASIGNABLES[rol]:
+			doc.append("roles", {"role": r})
 
 	doc.save(ignore_permissions=True)
 
 
 @frappe.whitelist(methods=["POST"])
 def eliminar_empleado(usuario):
-	"""Borra de la base de datos una cuenta de empleado. Solo para los roles de gestión."""
+	"""Borra de la base de datos una cuenta. Solo para los roles de gestión."""
 	exigir_rol(*ROLES_GESTION)
 	comprobar_gestionable(usuario)
 

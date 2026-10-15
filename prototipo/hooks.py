@@ -265,6 +265,9 @@ app_license = "mit"
 
 website_route_rules = [{'from_route': '/dashboard/<path:app_path>', 'to_route': 'dashboard'},]
 
+# La raíz del dominio lleva a la SPA, que muestra el login o la aplicación según haya sesión
+website_redirects = [{"source": "/", "target": "/dashboard", "redirect_http_status": 302}]
+
 fixtures = [
 	{"dt": "Role", "filters": [["name", "in", ["Empleado", "Coordinador", "CEO", "Administracion"]]]},
 	{"dt": "Custom DocPerm", "filters": [["parent", "=", "Customer"]]},

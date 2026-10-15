@@ -10,13 +10,13 @@ function datosIniciales(empleado) {
     nombre: empleado.first_name || "",
     apellidos: empleado.last_name || "",
     telefono: empleado.mobile_no || "",
-    rol: empleado.es_coordinador ? "Coordinador" : "Empleado",
+    rol: empleado.rol,
     activo: Boolean(empleado.enabled),
     password: "",
   };
 }
 
-export default function EditarEmpleado({ empleado, onCerrar, onGuardado }) {
+export default function EditarEmpleado({ empleado, roles, onCerrar, onGuardado }) {
   const [inicial] = useState(() => datosIniciales(empleado));
   const [datos, setDatos] = useState(inicial);
   const [verPassword, setVerPassword] = useState(false);
@@ -93,7 +93,7 @@ export default function EditarEmpleado({ empleado, onCerrar, onGuardado }) {
 
   // --- Formulario de edición ---
   return (
-    <Modal titulo="Editar empleado" subtitulo={empleado.email} onCerrar={cerrar}>
+    <Modal titulo="Editar cuenta" subtitulo={empleado.email} onCerrar={cerrar}>
       <form onSubmit={guardar} className="flex min-h-0 flex-col">
         <div className="grid gap-5 overflow-y-auto p-6 sm:grid-cols-2">
           <Campo
@@ -129,7 +129,7 @@ export default function EditarEmpleado({ empleado, onCerrar, onGuardado }) {
           </div>
 
           <div className="sm:col-span-2">
-            <SelectorRol valor={datos.rol} onCambiar={(rol) => cambiar("rol", rol)} />
+            <SelectorRol roles={roles} valor={datos.rol} onCambiar={(rol) => cambiar("rol", rol)} />
           </div>
 
           <div className="border-t border-salvia-900/10 pt-4 sm:col-span-2">

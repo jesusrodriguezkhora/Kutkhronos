@@ -1,16 +1,25 @@
 import { useState } from "react";
 import { useFrappePostCall } from "frappe-react-sdk";
-import Modal from "../componentes/Modal";
+import Modal from "./Modal";
 import { mensajeDeError } from "../lib/errores";
 
-export default function EliminarEmpleado({ empleado, onCerrar, onEliminado }) {
+// Confirmación antes de borrar un registro. `children` describe qué se borra;
+// al confirmar se llama a `metodo` (método de la API) con `argumentos`.
+export default function ConfirmarEliminacion({
+  titulo,
+  metodo,
+  argumentos,
+  onCerrar,
+  onEliminado,
+  children,
+}) {
   const [error, setError] = useState(null);
-  const { call, loading } = useFrappePostCall("prototipo.api.empleados.eliminar_empleado");
+  const { call, loading } = useFrappePostCall(metodo);
 
   const eliminar = async () => {
     setError(null);
     try {
-      await call({ usuario: empleado.name });
+      await call(argumentos);
       onEliminado();
       onCerrar();
     } catch (err) {
@@ -19,12 +28,9 @@ export default function EliminarEmpleado({ empleado, onCerrar, onEliminado }) {
   };
 
   return (
-    <Modal titulo="Eliminar empleado" onCerrar={onCerrar} ancho="max-w-lg">
+    <Modal titulo={titulo} onCerrar={onCerrar} ancho="max-w-lg">
       <div className="space-y-3 p-6 text-sm text-salvia-950/70">
-        <p>
-          Se borrará de la base de datos la cuenta de{" "}
-          <strong className="text-salvia-950">{empleado.full_name}</strong> ({empleado.email}).
-        </p>
+        <p>{children}</p>
         <p>
           Esta acción <strong className="text-salvia-950">no se puede deshacer</strong>.
         </p>

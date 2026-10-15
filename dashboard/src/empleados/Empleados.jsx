@@ -3,29 +3,11 @@ import { useFrappeGetCall } from "frappe-react-sdk";
 import FilaEmpleado from "./FilaEmpleado";
 import AltaEmpleado from "./AltaEmpleado";
 import EditarEmpleado from "./EditarEmpleado";
-import EliminarEmpleado from "./EliminarEmpleado";
+import ConfirmarEliminacion from "../componentes/ConfirmarEliminacion";
+import IconoBuscar from "../componentes/IconoBuscar";
 import { GRID } from "./tabla";
 import { ESTILOS } from "../lib/estilos";
-
-// Minúsculas y sin tildes, para que "garcia" encuentre "García"
-function normalizar(texto) {
-  return (texto || "")
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
-}
-
-function IconoBuscar() {
-  return (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-      <path
-        fillRule="evenodd"
-        d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
+import { normalizar } from "../lib/texto";
 
 export default function Empleados() {
   const { data, error, isLoading, mutate } = useFrappeGetCall(
@@ -36,14 +18,18 @@ export default function Empleados() {
   const [aEditar, setAEditar] = useState(null);
   const [aEliminar, setAEliminar] = useState(null);
 
+  // Ya cargado por Inicio, así que sale de la caché sin otra petición
+  const { data: perfil } = useFrappeGetCall("prototipo.api.sesion.mi_perfil");
+  const roles = perfil?.message?.roles_asignables ?? [];
+
   // Si la petición falló, no mostramos datos anteriores
-  const empleados = error ? [] : data?.message ?? [];
+  const empleados = useMemo(() => (error ? [] : data?.message ?? []), [data, error]);
 
   const filtrados = useMemo(() => {
     const texto = normalizar(busqueda.trim());
     if (!texto) return empleados;
     return empleados.filter((e) =>
-      normalizar(`${e.full_name} ${e.email} ${e.mobile_no ?? ""}`).includes(texto)
+      normalizar(`${e.full_name} ${e.email} ${e.mobile_no ?? ""} ${e.rol}`).includes(texto)
     );
   }, [empleados, busqueda]);
 
@@ -67,7 +53,7 @@ export default function Empleados() {
             <input
               type="search"
               aria-label="Buscar empleados"
-              placeholder="Buscar por nombre, correo o teléfono"
+              placeholder="Buscar por nombre, correo, teléfono o rol"
               className={`${ESTILOS.claro.campo} pl-9`}
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
@@ -124,23 +110,33 @@ export default function Empleados() {
       </div>
 
       {altaAbierta && (
-        <AltaEmpleado onCerrar={() => setAltaAbierta(false)} onCreado={() => mutate()} />
+        <AltaEmpleado
+          roles={roles}
+          onCerrar={() => setAltaAbierta(false)}
+          onCreado={() => mutate()}
+        />
       )}
 
       {aEditar && (
         <EditarEmpleado
           empleado={aEditar}
+          roles={roles}
           onCerrar={() => setAEditar(null)}
           onGuardado={() => mutate()}
         />
       )}
 
       {aEliminar && (
-        <EliminarEmpleado
-          empleado={aEliminar}
+        <ConfirmarEliminacion
+          titulo="Eliminar cuenta"
+          metodo="prototipo.api.empleados.eliminar_empleado"
+          argumentos={{ usuario: aEliminar.name }}
           onCerrar={() => setAEliminar(null)}
           onEliminado={() => mutate()}
-        />
+        >
+          Se borrará de la base de datos la cuenta de{" "}
+          <strong className="text-salvia-950">{aEliminar.full_name}</strong> ({aEliminar.email}).
+        </ConfirmarEliminacion>
       )}
     </section>
   );

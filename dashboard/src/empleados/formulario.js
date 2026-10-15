@@ -4,9 +4,6 @@ import { ESTILOS } from "../lib/estilos";
 
 export const clases = ESTILOS.claro;
 
-// Valores que acepta prototipo.api.empleados (ROLES_ASIGNABLES)
-export const ROLES = ["Empleado", "Coordinador"];
-
 // Sin caracteres que se confunden al leerlos o dictarlos (I, l, 1, O, 0)
 const CARACTERES = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*?";
 
