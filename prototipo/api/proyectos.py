@@ -1,6 +1,8 @@
 import frappe
 from frappe.utils import flt
 
+from prototipo.roles import ROLES_GESTION, exigir_rol
+
 CAMPOS = [
 	"name",
 	"creation",
@@ -13,7 +15,7 @@ CAMPOS = [
 	"importe_consumido",
 	"importe_disponible",
 	"acuerdo_marco",
-	"observaciones",
+	"descripcion",
 	"lider_proyecto",
 	"miembros_consorcio",
 ]
@@ -35,11 +37,23 @@ def construir_condiciones(filtros):
 	return condiciones
 
 
-def listar(condiciones, order_by="creation desc"):
+def condiciones_busqueda(filtros):
+	"""Búsqueda de texto libre: el proyecto cumple si el texto aparece en la descripción, el código
+	o el cliente. Son condiciones "o" (or_filters). La comparación de la base de datos ya ignora
+	mayúsculas y tildes."""
+	texto = (filtros.get("busqueda") or "").strip()
+	if not texto:
+		return None
+	patron = f"%{texto}%"
+	return [["descripcion", "like", patron], ["name", "like", patron], ["cliente", "like", patron]]
+
+
+def listar(condiciones, o_condiciones=None, order_by="creation desc"):
 	return frappe.get_list(
 		"Proyecto",
 		fields=CAMPOS,
 		filters=condiciones,
+		or_filters=o_condiciones,
 		order_by=order_by,
 		limit_page_length=0,
 	)
@@ -50,14 +64,15 @@ def obtener_proyectos(filtros=None):
 	"""Proyectos principales con sus contratos basados, aplicando las reglas de filtrado jerárquico."""
 	filtros = frappe.parse_json(filtros) or {}
 	condiciones = construir_condiciones(filtros)
+	busqueda = condiciones_busqueda(filtros)
 
 	# 1. Proyectos principales que cumplen el filtro
-	principales = listar([["acuerdo_marco", "is", "not set"], *condiciones])
+	principales = listar([["acuerdo_marco", "is", "not set"], *condiciones], busqueda)
 	for p in principales:
 		p["cumple_filtro"] = True
 
 	# 2. Contratos basados que cumplen el filtro, de cualquier acuerdo
-	basados_que_cumplen = listar([["acuerdo_marco", "is", "set"], *condiciones])
+	basados_que_cumplen = listar([["acuerdo_marco", "is", "set"], *condiciones], busqueda)
 	nombres_que_cumplen = {c.name for c in basados_que_cumplen}
 
 	# 3. Acuerdos que solo aparecen como contexto de algún contrato basado que cumple
@@ -84,3 +99,20 @@ def obtener_proyectos(filtros=None):
 
 	principales.sort(key=lambda p: p.creation, reverse=True)
 	return principales
+
+
+@frappe.whitelist(methods=["POST"])
+def eliminar_proyecto(proyecto):
+	"""Borra un proyecto. Solo para los roles de gestión (y con el permiso de borrar Proyecto)."""
+	exigir_rol(*ROLES_GESTION)
+
+	if not frappe.db.exists("Proyecto", proyecto):
+		frappe.throw("El proyecto no existe.")
+	basados = frappe.db.count("Proyecto", {"acuerdo_marco": proyecto})
+	if basados:
+		frappe.throw(
+			f"Este acuerdo marco tiene {basados} "
+			f"{'contrato basado' if basados == 1 else 'contratos basados'}. Elimínalos antes."
+		)
+
+	frappe.delete_doc("Proyecto", proyecto)

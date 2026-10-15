@@ -1,3 +1,4 @@
+import BotonesAccion from "../componentes/BotonesAccion";
 import { GRID } from "./tabla";
 import { formatearImporte } from "../lib/formato";
 
@@ -44,21 +45,6 @@ function BotonFlecha({ abierto, onClick }) {
   );
 }
 
-function BotonDetalle({ onClick, codigo }) {
-  return (
-    <button
-      onClick={onClick}
-      title="Ver detalle"
-      aria-label={`Ver detalle de ${codigo}`}
-      className="grid h-8 w-8 place-items-center rounded-lg border border-salvia-900/15 hover:bg-salvia"
-    >
-      <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-        <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-      </svg>
-    </button>
-  );
-}
-
 function textoIndicador(acuerdo, basados) {
   const total = basados.length;
   const coinciden = basados.filter((c) => c.cumple_filtro).length;
@@ -71,7 +57,7 @@ function textoIndicador(acuerdo, basados) {
   return texto;
 }
 
-function Fila({ datos, flecha, indicador, esBasado, atenuada, onVerDetalle }) {
+function Fila({ datos, flecha, indicador, esBasado, atenuada, acciones }) {
   const celda = atenuada ? "opacity-40" : "";
 
   return (
@@ -80,7 +66,7 @@ function Fila({ datos, flecha, indicador, esBasado, atenuada, onVerDetalle }) {
 
       <div className={celda}>
         <div
-          className={`font-mono font-semibold ${
+          className={`font-mono ${
             esBasado ? "border-l-2 border-salvia pl-2" : ""
           }`}
         >
@@ -92,6 +78,9 @@ function Fila({ datos, flecha, indicador, esBasado, atenuada, onVerDetalle }) {
       </div>
 
       <div className={celda}>{datos.cliente || "—"}</div>
+      <div className={`${celda} line-clamp-2 text-salvia-950/70`} title={datos.descripcion || undefined}>
+        {datos.descripcion || "—"}
+      </div>
       <div className={celda}>{datos.tipo}</div>
       <div className={celda}>{datos.via || "—"}</div>
 
@@ -108,9 +97,11 @@ function Fila({ datos, flecha, indicador, esBasado, atenuada, onVerDetalle }) {
         <Estado valor={datos.estado} />
       </div>
 
-      <div className="flex justify-end">
-        <BotonDetalle onClick={() => onVerDetalle(datos)} codigo={datos.name} />
-      </div>
+      <BotonesAccion
+        onVer={() => acciones.onVerDetalle(datos)}
+        onEditar={() => acciones.onEditar(datos)}
+        onEliminar={() => acciones.onEliminar(datos)}
+      />
     </div>
   );
 }
@@ -119,7 +110,7 @@ export default function FilaProyecto({
   proyecto,
   desplegado,
   onAlternar,
-  onVerDetalle,
+  acciones, // { onVerDetalle, onEditar, onEliminar }, se aplican al proyecto y a sus contratos basados
   onAnadirContratoBasado,
 }) {
   const esAcuerdo = proyecto.tipo === "Acuerdo marco";
@@ -130,7 +121,7 @@ export default function FilaProyecto({
       <Fila
         datos={proyecto}
         atenuada={!proyecto.cumple_filtro}
-        onVerDetalle={onVerDetalle}
+        acciones={acciones}
         flecha={
           esAcuerdo ? (
             <BotonFlecha abierto={desplegado} onClick={onAlternar} />
@@ -152,7 +143,7 @@ export default function FilaProyecto({
                 datos={c}
                 esBasado
                 atenuada={!c.cumple_filtro}
-                onVerDetalle={onVerDetalle}
+                acciones={acciones}
               />
             ))
           )}

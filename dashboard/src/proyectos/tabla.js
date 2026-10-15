@@ -1,5 +1,7 @@
-// Plantilla de columnas compartida por cabecera, filas y subcontratos:
-// flecha | código | cliente | tipo | vía | importe | estado | editar
+// Plantilla de columnas compartida por cabecera, filas y subcontratos, con el ancho mínimo de la
+// tabla (suma de columnas, huecos y relleno), que cabe en el ancho de la página (max-w-7xl):
+// flecha | código | cliente | descripción | tipo | vía | importe | estado | acciones
 
 export const GRID =
-  "grid grid-cols-[2.5rem_9rem_minmax(10rem,1.5fr)_minmax(8rem,1fr)_minmax(9rem,1fr)_9rem_7.5rem_2.5rem] items-center gap-x-4";
+  "grid grid-cols-[2rem_7.5rem_minmax(9rem,1fr)_minmax(12rem,2fr)_8.5rem_8.5rem_7.5rem_7rem_6.5rem] items-center gap-x-2";
+export const ANCHO_MINIMO = "min-w-[1190px]";

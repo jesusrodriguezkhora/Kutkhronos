@@ -19,7 +19,7 @@ function valoresIniciales(proyecto, acuerdoMarco) {
     via: proyecto?.via ?? acuerdoMarco?.via ?? "",
     importe: proyecto?.importe ?? "",
     estado: proyecto?.estado ?? "Oportunidad",
-    observaciones: proyecto?.observaciones ?? "",
+    descripcion: proyecto?.descripcion ?? "",
     lider_proyecto: proyecto?.lider_proyecto ?? "",
     miembros_consorcio: proyecto?.miembros_consorcio ?? "",
   };
@@ -73,12 +73,14 @@ function CampoLectura({ etiqueta, valor }) {
 }
 
 // Modos según las props:
-//   - detalle de un proyecto: con proyecto (empieza en modo detalle; botón Editar)
+//   - detalle de un proyecto: con proyecto (empieza en modo detalle; botón Editar),
+//     o directamente en edición con editarAlAbrir (lápiz de la tabla)
 //   - nuevo proyecto:         sin proyecto ni acuerdoMarco (empieza en edición)
 //   - nuevo contrato basado:  con acuerdoMarco (empieza en edición)
 export default function FichaProyecto({
   proyecto: proyectoInicial,
   acuerdoMarco,
+  editarAlAbrir = false,
   onCerrar,
   onCreado,
   onActualizado,
@@ -89,7 +91,7 @@ export default function FichaProyecto({
   const esNuevoBasado = esNuevo && !!acuerdoMarco;
   const esBasado = esNuevoBasado || !!proyecto?.acuerdo_marco;
 
-  const [editando, setEditando] = useState(esNuevo);
+  const [editando, setEditando] = useState(esNuevo || editarAlAbrir);
   const [datos, setDatos] = useState(() => valoresIniciales(proyectoInicial, acuerdoMarco));
   const [error, setError] = useState(null);
 
@@ -125,7 +127,8 @@ export default function FichaProyecto({
   };
 
   const cancelarEdicion = () => {
-    if (esNuevo) return cerrar();
+    // Si se abrió para editar, cancelar cierra la ficha en vez de pasar al detalle
+    if (esNuevo || editarAlAbrir) return cerrar();
     setDatos(valoresIniciales(proyecto));
     setError(null);
     setEditando(false);
@@ -145,7 +148,7 @@ export default function FichaProyecto({
     const valores = {
       importe: datos.importe === "" ? 0 : Number(datos.importe),
       estado: datos.estado,
-      observaciones: datos.observaciones || null,
+      descripcion: datos.descripcion || null,
     };
     // Cliente y vía de un contrato basado los fija el servidor (herencia del acuerdo)
     if (!esBasado) {
@@ -223,9 +226,9 @@ export default function FichaProyecto({
         </>
       )}
 
-      <TituloSeccion>Observaciones</TituloSeccion>
+      <TituloSeccion>Descripción</TituloSeccion>
       <Dato etiqueta="" ancho>
-        {proyecto.observaciones}
+        {proyecto.descripcion}
       </Dato>
     </dl>
   );
@@ -319,9 +322,9 @@ export default function FichaProyecto({
 
       <div className="sm:col-span-2">
         <AreaTexto
-          etiqueta="Observaciones"
-          valor={datos.observaciones}
-          onChange={(v) => cambiar("observaciones", v)}
+          etiqueta="Descripción"
+          valor={datos.descripcion}
+          onChange={(v) => cambiar("descripcion", v)}
           clases={clases}
         />
       </div>
