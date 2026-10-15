@@ -5,7 +5,7 @@ import AltaEmpleado from "./AltaEmpleado";
 import EditarEmpleado from "./EditarEmpleado";
 import ConfirmarEliminacion from "../componentes/ConfirmarEliminacion";
 import IconoBuscar from "../componentes/IconoBuscar";
-import { GRID, GRID_LABORAL } from "./tabla";
+import { ANCHO_MINIMO, ANCHO_MINIMO_LABORAL, GRID, GRID_LABORAL } from "./tabla";
 import { ESTILOS } from "../lib/estilos";
 import { normalizar } from "../lib/texto";
 import { mensajeDeError } from "../lib/errores";
@@ -73,7 +73,7 @@ export default function Empleados() {
       <div className="overflow-x-auto">
         <div
           className={`${
-            veLaborales ? "min-w-[1300px]" : "min-w-[1050px]"
+            veLaborales ? ANCHO_MINIMO_LABORAL : ANCHO_MINIMO
           } overflow-hidden rounded-xl border border-salvia-900/10`}
         >
           <div
@@ -86,7 +86,7 @@ export default function Empleados() {
             {veLaborales && (
               <>
                 <span>Posición</span>
-                <span>Coste/h</span>
+                <span>€/h</span>
               </>
             )}
             <span>Estado</span>

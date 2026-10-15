@@ -1,3 +1,4 @@
+import BotonesAccion from "../componentes/BotonesAccion";
 import { GRID, GRID_LABORAL } from "./tabla";
 import { formatearCosteHora, formatearFecha } from "../lib/formato";
 
@@ -63,24 +64,12 @@ export default function FilaEmpleado({ empleado, veLaborales, onEditar, onElimin
       </div>
 
       {/* Sin botones en la cuenta propia ni en las de dirección (si no eres de dirección) */}
-      <div className="flex justify-end gap-1">
+      <div>
         {empleado.editable && (
-          <>
-            <button
-              type="button"
-              onClick={() => onEditar(empleado)}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-salvia-900/5"
-            >
-              Editar
-            </button>
-            <button
-              type="button"
-              onClick={() => onEliminar(empleado)}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50"
-            >
-              Eliminar
-            </button>
-          </>
+          <BotonesAccion
+            onEditar={() => onEditar(empleado)}
+            onEliminar={() => onEliminar(empleado)}
+          />
         )}
       </div>
     </div>
