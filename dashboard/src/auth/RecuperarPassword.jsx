@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { useFrappePostCall } from "frappe-react-sdk";
+import { CAMPO, BOTON_PRINCIPAL, ENLACE } from "./Login";
 
-const CAMPO =
-  "w-full rounded-lg border border-salvia-900/15 px-3 py-2.5 outline-none focus:border-salvia-900 focus:ring-2 focus:ring-salvia";
-
-export default function RecuperarPassword({ emailInicial, onVolver }) {
+export default function RecuperarPassword({ logo, emailInicial, onVolver }) {
   const [email, setEmail] = useState(emailInicial || "");
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState(null);
@@ -26,22 +24,25 @@ export default function RecuperarPassword({ emailInicial, onVolver }) {
     }
   };
 
+  const cabecera = (titulo, texto) => (
+    <div className="flex flex-col items-center text-center">
+      <img src={logo} alt="" className="mb-5 h-20 w-auto" />
+      <h1 className="text-2xl font-bold text-salvia-900">{titulo}</h1>
+      <p className="mt-1.5 text-sm text-salvia-950/60">{texto}</p>
+    </div>
+  );
+
   if (enviado) {
     return (
-      <div className="space-y-5">
-        <div>
-          <h2 className="text-xl font-bold text-salvia-950">Revisa tu correo</h2>
-          <p className="mt-2 text-sm text-salvia-950/70">
-            Si <strong className="text-salvia-950">{email}</strong> está registrado, recibirás un
-            enlace para restablecer tu contraseña. Puede tardar unos minutos; revisa también la
-            carpeta de correo no deseado.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onVolver}
-          className="w-full rounded-lg bg-salvia-900 py-2.5 font-semibold text-salvia-200 hover:bg-salvia hover:text-salvia-950"
-        >
+      <div className="space-y-6">
+        {cabecera(
+          "Revisa tu correo",
+          <>
+            Si <strong className="text-salvia-900">{email}</strong> está registrado, recibirás un
+            enlace para restablecer tu contraseña. Revisa también la carpeta de correo no deseado.
+          </>
+        )}
+        <button type="button" onClick={onVolver} className={BOTON_PRINCIPAL}>
           Volver al inicio de sesión
         </button>
       </div>
@@ -49,42 +50,40 @@ export default function RecuperarPassword({ emailInicial, onVolver }) {
   }
 
   return (
-    <form onSubmit={enviar} className="space-y-5">
-      <div>
-        <h2 className="text-xl font-bold text-salvia-950">Recuperar contraseña</h2>
-        <p className="mt-1 text-sm text-salvia-950/50">
-          Indica el correo de tu cuenta y te enviaremos un enlace para elegir una contraseña nueva.
-        </p>
-      </div>
+    <form onSubmit={enviar} className="space-y-6">
+      {cabecera(
+        "Recuperar contraseña",
+        "Indica el correo de tu cuenta y te enviaremos un enlace para elegir una contraseña nueva."
+      )}
 
-      <input
-        type="email"
-        required
-        className={CAMPO}
-        placeholder="Email"
-        autoComplete="username"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+      <label className="block">
+        <span className="mb-1.5 block text-sm font-medium text-salvia-900">Correo electrónico</span>
+        <input
+          type="email"
+          required
+          autoFocus
+          className={CAMPO}
+          placeholder="nombre@empresa.com"
+          autoComplete="username"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </label>
 
       {error && (
-        <p className="rounded-lg border-l-4 border-salvia-900 bg-salvia-100 px-3 py-2 text-sm text-salvia-950">
+        <p
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
           {error}
         </p>
       )}
 
-      <button
-        disabled={loading || !email.trim()}
-        className="w-full rounded-lg bg-salvia-900 py-2.5 font-semibold text-salvia-200 hover:bg-salvia hover:text-salvia-950 disabled:cursor-not-allowed disabled:opacity-50"
-      >
+      <button disabled={loading || !email.trim()} className={BOTON_PRINCIPAL}>
         {loading ? "Enviando…" : "Enviar enlace"}
       </button>
 
-      <button
-        type="button"
-        onClick={onVolver}
-        className="w-full text-sm font-medium text-salvia-950/60 underline-offset-4 hover:text-salvia-950 hover:underline"
-      >
+      <button type="button" onClick={onVolver} className={ENLACE}>
         Volver al inicio de sesión
       </button>
     </form>
