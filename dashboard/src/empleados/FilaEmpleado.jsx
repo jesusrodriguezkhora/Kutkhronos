@@ -1,4 +1,4 @@
-import { GRID } from "./tabla";
+import { GRID, GRID_ADMIN } from "./tabla";
 import { formatearFecha } from "../lib/formato";
 
 function iniciales(nombre) {
@@ -22,15 +22,15 @@ function Rol({ esCoordinador }) {
   );
 }
 
-export default function FilaEmpleado({ empleado }) {
+export default function FilaEmpleado({ empleado, onEliminar }) {
   const activo = Boolean(empleado.enabled);
 
   return (
-     <div
-        className={`${GRID} px-4 py-3 text-sm transition-colors hover:bg-salvia/15 ${
-          activo ? "" : "opacity-50"
-        }`}
-      >
+    <div
+      className={`${onEliminar ? GRID_ADMIN : GRID} px-4 py-3 text-sm transition-colors hover:bg-salvia/15 ${
+        activo ? "" : "opacity-50"
+      }`}
+    >
       <div className="flex items-center gap-3">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-salvia text-xs font-bold text-salvia-950">
           {iniciales(empleado.full_name)}
@@ -52,6 +52,18 @@ export default function FilaEmpleado({ empleado }) {
       <div className="tabular-nums text-salvia-950/70">
         {formatearFecha(empleado.creation?.slice(0, 10))}
       </div>
+
+      {onEliminar && (
+        <div className="text-right">
+          <button
+            type="button"
+            onClick={() => onEliminar(empleado)}
+            className="rounded-lg px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50"
+          >
+            Eliminar
+          </button>
+        </div>
+      )}
     </div>
   );
 }

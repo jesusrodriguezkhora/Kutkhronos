@@ -1,7 +1,7 @@
 import frappe
 from frappe.utils import get_fullname
 
-from prototipo.roles import ROL_EMPLEADO, ROLES_APP, ROLES_GESTION, tiene_rol
+from prototipo.roles import ROL_EMPLEADO, ROLES_APP, ROLES_GESTION, es_administrador, tiene_rol
 
 
 @frappe.whitelist()
@@ -17,4 +17,5 @@ def mi_perfil():
 		"roles": [r for r in frappe.get_roles() if r in ROLES_APP],
 		"modulos": modulos,
 		"imputa_horas": tiene_rol(ROL_EMPLEADO),
+		"es_administrador": es_administrador(),
 	}

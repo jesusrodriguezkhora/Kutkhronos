@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { useFrappeGetCall } from "frappe-react-sdk";
 import FilaEmpleado from "./FilaEmpleado";
 import AltaEmpleado from "./AltaEmpleado";
-import { GRID } from "./tabla";
+import EliminarEmpleado from "./EliminarEmpleado";
+import { GRID, GRID_ADMIN } from "./tabla";
 import { ESTILOS } from "../lib/estilos";
 
 // Minúsculas y sin tildes, para que "garcia" encuentre "García"
@@ -31,6 +32,11 @@ export default function Empleados() {
   );
   const [busqueda, setBusqueda] = useState("");
   const [altaAbierta, setAltaAbierta] = useState(false);
+  const [aEliminar, setAEliminar] = useState(null);
+
+  // Ya cargado por Inicio, así que sale de la caché sin otra petición
+  const { data: perfil } = useFrappeGetCall("prototipo.api.sesion.mi_perfil");
+  const esAdministrador = Boolean(perfil?.message?.es_administrador);
 
   // Si la petición falló, no mostramos datos anteriores
   const empleados = error ? [] : data?.message ?? [];
@@ -79,9 +85,13 @@ export default function Empleados() {
       </div>
 
       <div className="overflow-x-auto">
-        <div className="min-w-[900px] overflow-hidden rounded-xl border border-salvia-900/10">
+        <div
+          className={`${
+            esAdministrador ? "min-w-[1000px]" : "min-w-[900px]"
+          } overflow-hidden rounded-xl border border-salvia-900/10`}
+        >
           <div
-            className={`${GRID} bg-salvia-900 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-salvia-200`}
+            className={`${esAdministrador ? GRID_ADMIN : GRID} bg-salvia-900 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-salvia-200`}
           >
             <span>Nombre</span>
             <span>Correo</span>
@@ -89,6 +99,7 @@ export default function Empleados() {
             <span>Rol</span>
             <span>Estado</span>
             <span>Alta</span>
+            {esAdministrador && <span />}
           </div>
 
           {isLoading && (
@@ -107,7 +118,11 @@ export default function Empleados() {
 
           <div className="divide-y divide-salvia-900/10 bg-white">
             {filtrados.map((e) => (
-              <FilaEmpleado key={e.name} empleado={e} />
+              <FilaEmpleado
+                key={e.name}
+                empleado={e}
+                onEliminar={esAdministrador ? setAEliminar : undefined}
+              />
             ))}
           </div>
         </div>
@@ -115,6 +130,14 @@ export default function Empleados() {
 
       {altaAbierta && (
         <AltaEmpleado onCerrar={() => setAltaAbierta(false)} onCreado={() => mutate()} />
+      )}
+
+      {aEliminar && (
+        <EliminarEmpleado
+          empleado={aEliminar}
+          onCerrar={() => setAEliminar(null)}
+          onEliminado={() => mutate()}
+        />
       )}
     </section>
   );

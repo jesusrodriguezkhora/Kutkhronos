@@ -1,7 +1,13 @@
 import frappe
 from frappe.utils import validate_email_address
 
-from prototipo.roles import ROL_COORDINADOR, ROL_EMPLEADO, ROLES_GESTION, exigir_rol
+from prototipo.roles import (
+	ROL_COORDINADOR,
+	ROL_EMPLEADO,
+	ROLES_GESTION,
+	exigir_administrador,
+	exigir_rol,
+)
 
 CAMPOS_USUARIO = [
 	"name",
@@ -80,3 +86,26 @@ def crear_empleado(nombre, apellidos, email, password, telefono=None):
 	usuario.insert(ignore_permissions=True)
 
 	return {"name": usuario.name}
+
+
+@frappe.whitelist(methods=["POST"])
+def eliminar_empleado(usuario):
+	"""Borra de la base de datos una cuenta con el rol Empleado. Solo para administradores."""
+	exigir_administrador()
+
+	if usuario in USUARIOS_SISTEMA:
+		frappe.throw("Las cuentas del sistema no se pueden eliminar.")
+	if usuario == frappe.session.user:
+		frappe.throw("No puedes eliminar tu propia cuenta.")
+	if not frappe.db.exists("User", usuario):
+		frappe.throw("La cuenta no existe.")
+	if usuario not in usuarios_con_rol(ROL_EMPLEADO):
+		frappe.throw("Solo se pueden eliminar cuentas de empleados.")
+
+	try:
+		frappe.delete_doc("User", usuario)
+	except frappe.LinkExistsError:
+		frappe.throw(
+			"No se puede eliminar la cuenta porque hay registros vinculados a ella. "
+			"Desactívala en su lugar."
+		)
