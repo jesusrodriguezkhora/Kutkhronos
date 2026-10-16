@@ -17,7 +17,7 @@
   "fecha_alta",
   "fecha_fin",
   "responsable",
-  "observaciones",
+  "descripcion",
   "lider_proyecto",
   "miembros_consorcio"
  ],
@@ -113,9 +113,9 @@
    "options": "User"
   },
   {
-   "fieldname": "observaciones",
+   "fieldname": "descripcion",
    "fieldtype": "Text",
-   "label": "Observaciones"
+   "label": "Descripci\u00f3n"
   }
  ],
  "grid_page_length": 50,
@@ -127,7 +127,7 @@
    "link_fieldname": "acuerdo_marco"
   }
  ],
- "modified": "2026-10-16 13:03:10.353910",
+ "modified": "2026-10-16 13:58:44.952672",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Proyecto",
@@ -167,6 +167,18 @@
    "read": 1,
    "report": 1,
    "role": "CEO",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Administracion",
    "share": 1,
    "write": 1
   }
