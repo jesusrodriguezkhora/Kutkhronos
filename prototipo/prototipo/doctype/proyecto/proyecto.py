@@ -63,9 +63,11 @@ class Proyecto(Document):
 			self.name = f"{self.acuerdo_marco}-{getseries(self.acuerdo_marco + '-', 2)}"
 		elif self.tipo in PREFIJOS:
 			prefijo = PREFIJOS[self.tipo]
-			anio = nowdate()[:4]
-			# Año en dos cifras (CON-26-001). La serie sigue la numeración que ya tuviera
-			# ese año con el formato anterior de cuatro cifras (CON-2026-001)
+			# Año de la fecha de alta en dos cifras (CON-26-001). Normalmente es el año actual;
+			# solo la migración crea proyectos con fechas pasadas.
+			anio = str(getdate(self.fecha_alta or nowdate()).year)
+			# La serie sigue la numeración que ya tuviera ese año con el formato anterior
+			# de cuatro cifras (CON-2026-001)
 			continuar_serie(f"{prefijo}-{anio[2:]}-", f"{prefijo}-{anio}-")
 			self.name = make_autoname(f"{prefijo}-{anio[2:]}-.###")
 		else:
