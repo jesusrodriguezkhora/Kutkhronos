@@ -32,6 +32,13 @@ async function heredarDelAcuerdo(frm) {
 }
 
 frappe.ui.form.on("Proyecto", {
+	setup(frm) {
+		// Solo empleados y coordinadores activos (la regla de verdad está en proyecto.py)
+		frm.set_query("responsable", () => ({
+			query: "prototipo.api.responsables.buscar_responsables",
+		}));
+	},
+
 	refresh(frm) {
 		aplicarReglas(frm);
 		heredarDelAcuerdo(frm);

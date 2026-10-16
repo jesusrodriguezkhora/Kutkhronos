@@ -1,7 +1,9 @@
 import frappe
 from frappe.model.document import Document
 from frappe.model.naming import getseries, make_autoname
-from frappe.utils import flt, fmt_money, nowdate
+from frappe.utils import flt, fmt_money, getdate, nowdate
+
+from prototipo.api.responsables import responsables_posibles
 
 # Prefijos de los proyectos que se crean sueltos.
 # Los contratos basados no tienen prefijo propio: su código deriva del acuerdo marco.
@@ -71,6 +73,8 @@ class Proyecto(Document):
 
 	def validate(self):
 		self.normalizar()
+		self.validar_fechas()
+		self.validar_responsable()
 
 		if self.tipo == "Acuerdo marco":
 			self.validar_acuerdo_marco()
@@ -102,6 +106,18 @@ class Proyecto(Document):
 				self.set(campo, None)
 
 	# --- Fase 2: comprobar las reglas que dependen del usuario ---
+
+	def validar_fechas(self):
+		if self.fecha_fin and self.fecha_alta and getdate(self.fecha_fin) < getdate(self.fecha_alta):
+			frappe.throw("La fecha de fin no puede ser anterior a la fecha de alta.")
+
+	def validar_responsable(self):
+		# Solo se comprueba al ponerlo o cambiarlo: si un empleado se da de baja más tarde,
+		# sus proyectos se siguen pudiendo editar sin tener que cambiar el responsable.
+		if not self.responsable or not self.has_value_changed("responsable"):
+			return
+		if self.responsable not in {u.name for u in responsables_posibles()}:
+			frappe.throw("El responsable debe ser un empleado o coordinador activo.")
 
 	def validar_acuerdo_marco(self):
 		if flt(self.importe) <= 0:
