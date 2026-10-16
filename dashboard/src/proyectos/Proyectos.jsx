@@ -45,7 +45,7 @@ export default function Proyectos() {
   const [desplegados, setDesplegados] = useState(() => new Set());
 
   // Ficha abierta: null (ninguna), {} (nuevo), { proyecto } (detalle), { proyecto, editar: true }
-  // (edición directa con el lápiz) o { acuerdoMarco } (nuevo contrato basado)
+  // (edición directa con el botón Editar de la fila) o { acuerdoMarco } (nuevo contrato basado)
   const [ficha, setFicha] = useState(null);
   const [aEliminar, setAEliminar] = useState(null);
 
@@ -200,11 +200,10 @@ export default function Proyectos() {
           acuerdoMarco={ficha.acuerdoMarco}
           editarAlAbrir={ficha.editar}
           onCerrar={() => setFicha(null)}
-          onCreado={() => {
+          onGuardado={() => {
             setFicha(null);
             mutate();
           }}
-          onActualizado={() => mutate()}
         />
       )}
 

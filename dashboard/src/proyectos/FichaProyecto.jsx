@@ -74,25 +74,23 @@ function CampoLectura({ etiqueta, valor }) {
 
 // Modos según las props:
 //   - detalle de un proyecto: con proyecto (empieza en modo detalle; botón Editar),
-//     o directamente en edición con editarAlAbrir (lápiz de la tabla)
+//     o directamente en edición con editarAlAbrir (botón Editar de la tabla)
 //   - nuevo proyecto:         sin proyecto ni acuerdoMarco (empieza en edición)
 //   - nuevo contrato basado:  con acuerdoMarco (empieza en edición)
+// Al guardar (alta o edición) se llama a onGuardado, que cierra la ficha y recarga la lista.
 export default function FichaProyecto({
-  proyecto: proyectoInicial,
+  proyecto,
   acuerdoMarco,
   editarAlAbrir = false,
   onCerrar,
-  onCreado,
-  onActualizado,
+  onGuardado,
 }) {
-  // Copia local: tras guardar se sustituye por lo que devuelve el servidor
-  const [proyecto, setProyecto] = useState(proyectoInicial);
   const esNuevo = !proyecto;
   const esNuevoBasado = esNuevo && !!acuerdoMarco;
   const esBasado = esNuevoBasado || !!proyecto?.acuerdo_marco;
 
   const [editando, setEditando] = useState(esNuevo || editarAlAbrir);
-  const [datos, setDatos] = useState(() => valoresIniciales(proyectoInicial, acuerdoMarco));
+  const [datos, setDatos] = useState(() => valoresIniciales(proyecto, acuerdoMarco));
   const [error, setError] = useState(null);
 
   const { createDoc, loading: creando } = useFrappeCreateDoc();
@@ -167,14 +165,10 @@ export default function FichaProyecto({
           tipo: datos.tipo,
           ...(esNuevoBasado && { acuerdo_marco: acuerdoMarco.name }),
         });
-        onCreado();
       } else {
-        const guardado = await updateDoc("Proyecto", proyecto.name, valores);
-        // Conservamos lo que solo existe en la lista (contratos_basados, cumple_filtro)
-        setProyecto((p) => ({ ...p, ...guardado }));
-        setEditando(false);
-        onActualizado();
+        await updateDoc("Proyecto", proyecto.name, valores);
       }
+      onGuardado();
     } catch (err) {
       setError(mensajeDeError(err));
     }
