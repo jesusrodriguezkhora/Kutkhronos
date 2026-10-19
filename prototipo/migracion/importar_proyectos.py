@@ -322,7 +322,7 @@ def importar(ruta, hoja=None, simular=True):
 	for registro, datos, aviso in sorted(validos, key=orden):
 		try:
 			codigo, nuevos = importar_fila(registro, datos, codigos, clientes)
-		except Exception as e:
+		except Exception as e:  # noqa: BLE001
 			anotar(registro, "error", mensaje=strip_html(str(e)) or repr(e))
 			continue
 		creados += 1
