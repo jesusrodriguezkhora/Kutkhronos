@@ -2,7 +2,7 @@
  "actions": [],
  "allow_bulk_edit": 1,
  "allow_rename": 1,
- "creation": "2026-10-06 11:06:13.188561",
+ "creation": "2026-10-16 13:59:37.860523",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -51,7 +51,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "V\u00eda",
-   "options": "Heredada\nContrato menor\nLicitaci\u00f3n p\u00fablica\nSubvenci\u00f3n",
+   "options": "Heredada\nContrato menor\nLicitaci\u00f3n p\u00fablica\nSubvenci\u00f3n\nContrataci\u00f3n directa",
    "read_only_depends_on": "eval:doc.acuerdo_marco || doc.tipo==\"Subvenci\u00f3n\""
   },
   {
@@ -127,7 +127,7 @@
    "link_fieldname": "acuerdo_marco"
   }
  ],
- "modified": "2026-10-16 13:58:44.952672",
+ "modified": "2026-10-19 11:35:58.699474",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Proyecto",

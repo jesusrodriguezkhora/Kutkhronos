@@ -1,5 +1,5 @@
 const TIPOS_SUELTOS = ["Contrato", "Acuerdo marco", "Subvención"];
-const VIAS_NO_SUBVENCION = ["", "Heredada", "Contrato menor", "Licitación pública"];
+const VIAS_NO_SUBVENCION = ["", "Contratación directa", "Contrato menor", "Licitación pública"];
 
 function aplicarReglas(frm) {
 	// Un proyecto suelto no puede ser contrato basado
@@ -27,7 +27,7 @@ async function heredarDelAcuerdo(frm) {
 	frm.set_value({
 		tipo: "Contrato basado",
 		cliente: message.cliente,
-		via: message.via,
+		via: "Heredada",
 	});
 }
 

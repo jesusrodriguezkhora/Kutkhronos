@@ -20,7 +20,10 @@ ESTADOS_COMPUTABLES = ("Aceptado", "En curso", "Cerrado")
 ESTADOS_ACUERDO_CON_BASADOS = ESTADOS_COMPUTABLES
 
 # Campos que el contrato basado hereda de su acuerdo marco
-CAMPOS_HEREDADOS = ("cliente", "via")
+CAMPOS_HEREDADOS = ("cliente",)
+
+# Vía de todos los contratos basados (y solo de ellos)
+VIA_BASADO = "Heredada"
 
 # Campos exclusivos de las subvenciones
 CAMPOS_SUBVENCION = ("lider_proyecto", "miembros_consorcio")
@@ -96,6 +99,7 @@ class Proyecto(Document):
 			if not acuerdo or acuerdo.tipo != "Acuerdo marco":
 				frappe.throw(f"{self.acuerdo_marco} no es un acuerdo marco.")
 			self.tipo = "Contrato basado"
+			self.via = VIA_BASADO
 			for campo in CAMPOS_HEREDADOS:
 				self.set(campo, acuerdo.get(campo))
 
@@ -107,6 +111,8 @@ class Proyecto(Document):
 		else:
 			if self.via == "Subvención":
 				frappe.throw("Solo las subvenciones pueden tener la vía Subvención.")
+			if self.via == VIA_BASADO and not self.acuerdo_marco:
+				frappe.throw("La vía Heredada solo es para contratos basados.")
 			for campo in CAMPOS_SUBVENCION:
 				self.set(campo, None)
 

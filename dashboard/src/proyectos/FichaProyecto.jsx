@@ -16,7 +16,7 @@ function valoresIniciales(proyecto, acuerdoMarco) {
   return {
     tipo: proyecto?.tipo ?? (esNuevoBasado ? "Contrato basado" : ""),
     cliente: proyecto?.cliente ?? acuerdoMarco?.cliente ?? "",
-    via: proyecto?.via ?? acuerdoMarco?.via ?? "",
+    via: proyecto?.via ?? (esNuevoBasado ? "Heredada" : ""),
     importe: proyecto?.importe ?? "",
     estado: proyecto?.estado ?? "Oportunidad",
     descripcion: proyecto?.descripcion ?? "",
