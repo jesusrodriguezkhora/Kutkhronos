@@ -2,7 +2,7 @@
  "actions": [],
  "allow_rename": 1,
  "autoname": "field:usuario",
- "creation": "2026-10-15 17:00:00.000000",
+ "creation": "2026-10-15 17:00:00",
  "description": "Datos laborales de una cuenta. Solo los ven CEO, Administracion y System Manager.",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -29,7 +29,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Posici\u00f3n",
-   "options": "\nPr\u00e1cticas\nConsultor Junior\nConsultor Senior\nCoordinador\nCEO"
+   "options": "\nPr\u00e1cticas\nConsultor\nConsultor\nCoordinador\nDirector"
   },
   {
    "fieldname": "salario_anual",
@@ -53,9 +53,8 @@
   }
  ],
  "grid_page_length": 50,
- "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-15 17:00:00.000000",
+ "modified": "2026-10-19 12:47:34.638800",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Datos Laborales",
