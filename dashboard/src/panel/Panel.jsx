@@ -116,7 +116,6 @@ export default function Panel() {
   if (isLoading) {
     return (
       <section>
-        {cabecera}
         <p className="text-sm text-salvia-950/50">Cargando panel…</p>
       </section>
     );
@@ -125,7 +124,6 @@ export default function Panel() {
   if (error) {
     return (
       <section>
-        {cabecera}
         <p className="text-sm text-red-600">Error al cargar el panel: {mensajeDeError(error)}</p>
       </section>
     );
@@ -138,7 +136,6 @@ export default function Panel() {
   if (!hayProyectos) {
     return (
       <section>
-        {cabecera}
         <p className="text-sm text-salvia-950/50">Todavía no hay proyectos.</p>
       </section>
     );
@@ -148,8 +145,7 @@ export default function Panel() {
 
   return (
     <section className="space-y-6">
-      {cabecera}
-
+      
       {/* Indicadores */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Indicador
