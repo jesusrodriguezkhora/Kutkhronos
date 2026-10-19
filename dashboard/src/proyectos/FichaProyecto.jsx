@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useFrappeCreateDoc, useFrappeUpdateDoc } from "frappe-react-sdk";
+import { useFrappeCreateDoc, useFrappeGetCall, useFrappeUpdateDoc } from "frappe-react-sdk";
 import { TIPOS_SUELTOS, VIAS_NO_SUBVENCION, ESTADOS } from "./opciones";
 import { ESTILOS } from "../lib/estilos";
 import { mensajeDeError } from "../lib/errores";
@@ -20,6 +20,8 @@ function valoresIniciales(proyecto, acuerdoMarco) {
     importe: proyecto?.importe ?? "",
     estado: proyecto?.estado ?? "Oportunidad",
     descripcion: proyecto?.descripcion ?? "",
+    fecha_fin: proyecto?.fecha_fin ?? "",
+    responsable: proyecto?.responsable ?? "",
     lider_proyecto: proyecto?.lider_proyecto ?? "",
     miembros_consorcio: proyecto?.miembros_consorcio ?? "",
   };
@@ -53,6 +55,28 @@ function Selector({ etiqueta, valor, opciones, onChange, vacio }) {
         {opciones.map((o) => (
           <option key={o} value={o}>
             {o}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+// Responsable: empleados y coordinadores activos. Si el actual ya no lo es (p. ej., se dio de baja),
+// se mantiene como opción para que no se pierda al guardar otros cambios.
+function SelectorResponsable({ valor, opciones, nombreActual, onChange }) {
+  const lista = [...opciones];
+  if (valor && !lista.some((u) => u.name === valor)) {
+    lista.unshift({ name: valor, full_name: nombreActual || valor });
+  }
+  return (
+    <label className="block">
+      <span className={clases.etiqueta}>Responsable</span>
+      <select className={clases.campo} value={valor} onChange={(e) => onChange(e.target.value)}>
+        <option value="">Sin responsable</option>
+        {lista.map((u) => (
+          <option key={u.name} value={u.name}>
+            {u.full_name || u.name}
           </option>
         ))}
       </select>
@@ -96,6 +120,14 @@ export default function FichaProyecto({
   const { createDoc, loading: creando } = useFrappeCreateDoc();
   const { updateDoc, loading: actualizando } = useFrappeUpdateDoc();
   const guardando = creando || actualizando;
+
+    // Posibles responsables para el selector. Solo se piden al editar (null = no lanzar la petición)
+  const { data: respuestaResponsables } = useFrappeGetCall(
+    "prototipo.api.responsables.listar_responsables",
+    undefined,
+    editando ? undefined : null
+  );
+  const responsables = respuestaResponsables?.message ?? [];
 
   const esSubvencion = datos.tipo === "Subvención";
   const hayCambios =
@@ -147,6 +179,8 @@ export default function FichaProyecto({
       importe: datos.importe === "" ? 0 : Number(datos.importe),
       estado: datos.estado,
       descripcion: datos.descripcion || null,
+      fecha_fin: datos.fecha_fin || null,
+      responsable: datos.responsable || null,
     };
     // Cliente y vía de un contrato basado los fija el servidor (herencia del acuerdo)
     if (!esBasado) {
@@ -194,6 +228,8 @@ export default function FichaProyecto({
       <Dato etiqueta="Estado">{proyecto.estado}</Dato>
       <Dato etiqueta="Importe">{formatearImporte(proyecto.importe)}</Dato>
       <Dato etiqueta="Fecha de alta">{formatearFecha(proyecto.fecha_alta)}</Dato>
+      <Dato etiqueta="Fecha de fin">{formatearFecha(proyecto.fecha_fin)}</Dato>
+      <Dato etiqueta="Responsable">{proyecto.responsable_nombre || proyecto.responsable}</Dato>
 
       {proyecto.tipo === "Acuerdo marco" && (
         <>
@@ -286,6 +322,23 @@ export default function FichaProyecto({
       <CampoLectura
         etiqueta="Fecha de alta"
         valor={esNuevo ? "Se asignará al guardar" : formatearFecha(proyecto.fecha_alta)}
+      />
+      <label className="block">
+        <span className={clases.etiqueta}>Fecha de fin</span>
+        <input
+          type="date"
+          className={clases.campo}
+          value={datos.fecha_fin}
+          min={proyecto?.fecha_alta}
+          onChange={(e) => cambiar("fecha_fin", e.target.value)}
+        />
+      </label>
+
+      <SelectorResponsable
+        valor={datos.responsable}
+        opciones={responsables}
+        nombreActual={proyecto?.responsable_nombre}
+        onChange={(v) => cambiar("responsable", v)}
       />
 
       {esSubvencion && (

@@ -1,6 +1,6 @@
 import frappe
 
-from prototipo.roles import ROL_COORDINADOR, ROL_EMPLEADO
+from prototipo.roles import ROL_COORDINADOR, ROL_EMPLEADO, ROLES_GESTION, exigir_rol
 
 # Cuentas que pueden ser responsables de un proyecto
 ROLES_RESPONSABLE = (ROL_EMPLEADO, ROL_COORDINADOR)
@@ -35,3 +35,10 @@ def buscar_responsables(doctype, txt, searchfield, start, page_len, filters):
 		if texto in (u.full_name or "").lower() or texto in u.name.lower()
 	]
 	return encontrados[start : start + page_len]
+
+
+@frappe.whitelist()
+def listar_responsables():
+	"""Empleados y coordinadores activos, para el selector de responsable de la SPA."""
+	exigir_rol(*ROLES_GESTION)
+	return responsables_posibles()

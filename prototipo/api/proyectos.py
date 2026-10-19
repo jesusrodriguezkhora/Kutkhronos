@@ -16,6 +16,8 @@ CAMPOS = [
 	"importe_disponible",
 	"acuerdo_marco",
 	"descripcion",
+	"fecha_fin",
+	"responsable",
 	"lider_proyecto",
 	"miembros_consorcio",
 ]
@@ -58,6 +60,17 @@ def listar(condiciones, o_condiciones=None, order_by="creation desc"):
 		limit_page_length=0,
 	)
 
+def anadir_nombre_responsable(proyectos):
+	"""Añade responsable_nombre (nombre completo del usuario) para que la SPA no muestre el email."""
+	usuarios = list({p.responsable for p in proyectos if p.responsable})
+	nombres = {}
+	if usuarios:
+		nombres = dict(
+			frappe.get_all("User", filters={"name": ["in", usuarios]}, fields=["name", "full_name"], as_list=True)
+		)
+	for p in proyectos:
+		p["responsable_nombre"] = nombres.get(p.responsable)
+
 
 @frappe.whitelist()
 def obtener_proyectos(filtros=None):
@@ -97,7 +110,10 @@ def obtener_proyectos(filtros=None):
 			# Si el acuerdo solo está como contexto, mostramos únicamente los que cumplen
 			p["contratos_basados"] = basados if p.cumple_filtro else [c for c in basados if c.cumple_filtro]
 
+	anadir_nombre_responsable(principales + [c for p in principales for c in p.get("contratos_basados", [])])
+
 	principales.sort(key=lambda p: p.creation, reverse=True)
+
 	return principales
 
 
