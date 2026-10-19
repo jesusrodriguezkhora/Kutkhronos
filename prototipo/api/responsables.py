@@ -1,9 +1,15 @@
 import frappe
 
-from prototipo.roles import ROL_COORDINADOR, ROL_EMPLEADO, ROLES_GESTION, exigir_rol
+from prototipo.roles import (
+	ROL_CEO,
+	ROL_COORDINADOR,
+	ROL_EMPLEADO,
+	ROLES_GESTION,
+	exigir_rol,
+)
 
 # Cuentas que pueden ser responsables de un proyecto
-ROLES_RESPONSABLE = (ROL_EMPLEADO, ROL_COORDINADOR)
+ROLES_RESPONSABLE = (ROL_EMPLEADO, ROL_COORDINADOR, ROL_CEO)
 
 
 def responsables_posibles():
