@@ -1,6 +1,7 @@
 import unicodedata
 
 import frappe
+from frappe.model.rename_doc import rename_doc
 
 from prototipo.roles import ROLES_GESTION, exigir_rol
 
@@ -78,7 +79,7 @@ def modificar_cliente(cliente, nombre, descripcion=None):
 	# Si el identificador del cliente es su nombre (lo habitual en ERPNext), se renombra también,
 	# para que los proyectos enlazados muestren el nombre nuevo. rename_doc actualiza los enlaces.
 	if cliente == nombre_anterior and nombre != cliente:
-		cliente = frappe.rename_doc("Customer", cliente, nombre, ignore_permissions=True, show_alert=False)
+		cliente = rename_doc("Customer", cliente, nombre, ignore_permissions=True, show_alert=False)
 
 	return {"name": cliente}
 
