@@ -98,7 +98,7 @@ export default function Proyectos() {
   return (
     <section>
       <div className="mb-6 flex items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Proyectos</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Pipeline</h1>
         <div className="flex items-center gap-3">
           <div className="relative w-72">
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-salvia-950/40">
@@ -106,7 +106,7 @@ export default function Proyectos() {
             </span>
             <input
               type="search"
-              aria-label="Buscar proyectos"
+              aria-label="Buscar en el pipeline"
               placeholder="Buscar por descripción, código o cliente"
               className={`${ESTILOS.claro.campo} pl-9`}
               value={busqueda}
