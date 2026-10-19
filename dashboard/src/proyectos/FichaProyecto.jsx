@@ -7,6 +7,7 @@ import { formatearImporte, formatearFecha } from "../lib/formato";
 import BuscadorCliente from "../componentes/BuscadorCliente";
 import CampoImporte from "../componentes/CampoImporte";
 import AreaTexto from "../componentes/AreaTexto";
+import Propuesta from "./Propuesta";
 
 const clases = ESTILOS.claro;
 
@@ -25,6 +26,41 @@ function valoresIniciales(proyecto, acuerdoMarco) {
     lider_proyecto: proyecto?.lider_proyecto ?? "",
     miembros_consorcio: proyecto?.miembros_consorcio ?? "",
   };
+}
+
+// Pestañas bajo la cabecera. La propuesta solo existe para proyectos ya guardados.
+const PESTANAS = [
+  { clave: "datos", etiqueta: "Datos" },
+  { clave: "propuesta", etiqueta: "Propuesta" },
+];
+
+function Pestanas({ activa, onCambiar, propuestaDisponible }) {
+  return (
+    <div role="tablist" className="grid grid-cols-2 border-b border-salvia-900/10">
+      {PESTANAS.map(({ clave, etiqueta }) => {
+        const deshabilitada = clave === "propuesta" && !propuestaDisponible;
+        const activo = activa === clave;
+        return (
+          <button
+            key={clave}
+            type="button"
+            role="tab"
+            aria-selected={activo}
+            disabled={deshabilitada}
+            title={deshabilitada ? "Guarda el proyecto para preparar su propuesta" : undefined}
+            onClick={() => onCambiar(clave)}
+            className={`-mb-px border-b-2 py-3 text-sm font-semibold uppercase tracking-wider transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+              activo
+                ? "border-salvia-900 text-salvia-950"
+                : "border-transparent text-salvia-950/50 hover:text-salvia-950"
+            }`}
+          >
+            {etiqueta}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 // --- Piezas del modo detalle ---
@@ -116,6 +152,7 @@ export default function FichaProyecto({
   const [editando, setEditando] = useState(esNuevo || editarAlAbrir);
   const [datos, setDatos] = useState(() => valoresIniciales(proyecto, acuerdoMarco));
   const [error, setError] = useState(null);
+  const [pestana, setPestana] = useState("datos");
 
   const { createDoc, loading: creando } = useFrappeCreateDoc();
   const { updateDoc, loading: actualizando } = useFrappeUpdateDoc();
@@ -417,54 +454,69 @@ export default function FichaProyecto({
           </button>
         </div>
 
-        {esNuevoBasado && (
-           <div className="flex items-center justify-between border-b border-salvia-900/10 bg-salvia/40 px-6 py-3 text-sm">
-            <span className="text-salvia-950/70">Saldo disponible del acuerdo</span>
-            <span className="font-semibold tabular-nums text-salvia-950">
-              {formatearImporte(acuerdoMarco.importe_disponible)}
-            </span>
+        <Pestanas activa={pestana} onCambiar={setPestana} propuestaDisponible={!esNuevo} />
+
+        {/* Pestaña Datos: lo que ya había (detalle o edición del proyecto) */}
+        {pestana === "datos" && (
+          <>
+            {esNuevoBasado && (
+              <div className="flex items-center justify-between border-b border-salvia-900/10 bg-salvia/40 px-6 py-3 text-sm">
+                <span className="text-salvia-950/70">Saldo disponible del acuerdo</span>
+                <span className="font-semibold tabular-nums text-salvia-950">
+                  {formatearImporte(acuerdoMarco.importe_disponible)}
+                </span>
+              </div>
+            )}
+
+            {editando ? vistaEdicion : vistaDetalle}
+
+            {error && (
+              <p className="mx-6 mb-2 whitespace-pre-line rounded-lg border-l-4 border-salvia-900 bg-salvia-100 px-3 py-2 text-sm text-salvia-950">
+                {error}
+              </p>
+            )}
+
+            <div className="flex justify-end gap-3 border-t border-salvia-900/10 px-6 py-4">
+              {editando ? (
+                <>
+                  <button
+                    key="cancelar"
+                    type="button"
+                    onClick={cancelarEdicion}
+                    className="rounded-lg px-4 py-2 text-sm font-medium text-salvia-950/60 hover:bg-salvia-900/5 hover:text-salvia-950"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    key="guardar"
+                    type="submit"
+                    disabled={!puedeGuardar}
+                    className="rounded-lg bg-salvia-900 px-5 py-2 text-sm font-semibold text-salvia-200 hover:bg-salvia hover:text-salvia-950 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {guardando ? "Guardando…" : "Guardar"}
+                  </button>
+                </>
+              ) : (
+                <button
+                  key="editar"
+                  type="button"
+                  onClick={empezarEdicion}
+                  className="rounded-lg bg-salvia-900 px-5 py-2 text-sm font-semibold text-salvia-200 hover:bg-salvia hover:text-salvia-950"
+                >
+                  Editar
+                </button>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Pestaña Propuesta: se mantiene montada (oculta) para no perder lo que se esté editando
+            al cambiar de pestaña */}
+        {!esNuevo && (
+          <div className={pestana === "propuesta" ? "flex min-h-0 flex-col" : "hidden"}>
+            <Propuesta proyecto={proyecto.name} />
           </div>
         )}
-
-        {editando ? vistaEdicion : vistaDetalle}
-
-        {error && (
-          <p className="mx-6 mb-2 whitespace-pre-line rounded-lg border-l-4 border-salvia-900 bg-salvia-100 px-3 py-2 text-sm text-salvia-950">
-            {error}
-          </p>
-        )}
-
-                <div className="flex justify-end gap-3 border-t border-salvia-900/10 px-6 py-4">
-                {editando ? (
-                    <>
-                        <button
-                        key="cancelar"
-                        type="button"
-                        onClick={cancelarEdicion}
-                        className="rounded-lg px-4 py-2 text-sm font-medium text-salvia-950/60 hover:bg-salvia-900/5 hover:text-salvia-950"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        key="guardar"
-                        type="submit"
-                        disabled={!puedeGuardar}
-                        className="rounded-lg bg-salvia-900 px-5 py-2 text-sm font-semibold text-salvia-200 hover:bg-salvia hover:text-salvia-950 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                        {guardando ? "Guardando…" : "Guardar"}
-                    </button>
-                </>
-            ) : (
-                <button
-                    key="editar"
-                    type="button"
-                    onClick={empezarEdicion}
-                    className="rounded-lg bg-salvia-900 px-5 py-2 text-sm font-semibold text-salvia-200 hover:bg-salvia hover:text-salvia-950"
-                >
-                Editar
-            </button>
-          )}
-        </div>
       </form>
     </div>
   );
