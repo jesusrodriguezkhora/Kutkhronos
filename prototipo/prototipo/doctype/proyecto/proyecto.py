@@ -185,6 +185,9 @@ class Proyecto(Document):
 	def on_trash(self):
 		if self.acuerdo_marco:
 			actualizar_saldo(self.acuerdo_marco, excluir=self.name)
+		# La propuesta es parte del proyecto: se borra con él
+		if frappe.db.exists("Propuesta", self.name):
+			frappe.delete_doc("Propuesta", self.name, ignore_permissions=True)
 
 	def propagar_a_contratos_basados(self):
 		"""Copia cliente y vía del acuerdo a sus contratos basados si han cambiado."""

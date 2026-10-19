@@ -13,7 +13,7 @@ export function generarContrasena(longitud = 14) {
 }
 
 // Opciones del campo Posición (DocType Datos Laborales)
-export const POSICIONES = ["Prácticas", "Consultor Junior", "Consultor Senior", "Coordinador", "CEO"];
+export const POSICIONES = ["Prácticas", "Consultor", "Consultor Senior", "Coordinador", "Director"];
 
 // Igual que calcular_coste_hora en datos_laborales.py, para mostrarlo mientras se escribe
 export const SEMANAS_ANIO = 52;
