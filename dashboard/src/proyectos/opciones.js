@@ -8,3 +8,6 @@ export const TIPOS_SUELTOS = ["Contrato", "Acuerdo marco", "Subvención"];
 
 // Vías que puede elegir un proyecto que no es subvención
 export const VIAS_NO_SUBVENCION = ["Heredada", "Contrato menor", "Licitación pública"];
+
+// Estados en los que un acuerdo marco admite contratos basados (mismos que en proyecto.py)
+export const ESTADOS_ACUERDO_CON_BASADOS = ["Aceptado", "En curso", "Cerrado"];

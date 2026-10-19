@@ -16,6 +16,9 @@ PREFIJOS = {
 # Estados de un contrato basado que consumen presupuesto del acuerdo marco
 ESTADOS_COMPUTABLES = ("Aceptado", "En curso", "Cerrado")
 
+# Estados en los que un acuerdo marco admite contratos basados (ya ha sido aceptado)
+ESTADOS_ACUERDO_CON_BASADOS = ESTADOS_COMPUTABLES
+
 # Campos que el contrato basado hereda de su acuerdo marco
 CAMPOS_HEREDADOS = ("cliente", "via")
 
@@ -134,7 +137,27 @@ class Proyecto(Document):
 		self.importe_consumido = consumido
 		self.importe_disponible = flt(self.importe) - consumido
 
+		if (
+			not self.is_new()
+			and self.has_value_changed("estado")
+			and self.estado not in ESTADOS_ACUERDO_CON_BASADOS
+		):
+			basados = frappe.db.count("Proyecto", {"acuerdo_marco": self.name})
+			if basados:
+				frappe.throw(
+					f"No se puede pasar a {self.estado or 'sin estado'} un acuerdo marco con "
+					f"{basados} {'contrato basado' if basados == 1 else 'contratos basados'}."
+				)
+
 	def validar_contrato_basado(self):
+		if self.is_new():
+			estado_acuerdo = frappe.db.get_value("Proyecto", self.acuerdo_marco, "estado")
+			if estado_acuerdo not in ESTADOS_ACUERDO_CON_BASADOS:
+				frappe.throw(
+					"Solo se pueden añadir contratos basados a un acuerdo marco aceptado "
+					f"(este está en {estado_acuerdo or 'sin estado'})."
+				)
+	
 		if self.estado in ESTADOS_COMPUTABLES:
 			importe_acuerdo = flt(frappe.db.get_value("Proyecto", self.acuerdo_marco, "importe"))
 			disponible = importe_acuerdo - calcular_consumido(self.acuerdo_marco, excluir=self.name)

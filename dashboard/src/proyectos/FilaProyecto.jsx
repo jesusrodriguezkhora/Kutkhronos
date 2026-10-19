@@ -1,6 +1,7 @@
 import BotonesAccion from "../componentes/BotonesAccion";
 import { GRID } from "./tabla";
 import { formatearImporte } from "../lib/formato";
+import { ESTADOS_ACUERDO_CON_BASADOS } from "./opciones";
 
 const ESTILOS_ESTADO = {
   Oportunidad: "border border-salvia-900/30 text-salvia-950",
@@ -149,12 +150,18 @@ export default function FilaProyecto({
           )}
 
           <div className="py-3 pl-[4.5rem]">
-            <button
-              onClick={() => onAnadirContratoBasado(proyecto)}
-              className="rounded-lg border border-dashed border-salvia-900/30 px-3 py-1.5 text-sm font-medium text-salvia-950/70 hover:border-salvia-900 hover:bg-salvia hover:text-salvia-950"
-            >
-              + Añadir contrato basado
-            </button>
+            {ESTADOS_ACUERDO_CON_BASADOS.includes(proyecto.estado) ? (
+              <button
+                onClick={() => onAnadirContratoBasado(proyecto)}
+                className="rounded-lg border border-dashed border-salvia-900/30 px-3 py-1.5 text-sm font-medium text-salvia-950/70 hover:border-salvia-900 hover:bg-salvia hover:text-salvia-950"
+              >
+                + Añadir contrato basado
+              </button>
+            ) : (
+              <p className="text-sm text-salvia-950/50">
+                Podrás añadir contratos basados cuando el acuerdo esté aceptado.
+              </p>
+            )}
           </div>
         </div>
       )}
