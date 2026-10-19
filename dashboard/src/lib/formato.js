@@ -10,6 +10,24 @@ export function formatearImporte(valor) {
   return euros.format(valor);
 }
 
+const eurosCompactos = new Intl.NumberFormat("es-ES", {
+  style: "currency",
+  currency: "EUR",
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
+// Para ejes y etiquetas de gráficos: "16 mil €", "1,2 M€"
+export function formatearImporteCompacto(valor) {
+  if (valor === null || valor === undefined) return "—";
+  return eurosCompactos.format(valor);
+}
+
+export function formatearPorcentaje(parte, total) {
+  if (!total) return "—";
+  return `${Math.round((parte / total) * 100)} %`;
+}
+
 // Frappe envía las fechas como "AAAA-MM-DD"; las mostramos como "DD/MM/AAAA"
 export function formatearFecha(valor) {
   if (!valor) return "—";

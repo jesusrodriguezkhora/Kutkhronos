@@ -16,7 +16,8 @@ def mi_perfil():
 	"""Datos del usuario de la sesión y los módulos de la SPA a los que tiene acceso."""
 	modulos = []
 	if tiene_rol(*ROLES_GESTION):
-		modulos += ["proyectos", "clientes", "empleados"]
+		# El primero es la página de entrada
+		modulos += ["panel", "proyectos", "clientes", "empleados"]
 
 	return {
 		"usuario": frappe.session.user,
