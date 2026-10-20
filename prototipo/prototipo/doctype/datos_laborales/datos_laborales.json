@@ -29,7 +29,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Posici\u00f3n",
-   "options": "\nPr\u00e1cticas\nConsultor\nConsultor\nCoordinador\nDirector"
+   "options": "\nPr\u00e1cticas\nConsultor\nConsultor Senior\nCoordinador\nDirector"
   },
   {
    "fieldname": "salario_anual",
@@ -54,7 +54,7 @@
  ],
  "grid_page_length": 50,
  "links": [],
- "modified": "2026-10-19 12:47:34.638800",
+ "modified": "2026-10-20 09:44:29.739952",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Datos Laborales",

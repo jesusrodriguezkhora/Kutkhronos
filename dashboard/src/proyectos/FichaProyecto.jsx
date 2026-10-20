@@ -153,6 +153,7 @@ export default function FichaProyecto({
   const [datos, setDatos] = useState(() => valoresIniciales(proyecto, acuerdoMarco));
   const [error, setError] = useState(null);
   const [pestana, setPestana] = useState("datos");
+  const [propuestaConCambios, setPropuestaConCambios] = useState(false);
 
   const { createDoc, loading: creando } = useFrappeCreateDoc();
   const { updateDoc, loading: actualizando } = useFrappeUpdateDoc();
@@ -180,8 +181,9 @@ export default function FichaProyecto({
       via: tipo === "Subvención" ? "Subvención" : d.via === "Subvención" ? "" : d.via,
     }));
 
-  const cerrar = () => {
-    if (editando && hayCambios && !window.confirm("Hay cambios sin guardar. ¿Descartarlos?")) {
+    const cerrar = () => {
+    const datosSinGuardar = editando && hayCambios;
+    if ((datosSinGuardar || propuestaConCambios) && !window.confirm("Hay cambios sin guardar. ¿Descartarlos?")) {
       return;
     }
     onCerrar();
@@ -513,8 +515,8 @@ export default function FichaProyecto({
         {/* Pestaña Propuesta: se mantiene montada (oculta) para no perder lo que se esté editando
             al cambiar de pestaña */}
         {!esNuevo && (
-          <div className={pestana === "propuesta" ? "flex min-h-0 flex-col" : "hidden"}>
-            <Propuesta proyecto={proyecto.name} />
+          <div className={pestana === "propuesta" ? "flex min-h-0 flex-1 flex-col" : "hidden"}>
+            <Propuesta proyecto={proyecto.name} onCambiosPendientes={setPropuestaConCambios} />
           </div>
         )}
       </form>
