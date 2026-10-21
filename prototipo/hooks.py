@@ -279,3 +279,9 @@ role_home_page = {
 	"CEO": "dashboard",
 	"Administracion": "dashboard",
 }
+
+scheduler_events = {
+	"weekly": [
+		"prototipo.planificacion.festivos.importar_festivos_programado",
+	],
+}
