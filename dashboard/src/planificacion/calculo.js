@@ -65,3 +65,26 @@ export function calcularTotales(indice, filas, empleados) {
 export function superaMaximo(total, maximo) {
   return maximo != null && total > maximo + 1e-9;
 }
+
+// Múltiplo de media hora (0,5 · 1 · 1,5…)
+export function esMediaHora(valor) {
+  return Math.abs(valor * 2 - Math.round(valor * 2)) < 1e-9;
+}
+
+// Índice {fila: {empleado: horas}} -> celdas para la API (solo las que tienen horas)
+export function aplanarCeldas(indice, conceptos) {
+  const celdas = [];
+  for (const [fila, porEmpleado] of Object.entries(indice)) {
+    const esConcepto = conceptos.includes(fila);
+    for (const [empleado, horas] of Object.entries(porEmpleado)) {
+      if (!horas) continue;
+      celdas.push({
+        concepto: esConcepto ? fila : CONCEPTO_PROYECTO,
+        proyecto: esConcepto ? null : fila,
+        empleado,
+        horas,
+      });
+    }
+  }
+  return celdas;
+}
