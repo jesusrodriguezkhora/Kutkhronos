@@ -17,7 +17,7 @@ def mi_perfil():
 	modulos = []
 	if tiene_rol(*ROLES_GESTION):
 		# El primero es la página de entrada
-		modulos += ["panel", "proyectos", "clientes", "empleados"]
+				modulos += ["panel", "proyectos", "planificacion", "clientes", "empleados"]
 
 	return {
 		"usuario": frappe.session.user,
