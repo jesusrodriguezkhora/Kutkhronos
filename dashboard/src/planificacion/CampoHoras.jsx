@@ -21,7 +21,7 @@ export default function CampoHoras({ valor, onChange, etiqueta }) {
       aria-label={etiqueta}
       aria-invalid={invalido}
       title={invalido ? "Las horas van en medias horas (0,5 · 1 · 1,5…)" : undefined}
-      className={`w-16 rounded-md border px-2 py-1 text-right tabular-nums outline-none focus:ring-2 focus:ring-salvia ${
+      className={`w-16 rounded-lg border px-2 py-1 text-right tabular-nums outline-none focus:border-salvia-900 focus:ring-2 focus:ring-salvia ${
         invalido ? "border-red-400 bg-red-50 text-red-700" : "border-salvia-900/15 bg-white"
       }`}
       value={texto}

@@ -1,14 +1,22 @@
 import { calcularTotales, formatearHoras, superaMaximo } from "./calculo";
 
-// Celdas fijas a izquierda (proyecto) y derecha (total), para que no se pierdan con el scroll horizontal
-const FIJA_IZQUIERDA = "sticky left-0 z-10 bg-white";
-const FIJA_DERECHA = "sticky right-0 z-10 bg-salvia-50";
+// Mismo estilo que las tablas del Pipeline, Clientes y Empleados: cabecera salvia-900 en mayúsculas,
+// filas blancas separadas por líneas finas y resaltado salvia al pasar el ratón.
+const CELDA = "px-4 py-3";
+const CABECERA = "bg-salvia-900 text-xs font-semibold uppercase tracking-wider text-salvia-200";
+
+// Columnas fijas a izquierda (proyecto) y derecha (total), para que no se pierdan con el scroll
+// horizontal. Necesitan fondo opaco; en las filas, el resaltado del ratón llega vía "group".
+const FIJA_IZQUIERDA = "sticky left-0 z-10";
+const FIJA_DERECHA = "sticky right-0 z-10 border-l border-salvia-900/10";
+const FONDO_FILA = "bg-white transition-colors group-hover:bg-salvia-50";
+const FONDO_CONCEPTO = "bg-salvia-50 transition-colors group-hover:bg-salvia-100";
 
 function CabeceraEmpleado({ empleado }) {
   return (
-    <th className="min-w-[7rem] px-3 py-2 text-right align-bottom font-semibold">
+    <th className={`${CELDA} ${CABECERA} min-w-[7.5rem] text-right align-bottom`}>
       <div className="leading-tight">{empleado.nombre}</div>
-      <div className="text-xs font-normal text-salvia-950/50">
+      <div className="mt-0.5 text-xs font-normal normal-case tracking-normal text-salvia-200/60">
         {empleado.en_plantilla ? `máx. ${formatearHoras(empleado.maximo) || 0} h` : "fuera de plantilla"}
       </div>
     </th>
@@ -17,12 +25,12 @@ function CabeceraEmpleado({ empleado }) {
 
 function FilaProyecto({ fila, empleados, indice, total, renderCelda, onQuitar }) {
   return (
-    <tr className="hover:bg-salvia/10">
-      <th scope="row" className={`${FIJA_IZQUIERDA} max-w-[16rem] px-3 py-2 text-left font-normal`}>
+    <tr className="group">
+      <th scope="row" className={`${CELDA} ${FIJA_IZQUIERDA} ${FONDO_FILA} max-w-[16rem] text-left font-normal`}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <div className="font-mono text-sm font-semibold">{fila.name}</div>
-            <div className="truncate text-xs text-salvia-950/60" title={fila.descripcion || undefined}>
+            <div className="font-mono font-medium">{fila.name}</div>
+            <div className="truncate text-xs text-salvia-950/50" title={fila.descripcion || undefined}>
               {fila.cliente ? `${fila.cliente} · ` : ""}
               {fila.descripcion || "—"}
             </div>
@@ -33,7 +41,7 @@ function FilaProyecto({ fila, empleados, indice, total, renderCelda, onQuitar })
               onClick={onQuitar}
               aria-label={`Quitar ${fila.name} de esta semana`}
               title="Quitar de esta semana"
-              className="grid h-6 w-6 shrink-0 place-items-center rounded text-salvia-950/40 hover:bg-red-50 hover:text-red-700"
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-salvia-950/40 hover:bg-salvia hover:text-salvia-950"
             >
               ×
             </button>
@@ -41,11 +49,11 @@ function FilaProyecto({ fila, empleados, indice, total, renderCelda, onQuitar })
         </div>
       </th>
       {empleados.map((e) => (
-        <td key={e.usuario} className="px-3 py-2 text-right tabular-nums">
+        <td key={e.usuario} className={`${CELDA} ${FONDO_FILA} text-right tabular-nums`}>
           {renderCelda(fila.name, e, indice[fila.name]?.[e.usuario] || 0)}
         </td>
       ))}
-      <td className={`${FIJA_DERECHA} px-3 py-2 text-right font-semibold tabular-nums`}>
+      <td className={`${CELDA} ${FIJA_DERECHA} ${FONDO_FILA} text-right font-medium tabular-nums`}>
         {formatearHoras(total)}
       </td>
     </tr>
@@ -54,16 +62,16 @@ function FilaProyecto({ fila, empleados, indice, total, renderCelda, onQuitar })
 
 function FilaConcepto({ concepto, empleados, indice, total, renderCelda }) {
   return (
-    <tr className="bg-salvia-900/[0.03]">
-      <th scope="row" className={`${FIJA_IZQUIERDA} bg-salvia-50 px-3 py-2 text-left font-semibold`}>
+    <tr className="group">
+      <th scope="row" className={`${CELDA} ${FIJA_IZQUIERDA} ${FONDO_CONCEPTO} text-left font-medium`}>
         {concepto}
       </th>
       {empleados.map((e) => (
-        <td key={e.usuario} className="px-3 py-2 text-right tabular-nums">
+        <td key={e.usuario} className={`${CELDA} ${FONDO_CONCEPTO} text-right tabular-nums`}>
           {renderCelda(concepto, e, indice[concepto]?.[e.usuario] || 0)}
         </td>
       ))}
-      <td className={`${FIJA_DERECHA} px-3 py-2 text-right font-semibold tabular-nums`}>
+      <td className={`${CELDA} ${FIJA_DERECHA} ${FONDO_CONCEPTO} text-right font-medium tabular-nums`}>
         {formatearHoras(total)}
       </td>
     </tr>
@@ -76,7 +84,7 @@ function celdaLectura(_fila, _empleado, horas) {
 }
 
 // Tabla filas (proyectos + vacaciones + formación) × personas, con totales.
-// renderCelda permite al editor (paso 5b) sustituir el texto por un campo de entrada.
+// renderCelda permite al editor sustituir el texto por un campo de entrada; onQuitarFila, quitar proyectos.
 export default function TablaPlanificacion({
   filas,
   conceptos,
@@ -90,29 +98,31 @@ export default function TablaPlanificacion({
 
   if (empleados.length === 0) {
     return (
-      <p className="rounded-2xl border border-salvia-900/10 bg-white px-4 py-6 text-sm text-salvia-950/50">
+      <p className="rounded-xl border border-salvia-900/10 bg-white px-4 py-6 text-sm text-salvia-950/50">
         No hay nadie en la plantilla: hacen falta empleados o coordinadores activos con horas semanales.
       </p>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-salvia-900/10 bg-white shadow-sm">
-      <table className="min-w-full text-sm">
-        <thead className="border-b border-salvia-900/10 text-salvia-950/70">
+    <div className="overflow-x-auto rounded-xl border border-salvia-900/10">
+      <table className="min-w-full border-collapse text-sm">
+        <thead>
           <tr>
-            <th className={`${FIJA_IZQUIERDA} px-3 py-2 text-left align-bottom font-semibold`}>Proyecto</th>
+            <th className={`${CELDA} ${CABECERA} ${FIJA_IZQUIERDA} text-left align-bottom`}>Proyecto</th>
             {empleados.map((e) => (
               <CabeceraEmpleado key={e.usuario} empleado={e} />
             ))}
-            <th className={`${FIJA_DERECHA} px-3 py-2 text-right align-bottom font-semibold`}>Total</th>
+            <th className={`${CELDA} ${CABECERA} ${FIJA_DERECHA} border-l-white/10 text-right align-bottom`}>
+              Total
+            </th>
           </tr>
         </thead>
 
-        <tbody className="divide-y divide-salvia-900/5">
+        <tbody className="divide-y divide-salvia-900/10">
           {filas.length === 0 && (
             <tr>
-              <td colSpan={empleados.length + 2} className="px-3 py-4 text-salvia-950/50">
+              <td colSpan={empleados.length + 2} className="bg-white px-4 py-6 text-sm text-salvia-950/50">
                 Esta semana no tiene proyectos planificados.
               </td>
             </tr>
@@ -140,16 +150,18 @@ export default function TablaPlanificacion({
           ))}
         </tbody>
 
-        <tfoot className="border-t-2 border-salvia-900/15 font-semibold">
+        <tfoot className="border-t border-salvia-900/15 font-semibold">
           <tr>
-            <th scope="row" className={`${FIJA_IZQUIERDA} px-3 py-2 text-left`}>Total por persona</th>
+            <th scope="row" className={`${CELDA} ${FIJA_IZQUIERDA} bg-salvia-100 text-left`}>
+              Total por persona
+            </th>
             {empleados.map((e) => {
               const total = totales.porEmpleado[e.usuario];
               const excede = superaMaximo(total, e.maximo);
               return (
                 <td
                   key={e.usuario}
-                  className={`px-3 py-2 text-right tabular-nums ${excede ? "bg-red-50 text-red-700" : ""}`}
+                  className={`${CELDA} text-right tabular-nums ${excede ? "bg-red-50 text-red-700" : "bg-salvia-100"}`}
                   title={excede ? `Supera el máximo de ${formatearHoras(e.maximo)} h` : undefined}
                 >
                   {formatearHoras(total) || "0"}
@@ -159,7 +171,7 @@ export default function TablaPlanificacion({
                 </td>
               );
             })}
-            <td className={`${FIJA_DERECHA} px-3 py-2 text-right tabular-nums`}>
+            <td className={`${CELDA} ${FIJA_DERECHA} bg-salvia-100 text-right tabular-nums`}>
               {formatearHoras(totales.general) || "0"}
             </td>
           </tr>
