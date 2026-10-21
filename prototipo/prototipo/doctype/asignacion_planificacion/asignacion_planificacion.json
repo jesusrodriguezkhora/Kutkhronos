@@ -1,0 +1,64 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "creation": "2026-10-21 09:48:08.330835",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "concepto",
+  "proyecto",
+  "empleado",
+  "horas"
+ ],
+ "fields": [
+  {
+   "default": "Proyecto",
+   "fieldname": "concepto",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Concepto",
+   "options": "Proyecto\nVacaciones\nFormaci\u00f3n",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.concepto==\"Proyecto\"",
+   "fieldname": "proyecto",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Proyecto",
+   "options": "Proyecto"
+  },
+  {
+   "fieldname": "empleado",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Empleado",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "horas",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Horas",
+   "reqd": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-21 09:51:32.269806",
+ "modified_by": "Administrator",
+ "module": "Prototipo",
+ "name": "Asignacion Planificacion",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
