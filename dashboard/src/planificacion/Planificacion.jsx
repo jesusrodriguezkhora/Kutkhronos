@@ -14,7 +14,7 @@ function fechaYHora(valor) {
 
 function Avisos({ semana }) {
   return (
-    <div className="space-y-2 text-sm">
+     <div className="space-y-2 text-sm">
       {semana.festivos.length > 0 && (
         <p className="text-salvia-950/70">
           ★ {semana.festivos.map((f) => `${formatearFecha(f.fecha)} · ${f.descripcion}`).join(" — ")}. Esta
@@ -25,11 +25,6 @@ function Avisos({ semana }) {
         <p className="rounded-lg border-l-4 border-red-300 bg-red-50 px-3 py-2 text-red-700">
           Todavía no hay calendario de festivos para {semana.sin_calendario.join(" y ")}: los máximos no
           descuentan festivos.
-        </p>
-      )}
-      {!semana.editable && (
-        <p className="rounded-lg border-l-4 border-salvia-900 bg-salvia-100 px-3 py-2 text-salvia-950">
-          Semana pasada: solo lectura.
         </p>
       )}
     </div>
@@ -66,22 +61,29 @@ export default function Planificacion() {
     if (!lunes && semanas.length) setLunes(semanas[0].lunes);
   }, [lunes, semanas]);
 
+  const irASemanaActual = () => {
+    const actual = lunesActual();
+    setAnio(Number(actual.slice(0, 4)));
+    setMes(Number(actual.slice(5, 7)));
+    setLunes(actual);
+  };
+
   return (
     <section className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Planificación</h1>
-        {info && <p className="mt-1 text-sm text-salvia-950/60">{info.semana.etiqueta}</p>}
       </div>
 
       <SelectorSemana
         anio={anio}
         mes={mes}
         semanas={semanas}
-        semanaActual={semanasMes.data?.message?.semana_actual}
+        semanaActual={lunesActual()}
         lunes={lunes}
         cargando={semanasMes.isLoading}
         onCambiarMes={cambiarMes}
         onCambiarSemana={setLunes}
+        onIrASemanaActual={irASemanaActual}
       />
 
       {semanasMes.error && <p className="text-sm text-red-600">{mensajeDeError(semanasMes.error)}</p>}
@@ -98,9 +100,12 @@ export default function Planificacion() {
             indice={indexarCeldas(info.celdas)}
           />
           <p className="text-xs text-salvia-950/50">
+            {!info.semana.editable && (
+              <span className="font-semibold text-salvia-950/70">Semana pasada, solo lectura · </span>
+            )}
             {info.modificado
               ? `Última edición el ${fechaYHora(info.modificado)} por ${info.modificado_por}.`
-              : "Esta semana todavía no se ha planificado."}
+              : "Esta semana no se planificó."}
           </p>
         </>
       )}
