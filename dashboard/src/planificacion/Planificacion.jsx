@@ -1,20 +1,14 @@
 import { useEffect, useState } from "react";
 import { useFrappeGetCall } from "frappe-react-sdk";
 import SelectorSemana from "./SelectorSemana";
-import TablaPlanificacion from "./TablaPlanificacion";
-import { indexarCeldas, lunesActual } from "./calculo";
+import EditorSemana from "./EditorSemana";
+import { lunesActual } from "./calculo";
 import { formatearFecha } from "../lib/formato";
 import { mensajeDeError } from "../lib/errores";
 
-// "2026-10-21 10:37:00.123" -> "21/10/2026 a las 10:37"
-function fechaYHora(valor) {
-  const [fecha, hora] = valor.split(" ");
-  return `${formatearFecha(fecha)} a las ${hora.slice(0, 5)}`;
-}
-
 function Avisos({ semana }) {
   return (
-     <div className="space-y-2 text-sm">
+    <div className="space-y-2 text-sm">
       {semana.festivos.length > 0 && (
         <p className="text-salvia-950/70">
           ★ {semana.festivos.map((f) => `${formatearFecha(f.fecha)} · ${f.descripcion}`).join(" — ")}. Esta
@@ -36,20 +30,32 @@ export default function Planificacion() {
   const [lunes, setLunes] = useState(lunesActual);
   const [anio, setAnio] = useState(() => Number(lunesActual().slice(0, 4)));
   const [mes, setMes] = useState(() => Number(lunesActual().slice(5, 7)));
+  const [cambiosPendientes, setCambiosPendientes] = useState(false);
 
   const semanasMes = useFrappeGetCall("prototipo.api.planificacion.semanas_del_mes", { anio, mes });
   const semanas = semanasMes.data?.message?.semanas ?? [];
 
-  // Mientras no haya semana elegida (null), no se pide nada
-  const { data, error, isLoading } = useFrappeGetCall(
+  // Mientras no haya semana elegida (null), no se pide nada. Sin recargar al volver a la pestaña:
+  // si otra persona guarda mientras editas, al guardar se te avisa en vez de perder lo que llevas.
+  const { data, error, isLoading, mutate } = useFrappeGetCall(
     "prototipo.api.planificacion.obtener_semana",
     { lunes },
-    lunes ? undefined : null
+    lunes ? undefined : null,
+    { revalidateOnFocus: false, revalidateOnReconnect: false }
   );
   const info = data?.message;
 
+  // Antes de salir de una semana con cambios sin guardar
+  const puedeSalir = () =>
+    !cambiosPendientes || window.confirm("Hay cambios sin guardar en esta semana. ¿Descartarlos?");
+
+  const elegirSemana = (nuevo) => {
+    if (nuevo !== lunes && puedeSalir()) setLunes(nuevo);
+  };
+
   // Al cambiar de mes: la semana actual si es de ese mes; si no, la primera del mes (cuando lleguen)
   const cambiarMes = (nuevoAnio, nuevoMes) => {
+    if (!puedeSalir()) return;
     const actual = lunesActual();
     const prefijo = `${nuevoAnio}-${String(nuevoMes).padStart(2, "0")}`;
     setAnio(nuevoAnio);
@@ -57,22 +63,21 @@ export default function Planificacion() {
     setLunes(actual.startsWith(prefijo) ? actual : null);
   };
 
-  useEffect(() => {
-    if (!lunes && semanas.length) setLunes(semanas[0].lunes);
-  }, [lunes, semanas]);
-
   const irASemanaActual = () => {
+    if (!puedeSalir()) return;
     const actual = lunesActual();
     setAnio(Number(actual.slice(0, 4)));
     setMes(Number(actual.slice(5, 7)));
     setLunes(actual);
   };
 
+  useEffect(() => {
+    if (!lunes && semanas.length) setLunes(semanas[0].lunes);
+  }, [lunes, semanas]);
+
   return (
     <section className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Planificación</h1>
-      </div>
+      <h1 className="text-3xl font-bold tracking-tight">Planificación</h1>
 
       <SelectorSemana
         anio={anio}
@@ -82,7 +87,7 @@ export default function Planificacion() {
         lunes={lunes}
         cargando={semanasMes.isLoading}
         onCambiarMes={cambiarMes}
-        onCambiarSemana={setLunes}
+        onCambiarSemana={elegirSemana}
         onIrASemanaActual={irASemanaActual}
       />
 
@@ -93,20 +98,14 @@ export default function Planificacion() {
       {lunes && info && (
         <>
           <Avisos semana={info.semana} />
-          <TablaPlanificacion
-            filas={info.filas}
-            conceptos={info.conceptos_administracion}
-            empleados={info.empleados}
-            indice={indexarCeldas(info.celdas)}
+          {/* key: el editor empieza de cero al cambiar de semana y después de guardar */}
+          <EditorSemana
+            key={`${lunes}|${info.modificado ?? ""}`}
+            info={info}
+            lunes={lunes}
+            onGuardado={(nueva) => mutate({ message: nueva }, { revalidate: false })}
+            onCambiosPendientes={setCambiosPendientes}
           />
-          <p className="text-xs text-salvia-950/50">
-            {!info.semana.editable && (
-              <span className="font-semibold text-salvia-950/70">Semana pasada, solo lectura · </span>
-            )}
-            {info.modificado
-              ? `Última edición el ${fechaYHora(info.modificado)} por ${info.modificado_por}.`
-              : "Esta semana no se planificó."}
-          </p>
         </>
       )}
     </section>

@@ -15,14 +15,29 @@ function CabeceraEmpleado({ empleado }) {
   );
 }
 
-function FilaProyecto({ fila, empleados, indice, total, renderCelda }) {
+function FilaProyecto({ fila, empleados, indice, total, renderCelda, onQuitar }) {
   return (
     <tr className="hover:bg-salvia/10">
       <th scope="row" className={`${FIJA_IZQUIERDA} max-w-[16rem] px-3 py-2 text-left font-normal`}>
-        <div className="font-mono text-sm font-semibold">{fila.name}</div>
-        <div className="truncate text-xs text-salvia-950/60" title={fila.descripcion || undefined}>
-          {fila.cliente ? `${fila.cliente} · ` : ""}
-          {fila.descripcion || "—"}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="font-mono text-sm font-semibold">{fila.name}</div>
+            <div className="truncate text-xs text-salvia-950/60" title={fila.descripcion || undefined}>
+              {fila.cliente ? `${fila.cliente} · ` : ""}
+              {fila.descripcion || "—"}
+            </div>
+          </div>
+          {onQuitar && (
+            <button
+              type="button"
+              onClick={onQuitar}
+              aria-label={`Quitar ${fila.name} de esta semana`}
+              title="Quitar de esta semana"
+              className="grid h-6 w-6 shrink-0 place-items-center rounded text-salvia-950/40 hover:bg-red-50 hover:text-red-700"
+            >
+              ×
+            </button>
+          )}
         </div>
       </th>
       {empleados.map((e) => (
@@ -68,6 +83,7 @@ export default function TablaPlanificacion({
   empleados,
   indice,
   renderCelda = celdaLectura,
+  onQuitarFila,
 }) {
   const claves = [...filas.map((f) => f.name), ...conceptos];
   const totales = calcularTotales(indice, claves, empleados);
@@ -109,6 +125,7 @@ export default function TablaPlanificacion({
               indice={indice}
               total={totales.porFila[f.name]}
               renderCelda={renderCelda}
+              onQuitar={onQuitarFila ? () => onQuitarFila(f.name) : undefined}
             />
           ))}
           {conceptos.map((c) => (
