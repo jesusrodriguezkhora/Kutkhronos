@@ -12,7 +12,7 @@ from datetime import date, datetime
 
 import frappe
 import requests
-from frappe.utils import getdate
+from frappe.utils import getdate, strip_html
 
 URL_CALENDARIO = (
 	"https://datos.madrid.es/dataset/300082-0-calendario_laboral/resource/"
@@ -105,17 +105,25 @@ def importar_festivos_programado():
 		frappe.log_error(title="Importar festivos de Madrid")
 
 
+def festivos_detalle(inicio, fin):
+	"""[{fecha, descripcion}] de los festivos entre dos fechas, ambas incluidas, según las listas
+	"Festivos Madrid AAAA"."""
+	filas = frappe.get_all(
+		"Holiday",
+		filters={
+			"parenttype": "Holiday List",
+			"parent": ["like", f"{PREFIJO_LISTA} %"],
+			"holiday_date": ["between", [inicio, fin]],
+		},
+		fields=["holiday_date", "description"],
+		order_by="holiday_date asc",
+	)
+	return [
+		{"fecha": getdate(f.holiday_date), "descripcion": strip_html(f.description or "").strip()}
+		for f in filas
+	]
+
+
 def festivos_entre(inicio, fin):
-	"""Fechas festivas entre dos fechas, ambas incluidas, según las listas "Festivos Madrid AAAA"."""
-	return {
-		getdate(d)
-		for d in frappe.get_all(
-			"Holiday",
-			filters={
-				"parenttype": "Holiday List",
-				"parent": ["like", f"{PREFIJO_LISTA} %"],
-				"holiday_date": ["between", [inicio, fin]],
-			},
-			pluck="holiday_date",
-		)
-	}
+	"""Fechas festivas entre dos fechas, ambas incluidas."""
+	return {f["fecha"] for f in festivos_detalle(inicio, fin)}
