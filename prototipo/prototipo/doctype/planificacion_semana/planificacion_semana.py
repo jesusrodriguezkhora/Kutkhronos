@@ -3,9 +3,12 @@ from frappe.model.document import Document
 from frappe.utils import flt, getdate
 
 from prototipo.planificacion.semanas import (
+	dias_de_semana,
 	dias_laborables,
 	es_pasada,
+	festivos_de_semana,
 	horas_maximas,
+	jornada_diaria,
 	plantilla,
 )
 from prototipo.roles import ROL_ADMINISTRACION, tiene_rol
@@ -21,13 +24,16 @@ ESTADOS_PLANIFICABLES = ("Aceptado", "En curso")
 
 
 def clave(asignacion):
-	"""Identifica una celda de la tabla: (concepto, proyecto, empleado)."""
-	proyecto = asignacion.proyecto if asignacion.concepto == CONCEPTO_PROYECTO else None
-	return (asignacion.concepto, proyecto, asignacion.empleado)
+	"""Identifica una celda: (concepto, proyecto, empleado, fecha). Los proyectos se planifican por
+	semana (sin fecha); vacaciones y formación, por día."""
+	if asignacion.concepto == CONCEPTO_PROYECTO:
+		return (asignacion.concepto, asignacion.proyecto, asignacion.empleado, None)
+	fecha = getdate(asignacion.fecha) if asignacion.fecha else None
+	return (asignacion.concepto, None, asignacion.empleado, fecha)
 
 
 def celdas(doc):
-	"""{(concepto, proyecto, empleado): horas} de una planificación ({} si no hay documento)."""
+	"""{(concepto, proyecto, empleado, fecha): horas} de una planificación ({} si no hay documento)."""
 	return {clave(a): flt(a.horas) for a in doc.asignaciones} if doc else {}
 
 
@@ -66,6 +72,7 @@ class PlanificacionSemana(Document):
 
 		self.validar_proyectos_nuevos()
 		self.validar_conceptos_administracion(cambiadas)
+		self.validar_dias(cambiadas, ahora)
 		self.validar_maximos(cambiadas, ahora)
 
 	# --- Fase 1: dejar los datos en forma ---
@@ -77,6 +84,9 @@ class PlanificacionSemana(Document):
 		for f in self.proyectos:
 			if f.proyecto and f.proyecto not in filas:
 				filas.append(f.proyecto)
+
+		dias = set(dias_de_semana(self.semana))
+		festivos = set(festivos_de_semana(self.semana))
 
 		valores = {}
 		for a in self.asignaciones:
@@ -91,8 +101,17 @@ class PlanificacionSemana(Document):
 					frappe.throw("Falta el proyecto en una de las horas planificadas.")
 				if a.proyecto not in filas:
 					filas.append(a.proyecto)
+				a.fecha = None
 			else:
+				# Vacaciones y formación van por día: de lunes a viernes de esta semana y nunca en festivo
 				a.proyecto = None
+				if h:
+					if not a.fecha:
+						frappe.throw(f"Falta el día en las horas de {a.concepto.lower()} de {a.empleado}.")
+					if getdate(a.fecha) not in dias:
+						frappe.throw(f"{a.concepto} de {a.empleado}: el {a.fecha} no es un día de esta semana.")
+					if getdate(a.fecha) in festivos:
+						frappe.throw(f"{a.concepto} de {a.empleado}: el {a.fecha} es festivo.")
 
 			if not h:
 				continue
@@ -105,8 +124,8 @@ class PlanificacionSemana(Document):
 		self.set(
 			"asignaciones",
 			[
-				{"concepto": c, "proyecto": p, "empleado": e, "horas": h}
-				for (c, p, e), h in valores.items()
+				{"concepto": c, "proyecto": p, "empleado": e, "fecha": f, "horas": h}
+				for (c, p, e, f), h in valores.items()
 			],
 		)
 
@@ -134,20 +153,52 @@ class PlanificacionSemana(Document):
 				)
 
 	def validar_conceptos_administracion(self, cambiadas):
-		if any(c in CONCEPTOS_ADMINISTRACION for c, _, _ in cambiadas) and not tiene_rol(ROL_ADMINISTRACION):
+		if any(c in CONCEPTOS_ADMINISTRACION for c, *_ in cambiadas) and not tiene_rol(ROL_ADMINISTRACION):
 			frappe.throw("Solo Administración puede modificar las horas de vacaciones y formación.")
+
+	def validar_dias(self, cambiadas, ahora):
+		"""En los días que cambian: no puede haber vacaciones y formación el mismo día, y entre las dos
+		no pueden superar la jornada diaria de la persona (horas semanales / 5)."""
+		dias_afectados = {(e, f) for c, _, e, f in cambiadas if c in CONCEPTOS_ADMINISTRACION}
+		if not dias_afectados:
+			return
+
+		equipo = {e["usuario"]: e for e in plantilla()}
+		por_dia = {}
+		for (concepto, _, empleado, fecha), h in ahora.items():
+			if concepto in CONCEPTOS_ADMINISTRACION:
+				por_dia.setdefault((empleado, fecha), {})[concepto] = h
+
+		errores = []
+		for empleado, fecha in sorted(dias_afectados):
+			conceptos = por_dia.get((empleado, fecha), {})
+			nombre = equipo[empleado]["nombre"] if empleado in equipo else empleado
+			dia = fecha.strftime("%d/%m")
+			if len(conceptos) > 1:
+				errores.append(f"{nombre}: el {dia} tiene vacaciones y formación a la vez.")
+			if empleado in equipo:
+				jornada = jornada_diaria(equipo[empleado]["horas_semanales"])
+				total = sum(conceptos.values())
+				if total > jornada + 1e-9:
+					errores.append(
+						f"{nombre}: {horas(total)} h de {' y '.join(c.lower() for c in conceptos)} el {dia}, "
+						f"más que su jornada diaria ({horas(jornada)} h)."
+					)
+
+		if errores:
+			frappe.throw("\n".join(errores), title="Vacaciones y formación")
 
 	def validar_maximos(self, cambiadas, ahora):
 		"""El total de cada persona (proyectos + vacaciones + formación) no puede superar sus horas
 		semanales, reducidas en proporción a los festivos de la semana."""
-		afectados = {e for _, _, e in cambiadas}
+		afectados = {e for _, _, e, _ in cambiadas}
 		if not afectados:
 			return
 
 		equipo = {e["usuario"]: e for e in plantilla()}
 		laborables = dias_laborables(self.semana)
 		totales = {}
-		for (_, _, empleado), h in ahora.items():
+		for (_, _, empleado, _), h in ahora.items():
 			totales[empleado] = totales.get(empleado, 0) + h
 
 		errores = []

@@ -71,3 +71,7 @@ def plantilla():
 		)
 	]
 	return sorted(equipo, key=lambda e: e["nombre"].lower())
+
+def jornada_diaria(horas_semanales):
+	"""Horas de un día de trabajo: las semanales repartidas de lunes a viernes."""
+	return flt(horas_semanales) / DIAS_SEMANA

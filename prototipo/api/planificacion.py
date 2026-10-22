@@ -9,6 +9,7 @@ from prototipo.planificacion.semanas import (
 	dias_de_semana,
 	es_pasada,
 	horas_maximas,
+	jornada_diaria,
 	lunes_de,
 	plantilla,
 )
@@ -23,6 +24,8 @@ MESES = (
 	"enero", "febrero", "marzo", "abril", "mayo", "junio",
 	"julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
 )
+
+NOMBRES_DIA = ("lunes", "martes", "miércoles", "jueves", "viernes")
 
 # Proyectos que se pueden añadir a una semana (mismas reglas que el controlador)
 FILTRO_PLANIFICABLES = {"estado": ["in", ESTADOS_PLANIFICABLES], "tipo": ["!=", "Acuerdo marco"]}
@@ -51,11 +54,17 @@ def etiqueta(lunes):
 def info_semana(lunes):
 	dias = dias_de_semana(lunes)
 	festivos = festivos_detalle(dias[0], dias[-1])
+	nombres_festivos = {f["fecha"]: f["descripcion"] for f in festivos}
 	return {
 		"lunes": lunes,
 		"viernes": dias[-1],
 		"etiqueta": etiqueta(lunes),
 		"festivos": festivos,
+		# Los cinco días, para el detalle diario de vacaciones y formación
+		"dias": [
+			{"fecha": d, "nombre": NOMBRES_DIA[i], "festivo": nombres_festivos.get(d)}
+			for i, d in enumerate(dias)
+		],
 		"dias_laborables": DIAS_SEMANA - len(festivos),
 		"editable": not es_pasada(lunes),
 		# Años de la semana sin calendario de festivos importado (el máximo no tendría en cuenta festivos)
@@ -87,7 +96,13 @@ def datos_proyectos(nombres):
 
 def celdas_de(doc, filtro=None):
 	return [
-		{"concepto": a.concepto, "proyecto": a.proyecto, "empleado": a.empleado, "horas": flt(a.horas)}
+		{
+			"concepto": a.concepto,
+			"proyecto": a.proyecto,
+			"empleado": a.empleado,
+			"fecha": a.fecha,
+			"horas": flt(a.horas),
+		}
 		for a in (doc.asignaciones if doc else [])
 		if not filtro or filtro(a)
 	]
@@ -125,14 +140,26 @@ def obtener_semana(lunes):
 
 	equipo = plantilla()
 	empleados = [
-		{**e, "maximo": horas_maximas(e["horas_semanales"], info["dias_laborables"]), "en_plantilla": True}
+		{
+			**e,
+			"maximo": horas_maximas(e["horas_semanales"], info["dias_laborables"]),
+			"jornada_diaria": jornada_diaria(e["horas_semanales"]),
+			"en_plantilla": True,
+		}
 		for e in equipo
 	]
 	# Quien tenga horas guardadas en la semana pero ya no esté en la plantilla (sobre todo, semanas pasadas)
 	en_plantilla = {e["usuario"] for e in equipo}
 	for usuario in sorted({a.empleado for a in (doc.asignaciones if doc else [])} - en_plantilla):
 		empleados.append(
-			{"usuario": usuario, "nombre": get_fullname(usuario), "horas_semanales": None, "maximo": None, "en_plantilla": False}
+			{
+				"usuario": usuario,
+				"nombre": get_fullname(usuario),
+				"horas_semanales": None,
+				"maximo": None,
+				"jornada_diaria": None,
+				"en_plantilla": False,
+			}
 		)
 
 	return {
@@ -176,6 +203,7 @@ def guardar_semana(lunes, filas, celdas, modificado=None):
 				"concepto": c.get("concepto"),
 				"proyecto": c.get("proyecto"),
 				"empleado": c.get("empleado"),
+				"fecha": c.get("fecha"),
 				"horas": flt(c.get("horas")),
 			}
 			for c in celdas

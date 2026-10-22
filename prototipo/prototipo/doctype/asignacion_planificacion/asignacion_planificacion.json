@@ -10,6 +10,7 @@
   "concepto",
   "proyecto",
   "empleado",
+  "fecha",
   "horas"
  ],
  "fields": [
@@ -44,13 +45,20 @@
    "in_list_view": 1,
    "label": "Horas",
    "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.concepto!=\"Proyecto\"",
+   "fieldname": "fecha",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "D\u00eda"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-10-21 09:51:32.269806",
+ "modified": "2026-10-22 09:45:12.102704",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Asignacion Planificacion",
