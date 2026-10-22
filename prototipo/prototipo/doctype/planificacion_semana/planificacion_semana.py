@@ -15,11 +15,14 @@ from prototipo.roles import ROL_ADMINISTRACION, tiene_rol
 
 CONCEPTO_PROYECTO = "Proyecto"
 
-# Filas fijas que solo puede editar Administración
-CONCEPTOS_ADMINISTRACION = ("Vacaciones", "Formación")
-
-# Las vacaciones son de día completo: sus horas son siempre la jornada diaria de la persona
+# Las vacaciones van por día, son de jornada completa y solo las edita Administración
 CONCEPTO_VACACIONES = "Vacaciones"
+
+# Filas fijas de una casilla por persona y semana, como los proyectos; las edita cualquier rol de gestión
+CONCEPTOS_SEMANALES = ("Comercial", "Interno", "Formación")
+
+# Todas las filas fijas, en el orden en que salen en la tabla (debajo de los proyectos)
+CONCEPTOS = (*CONCEPTOS_SEMANALES, CONCEPTO_VACACIONES)
 
 # Estados en los que un proyecto se puede añadir a la planificación (los acuerdos marco nunca:
 # se planifican sus contratos basados)
@@ -27,12 +30,13 @@ ESTADOS_PLANIFICABLES = ("Aceptado", "En curso")
 
 
 def clave(asignacion):
-	"""Identifica una celda: (concepto, proyecto, empleado, fecha). Los proyectos se planifican por
-	semana (sin fecha); vacaciones y formación, por día."""
-	if asignacion.concepto == CONCEPTO_PROYECTO:
-		return (asignacion.concepto, asignacion.proyecto, asignacion.empleado, None)
-	fecha = getdate(asignacion.fecha) if asignacion.fecha else None
-	return (asignacion.concepto, None, asignacion.empleado, fecha)
+	"""Identifica una celda: (concepto, proyecto, empleado, fecha). El proyecto solo en las filas de
+	proyecto; la fecha solo en vacaciones, que van por día. Todo lo demás es por semana."""
+	proyecto = asignacion.proyecto if asignacion.concepto == CONCEPTO_PROYECTO else None
+	fecha = None
+	if asignacion.concepto == CONCEPTO_VACACIONES and asignacion.fecha:
+		fecha = getdate(asignacion.fecha)
+	return (asignacion.concepto, proyecto, asignacion.empleado, fecha)
 
 
 def celdas(doc):
@@ -74,8 +78,7 @@ class PlanificacionSemana(Document):
 		cambiadas = {k for k in set(antes) | set(ahora) if antes.get(k) != ahora.get(k)}
 
 		self.validar_proyectos_nuevos()
-		self.validar_conceptos_administracion(cambiadas)
-		self.validar_dias(cambiadas, ahora)
+		self.validar_vacaciones(cambiadas, ahora)
 		self.validar_maximos(cambiadas, ahora)
 
 	# --- Fase 1: dejar los datos en forma ---
@@ -106,16 +109,20 @@ class PlanificacionSemana(Document):
 				if a.proyecto not in filas:
 					filas.append(a.proyecto)
 				a.fecha = None
-			else:
-				# Vacaciones y formación van por día: de lunes a viernes de esta semana y nunca en festivo
+			elif a.concepto == CONCEPTO_VACACIONES:
+				# Las vacaciones van por día: de lunes a viernes de esta semana y nunca en festivo
 				a.proyecto = None
 				if h:
 					if not a.fecha:
-						frappe.throw(f"Falta el día en las horas de {a.concepto.lower()} de {a.empleado}.")
+						frappe.throw(f"Falta el día en las vacaciones de {a.empleado}.")
 					if getdate(a.fecha) not in dias:
-						frappe.throw(f"{a.concepto} de {a.empleado}: el {a.fecha} no es un día de esta semana.")
+						frappe.throw(f"Vacaciones de {a.empleado}: el {a.fecha} no es un día de esta semana.")
 					if getdate(a.fecha) in festivos:
-						frappe.throw(f"{a.concepto} de {a.empleado}: el {a.fecha} es festivo.")
+						frappe.throw(f"Vacaciones de {a.empleado}: el {a.fecha} es festivo.")
+			else:
+				# Formación, comercial e interno: una casilla por semana
+				a.proyecto = None
+				a.fecha = None
 
 			if not h:
 				continue
@@ -156,50 +163,34 @@ class PlanificacionSemana(Document):
 					f"planificar proyectos {' o '.join(e.lower() for e in ESTADOS_PLANIFICABLES)}."
 				)
 
-	def validar_conceptos_administracion(self, cambiadas):
-		if any(c in CONCEPTOS_ADMINISTRACION for c, *_ in cambiadas) and not tiene_rol(ROL_ADMINISTRACION):
-			frappe.throw("Solo Administración puede modificar las horas de vacaciones y formación.")
-
-	def validar_dias(self, cambiadas, ahora):
-		"""En los días que cambian: no puede haber vacaciones y formación el mismo día, las vacaciones son
-		de jornada completa y la formación no puede superar la jornada diaria (horas semanales / 5)."""
-		dias_afectados = {(e, f) for c, _, e, f in cambiadas if c in CONCEPTOS_ADMINISTRACION}
+	def validar_vacaciones(self, cambiadas, ahora):
+		"""Solo Administración cambia las vacaciones, y cada día de vacaciones vale la jornada diaria
+		completa (horas semanales / 5)."""
+		dias_afectados = {(e, f) for c, _, e, f in cambiadas if c == CONCEPTO_VACACIONES}
 		if not dias_afectados:
 			return
+		if not tiene_rol(ROL_ADMINISTRACION):
+			frappe.throw("Solo Administración puede modificar las vacaciones.")
 
 		equipo = {e["usuario"]: e for e in plantilla()}
-		por_dia = {}
-		for (concepto, _, empleado, fecha), h in ahora.items():
-			if concepto in CONCEPTOS_ADMINISTRACION:
-				por_dia.setdefault((empleado, fecha), {})[concepto] = h
-
 		errores = []
 		for empleado, fecha in sorted(dias_afectados):
-			conceptos = por_dia.get((empleado, fecha), {})
-			nombre = equipo[empleado]["nombre"] if empleado in equipo else empleado
-			dia = fecha.strftime("%d/%m")
-			if len(conceptos) > 1:
-				errores.append(f"{nombre}: el {dia} tiene vacaciones y formación a la vez.")
-			if empleado in equipo:
-				jornada = jornada_diaria(equipo[empleado]["horas_semanales"])
-				vacaciones = conceptos.get(CONCEPTO_VACACIONES)
-				if vacaciones and abs(vacaciones - jornada) > 1e-9:
-					errores.append(
-						f"{nombre}: las vacaciones del {dia} deben ser de jornada completa ({horas(jornada)} h)."
-					)
-				total = sum(conceptos.values())
-				if total > jornada + 1e-9:
-					errores.append(
-						f"{nombre}: {horas(total)} h de {' y '.join(c.lower() for c in conceptos)} el {dia}, "
-						f"más que su jornada diaria ({horas(jornada)} h)."
-					)
+			h = ahora.get((CONCEPTO_VACACIONES, None, empleado, fecha))
+			if not h or empleado not in equipo:
+				continue
+			jornada = jornada_diaria(equipo[empleado]["horas_semanales"])
+			if abs(h - jornada) > 1e-9:
+				errores.append(
+					f"{equipo[empleado]['nombre']}: las vacaciones del {fecha.strftime('%d/%m')} deben ser de "
+					f"jornada completa ({horas(jornada)} h)."
+				)
 
 		if errores:
-			frappe.throw("\n".join(errores), title="Vacaciones y formación")
+			frappe.throw("\n".join(errores), title="Vacaciones")
 
 	def validar_maximos(self, cambiadas, ahora):
-		"""El total de cada persona (proyectos + vacaciones + formación) no puede superar sus horas
-		semanales, reducidas en proporción a los festivos de la semana."""
+		"""El total de cada persona (proyectos, vacaciones, formación, comercial e interno) no puede
+		superar sus horas semanales, reducidas en proporción a los festivos de la semana."""
 		afectados = {e for _, _, e, _ in cambiadas}
 		if not afectados:
 			return

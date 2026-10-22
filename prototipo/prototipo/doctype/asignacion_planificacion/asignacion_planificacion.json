@@ -20,7 +20,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Concepto",
-   "options": "Proyecto\nVacaciones\nFormaci\u00f3n",
+   "options": "Proyecto\nComercial\nInterno\nFormaci\u00f3n\nVacaciones",
    "reqd": 1
   },
   {
@@ -47,7 +47,7 @@
    "reqd": 1
   },
   {
-   "depends_on": "eval:doc.concepto!=\"Proyecto\"",
+   "depends_on": "eval:doc.concepto!=\"Vacaciones\"",
    "fieldname": "fecha",
    "fieldtype": "Date",
    "in_list_view": 1,
@@ -58,7 +58,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-10-22 09:45:12.102704",
+ "modified": "2026-10-22 13:44:51.312683",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Asignacion Planificacion",

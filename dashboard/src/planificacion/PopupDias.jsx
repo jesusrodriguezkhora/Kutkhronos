@@ -15,14 +15,12 @@ const sinVacios = (valores) =>
 const CONCEPTO_VACACIONES = "Vacaciones";
 
 // Detalle por día (lunes a viernes) de las vacaciones o la formación de una persona.
-// Los festivos y los días que ya tienen el otro concepto no se pueden rellenar.
+// Los festivos no se pueden marcar.
 export default function PopupDias({
   concepto,
-  otroConcepto,
   empleado,
   dias,
   valores,
-  otros,
   editable,
   onAplicar,
   onCerrar,
@@ -44,17 +42,11 @@ export default function PopupDias({
       <ul className="divide-y divide-salvia-900/10 px-6 py-2">
         {dias.map((d) => {
           const horas = borrador[d.fecha] || 0;
-          const otro = otros[d.fecha] || 0;
 
           let contenido;
           if (d.festivo) {
             contenido = <span className="text-right text-xs text-salvia-950/50">Festivo · {d.festivo}</span>;
-          } else if (otro) {
-            contenido = (
-              <span className="text-xs text-salvia-950/50">
-                {otroConcepto} ese día ({formatearHoras(otro)} h)
-              </span>
-            );
+
           } else if (porDias) {
             // Vacaciones: día completo o nada
             contenido = (

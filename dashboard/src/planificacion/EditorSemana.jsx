@@ -12,6 +12,7 @@ import {
   indexarCeldas,
   superaMaximo,
   totalesDiarios,
+  CONCEPTO_VACACIONES,
 } from "./calculo";
 import { formatearFecha } from "../lib/formato";
 import { mensajeDeError } from "../lib/errores";
@@ -29,7 +30,7 @@ function estadoInicial(info) {
 
 // Lo que se guardaría, en un orden estable: para saber si hay cambios
 function resumen(estado) {
-  const celdas = aplanarCeldas(estado.indice, estado.diario)
+  const celdas = aplanarCeldas(estado.indice, estado.semanal, estado.diario)
     .map((c) => `${c.concepto}|${c.proyecto ?? ""}|${c.empleado}|${c.fecha ?? ""}|${c.horas}`)
     .sort();
   return JSON.stringify([estado.filas.map((f) => f.name), celdas]);
@@ -58,7 +59,7 @@ const BOTON_SECUNDARIO =
 
 // Tabla de una semana con su edición. Se monta de nuevo (key) al cambiar de semana o tras guardar.
 export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendientes }) {
-  const conceptos = info.conceptos_administracion;
+  const conceptos = info.conceptos;
   const editable = info.semana.editable;
 
   const [estado, setEstado] = useState(() => estadoInicial(info));
@@ -97,6 +98,12 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
       indice: { ...e.indice, [fila]: { ...e.indice[fila], [empleado]: horas } },
     }));
 
+  const cambiarSemanal = (concepto, empleado, horas) =>
+    setEstado((e) => ({
+      ...e,
+      semanal: { ...e.semanal, [concepto]: { ...e.semanal[concepto], [empleado]: horas } },
+    }));
+
   const anadirFila = (proyecto) => setEstado((e) => ({ ...e, filas: [...e.filas, proyecto] }));
 
   const quitarFila = (nombre) =>
@@ -113,34 +120,38 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
     setPopup(null);
   };
 
-  // Vacaciones y formación: solo Administración. Las semanas pasadas no se editan.
-  const puedeEditar = (fila) => editable && (!conceptos.includes(fila) || info.puede_editar_administracion);
+  // Vacaciones: solo Administración. El resto de filas, cualquier rol de gestión. Las semanas cerradas no se editan.
+  const puedeEditar = (fila) => editable && (fila !== CONCEPTO_VACACIONES || info.puede_editar_vacaciones);
 
-  const renderCelda = (fila, empleado, horas) =>
-    conceptos.includes(fila) ? (
-      <BotonDias
-        horas={horas}
-        editable={puedeEditar(fila)}
-        onAbrir={() => setPopup({ concepto: fila, empleado })}
-        etiqueta={`${fila} de ${empleado.nombre}: detalle por día`}
-      />
-    ) : puedeEditar(fila) ? (
+  const renderCelda = (fila, empleado, horas) => {
+    if (fila === CONCEPTO_VACACIONES) {
+      return (
+        <BotonDias
+          horas={horas}
+          editable={puedeEditar(fila)}
+          onAbrir={() => setPopup({ concepto: fila, empleado })}
+          etiqueta={`${fila} de ${empleado.nombre}: detalle por día`}
+        />
+      );
+    }
+    if (!puedeEditar(fila)) return formatearHoras(horas);
+    const cambiar = conceptos.includes(fila) ? cambiarSemanal : cambiarCelda;
+    return (
       <CampoHoras
         valor={horas}
-        onChange={(h) => cambiarCelda(fila, empleado.usuario, h)}
+        onChange={(h) => cambiar(fila, empleado.usuario, h)}
         etiqueta={`Horas de ${empleado.nombre} en ${fila}`}
       />
-    ) : (
-      formatearHoras(horas)
     );
+  };
 
   // --- Lo que impide guardar (el servidor lo vuelve a comprobar) ---
 
-  const indiceTabla = { ...estado.indice, ...totalesDiarios(estado.diario) };
+  const indiceTabla = { ...estado.indice, ...estado.semanal, ...totalesDiarios(estado.diario) };
   const claves = [...estado.filas.map((f) => f.name), ...conceptos];
   const totales = calcularTotales(indiceTabla, claves, info.empleados);
   const excedidos = info.empleados.filter((e) => superaMaximo(totales.porEmpleado[e.usuario], e.maximo));
-  const horasInvalidas = Object.values(estado.indice).some((porEmpleado) =>
+  const horasInvalidas = [...Object.values(estado.indice), ...Object.values(estado.semanal)].some((porEmpleado) =>
     Object.values(porEmpleado).some((h) => h < 0 || !esMediaHora(h))
   );
 
@@ -158,7 +169,7 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
     try {
       const copia = (await llamarCopiar({ lunes })).message;
       setEstado((e) => {
-        // Vacaciones y formación de esta semana se mantienen; los proyectos se sustituyen
+        // Vacaciones, formación, comercial e interno de esta semana se mantienen; los proyectos se sustituyen
         const indice = {};
         for (const c of copia.celdas) {
           indice[c.proyecto] = { ...indice[c.proyecto], [c.empleado]: c.horas };
@@ -182,7 +193,7 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
       const respuesta = await llamarGuardar({
         lunes,
         filas: estado.filas.map((f) => f.name),
-        celdas: aplanarCeldas(estado.indice, estado.diario),
+        celdas: aplanarCeldas(estado.indice, estado.semanal, estado.diario),
         modificado: info.modificado,
       });
       onGuardado(respuesta.message);
@@ -271,11 +282,9 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
       {popup && (
         <PopupDias
           concepto={popup.concepto}
-          otroConcepto={conceptos.find((c) => c !== popup.concepto)}
           empleado={popup.empleado}
           dias={info.semana.dias}
           valores={estado.diario[popup.concepto]?.[popup.empleado.usuario] ?? {}}
-          otros={estado.diario[conceptos.find((c) => c !== popup.concepto)]?.[popup.empleado.usuario] ?? {}}
           editable={puedeEditar(popup.concepto)}
           onAplicar={(dias) => aplicarDias(popup.concepto, popup.empleado.usuario, dias)}
           onCerrar={() => setPopup(null)}

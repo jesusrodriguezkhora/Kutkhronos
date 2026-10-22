@@ -15,7 +15,7 @@ from prototipo.planificacion.semanas import (
 )
 from prototipo.prototipo.doctype.planificacion_semana.planificacion_semana import (
 	CONCEPTO_PROYECTO,
-	CONCEPTOS_ADMINISTRACION,
+	CONCEPTOS,
 	ESTADOS_PLANIFICABLES,
 )
 from prototipo.roles import ROL_ADMINISTRACION, ROLES_GESTION, exigir_rol, tiene_rol
@@ -167,8 +167,8 @@ def obtener_semana(lunes):
 		"empleados": empleados,
 		"filas": datos_proyectos([p.proyecto for p in doc.proyectos] if doc else []),
 		"celdas": celdas_de(doc),
-		"conceptos_administracion": CONCEPTOS_ADMINISTRACION,
-		"puede_editar_administracion": tiene_rol(ROL_ADMINISTRACION),
+		"conceptos": CONCEPTOS,
+		"puede_editar_vacaciones": tiene_rol(ROL_ADMINISTRACION),
 		"hay_semana_anterior": bool(planificacion_de(lunes - timedelta(days=7))),
 		"modificado": doc.modified if doc else None,
 		"modificado_por": get_fullname(doc.modified_by) if doc else None,

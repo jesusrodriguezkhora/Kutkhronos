@@ -2,6 +2,8 @@
 
 export const CONCEPTO_PROYECTO = "Proyecto";
 
+export const CONCEPTO_VACACIONES = "Vacaciones";
+
 export const MESES = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
@@ -30,22 +32,26 @@ export function primeraSemanaEditable() {
   return aISO(lunes);
 }
 
-// Celdas de la API -> proyectos por semana y vacaciones/formación por día:
-//   indice: {proyecto: {empleado: horas}}
-//   diario: {concepto: {empleado: {fecha: horas}}}
+// Celdas de la API -> estado del editor:
+//   indice:  {proyecto: {empleado: horas}}           proyectos, por semana
+//   semanal: {concepto: {empleado: horas}}           formación, comercial e interno, por semana
+//   diario:  {concepto: {empleado: {fecha: horas}}}  vacaciones, por día
 export function indexarCeldas(celdas) {
   const indice = {};
+  const semanal = {};
   const diario = {};
   for (const c of celdas) {
     const horas = Number(c.horas) || 0;
     if (c.concepto === CONCEPTO_PROYECTO) {
       indice[c.proyecto] = { ...indice[c.proyecto], [c.empleado]: horas };
-    } else {
+    } else if (c.concepto === CONCEPTO_VACACIONES) {
       diario[c.concepto] = { ...diario[c.concepto] };
       diario[c.concepto][c.empleado] = { ...diario[c.concepto][c.empleado], [c.fecha]: horas };
+    } else {
+      semanal[c.concepto] = { ...semanal[c.concepto], [c.empleado]: horas };
     }
   }
-  return { indice, diario };
+  return { indice, semanal, diario };
 }
 
 // Horas de una persona en un concepto, sumando sus días
@@ -92,11 +98,16 @@ export function esMediaHora(valor) {
 }
 
 // Estado del editor -> celdas para la API (solo las que tienen horas)
-export function aplanarCeldas(indice, diario) {
+export function aplanarCeldas(indice, semanal, diario) {
   const celdas = [];
   for (const [proyecto, porEmpleado] of Object.entries(indice)) {
     for (const [empleado, horas] of Object.entries(porEmpleado)) {
       if (horas) celdas.push({ concepto: CONCEPTO_PROYECTO, proyecto, empleado, fecha: null, horas });
+    }
+  }
+  for (const [concepto, porEmpleado] of Object.entries(semanal)) {
+    for (const [empleado, horas] of Object.entries(porEmpleado)) {
+      if (horas) celdas.push({ concepto, proyecto: null, empleado, fecha: null, horas });
     }
   }
   for (const [concepto, porEmpleado] of Object.entries(diario)) {
