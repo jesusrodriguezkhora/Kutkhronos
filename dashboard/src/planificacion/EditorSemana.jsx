@@ -237,7 +237,7 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-salvia-900/10 pt-4">
         <p className="text-xs text-salvia-950/50">
-          {!editable && <span className="font-semibold text-salvia-950/70">Semana pasada, solo lectura · </span>}
+          {!editable && <span className="font-semibold text-salvia-950/70">Semana cerrada, solo lectura · </span>}
           {info.modificado
             ? `Última edición el ${fechaYHora(info.modificado)} por ${info.modificado_por}.`
             : editable

@@ -19,8 +19,9 @@ def lunes_de(fecha):
 	return fecha - timedelta(days=fecha.weekday())
 
 def es_pasada(semana):
-	"""Una semana es pasada (solo lectura) cuando ya ha empezado la siguiente."""
-	return getdate(semana) < lunes_de(today())
+	"""Una semana se cierra (solo lectura) el martes a las 00:00 de esa misma semana: solo se puede
+	editar hasta el final de su lunes."""
+	return getdate(semana) < getdate(today())
 
 
 def dias_de_semana(lunes):
