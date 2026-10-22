@@ -3,6 +3,7 @@ import { useFrappePostCall } from "frappe-react-sdk";
 import TablaPlanificacion from "./TablaPlanificacion";
 import CampoHoras from "./CampoHoras";
 import BuscadorProyecto from "./BuscadorProyecto";
+import PopupDias from "./PopupDias";
 import {
   aplanarCeldas,
   calcularTotales,
@@ -10,6 +11,7 @@ import {
   formatearHoras,
   indexarCeldas,
   superaMaximo,
+  totalesDiarios,
 } from "./calculo";
 import { formatearFecha } from "../lib/formato";
 import { mensajeDeError } from "../lib/errores";
@@ -20,16 +22,35 @@ function fechaYHora(valor) {
   return `${formatearFecha(fecha)} a las ${hora.slice(0, 5)}`;
 }
 
+// filas: proyectos de la semana; indice: horas de proyectos; diario: vacaciones y formación por día
 function estadoInicial(info) {
-  return { filas: info.filas, indice: indexarCeldas(info.celdas) };
+  return { filas: info.filas, ...indexarCeldas(info.celdas) };
 }
 
 // Lo que se guardaría, en un orden estable: para saber si hay cambios
-function resumen(estado, conceptos) {
-  const celdas = aplanarCeldas(estado.indice, conceptos)
-    .map((c) => `${c.concepto}|${c.proyecto ?? ""}|${c.empleado}|${c.horas}`)
+function resumen(estado) {
+  const celdas = aplanarCeldas(estado.indice, estado.diario)
+    .map((c) => `${c.concepto}|${c.proyecto ?? ""}|${c.empleado}|${c.fecha ?? ""}|${c.horas}`)
     .sort();
   return JSON.stringify([estado.filas.map((f) => f.name), celdas]);
+}
+
+// Celda de vacaciones o formación: muestra el total de la semana y abre el detalle por día
+function BotonDias({ horas, editable, onAbrir, etiqueta }) {
+  if (!horas && !editable) return "";
+  return (
+    <button
+      type="button"
+      onClick={onAbrir}
+      aria-label={etiqueta}
+      className="inline-flex items-center gap-1 rounded-lg border border-salvia-900/15 bg-white px-2 py-1 tabular-nums hover:border-salvia-900 hover:bg-salvia"
+    >
+      {horas ? formatearHoras(horas) : <span className="text-salvia-950/40">Días</span>}
+      <span aria-hidden="true" className="text-xs text-salvia-950/50">
+        ▾
+      </span>
+    </button>
+  );
 }
 
 const BOTON_SECUNDARIO =
@@ -43,6 +64,7 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
   const [estado, setEstado] = useState(() => estadoInicial(info));
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
+  const [popup, setPopup] = useState(null); // { concepto, empleado } del detalle por día abierto
   const { call: llamarGuardar, loading: guardando } = useFrappePostCall(
     "prototipo.api.planificacion.guardar_semana"
   );
@@ -50,7 +72,7 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
     "prototipo.api.planificacion.copiar_semana_anterior"
   );
 
-  const hayCambios = resumen(estado, conceptos) !== resumen(estadoInicial(info), conceptos);
+  const hayCambios = resumen(estado) !== resumen(estadoInicial(info));
 
   useEffect(() => {
     onCambiosPendientes(hayCambios);
@@ -80,14 +102,29 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
   const quitarFila = (nombre) =>
     setEstado((e) => {
       const { [nombre]: _quitada, ...resto } = e.indice;
-      return { filas: e.filas.filter((f) => f.name !== nombre), indice: resto };
+      return { ...e, filas: e.filas.filter((f) => f.name !== nombre), indice: resto };
     });
+
+  const aplicarDias = (concepto, empleado, dias) => {
+    setEstado((e) => ({
+      ...e,
+      diario: { ...e.diario, [concepto]: { ...e.diario[concepto], [empleado]: dias } },
+    }));
+    setPopup(null);
+  };
 
   // Vacaciones y formación: solo Administración. Las semanas pasadas no se editan.
   const puedeEditar = (fila) => editable && (!conceptos.includes(fila) || info.puede_editar_administracion);
 
   const renderCelda = (fila, empleado, horas) =>
-    puedeEditar(fila) ? (
+    conceptos.includes(fila) ? (
+      <BotonDias
+        horas={horas}
+        editable={puedeEditar(fila)}
+        onAbrir={() => setPopup({ concepto: fila, empleado })}
+        etiqueta={`${fila} de ${empleado.nombre}: detalle por día`}
+      />
+    ) : puedeEditar(fila) ? (
       <CampoHoras
         valor={horas}
         onChange={(h) => cambiarCelda(fila, empleado.usuario, h)}
@@ -99,8 +136,9 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
 
   // --- Lo que impide guardar (el servidor lo vuelve a comprobar) ---
 
+  const indiceTabla = { ...estado.indice, ...totalesDiarios(estado.diario) };
   const claves = [...estado.filas.map((f) => f.name), ...conceptos];
-  const totales = calcularTotales(estado.indice, claves, info.empleados);
+  const totales = calcularTotales(indiceTabla, claves, info.empleados);
   const excedidos = info.empleados.filter((e) => superaMaximo(totales.porEmpleado[e.usuario], e.maximo));
   const horasInvalidas = Object.values(estado.indice).some((porEmpleado) =>
     Object.values(porEmpleado).some((h) => h < 0 || !esMediaHora(h))
@@ -121,11 +159,11 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
       const copia = (await llamarCopiar({ lunes })).message;
       setEstado((e) => {
         // Vacaciones y formación de esta semana se mantienen; los proyectos se sustituyen
-        const indice = Object.fromEntries(conceptos.filter((c) => e.indice[c]).map((c) => [c, e.indice[c]]));
+        const indice = {};
         for (const c of copia.celdas) {
           indice[c.proyecto] = { ...indice[c.proyecto], [c.empleado]: c.horas };
         }
-        return { filas: copia.filas, indice };
+        return { ...e, filas: copia.filas, indice }
       });
       if (copia.proyectos_omitidos.length) {
         setAviso(
@@ -144,7 +182,7 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
       const respuesta = await llamarGuardar({
         lunes,
         filas: estado.filas.map((f) => f.name),
-        celdas: aplanarCeldas(estado.indice, conceptos),
+        celdas: aplanarCeldas(estado.indice, estado.diario),
         modificado: info.modificado,
       });
       onGuardado(respuesta.message);
@@ -169,7 +207,7 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
         filas={estado.filas}
         conceptos={conceptos}
         empleados={info.empleados}
-        indice={estado.indice}
+        indice={indiceTabla}
         renderCelda={renderCelda}
         onQuitarFila={editable ? quitarFila : undefined}
       />
@@ -230,6 +268,19 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
           </div>
         )}
       </div>
+      {popup && (
+        <PopupDias
+          concepto={popup.concepto}
+          otroConcepto={conceptos.find((c) => c !== popup.concepto)}
+          empleado={popup.empleado}
+          dias={info.semana.dias}
+          valores={estado.diario[popup.concepto]?.[popup.empleado.usuario] ?? {}}
+          otros={estado.diario[conceptos.find((c) => c !== popup.concepto)]?.[popup.empleado.usuario] ?? {}}
+          editable={puedeEditar(popup.concepto)}
+          onAplicar={(dias) => aplicarDias(popup.concepto, popup.empleado.usuario, dias)}
+          onCerrar={() => setPopup(null)}
+        />
+      )}
     </div>
   );
 }

@@ -28,19 +28,37 @@ export function lunesActual() {
   return aISO(lunes);
 }
 
-// Clave de una fila de la tabla: el código del proyecto, o "Vacaciones" / "Formación"
-export function claveFila(celda) {
-  return celda.concepto === CONCEPTO_PROYECTO ? celda.proyecto : celda.concepto;
-}
-
-// {fila: {empleado: horas}} a partir de la lista de celdas de la API
+// Celdas de la API -> proyectos por semana y vacaciones/formación por día:
+//   indice: {proyecto: {empleado: horas}}
+//   diario: {concepto: {empleado: {fecha: horas}}}
 export function indexarCeldas(celdas) {
   const indice = {};
+  const diario = {};
   for (const c of celdas) {
-    const fila = claveFila(c);
-    indice[fila] = { ...indice[fila], [c.empleado]: Number(c.horas) || 0 };
+    const horas = Number(c.horas) || 0;
+    if (c.concepto === CONCEPTO_PROYECTO) {
+      indice[c.proyecto] = { ...indice[c.proyecto], [c.empleado]: horas };
+    } else {
+      diario[c.concepto] = { ...diario[c.concepto] };
+      diario[c.concepto][c.empleado] = { ...diario[c.concepto][c.empleado], [c.fecha]: horas };
+    }
   }
-  return indice;
+  return { indice, diario };
+}
+
+// Horas de una persona en un concepto, sumando sus días
+export function sumarDias(porDia = {}) {
+  return Object.values(porDia).reduce((total, horas) => total + (horas || 0), 0);
+}
+
+// {concepto: {empleado: {fecha: horas}}} -> {concepto: {empleado: total de la semana}}, para la tabla
+export function totalesDiarios(diario) {
+  return Object.fromEntries(
+    Object.entries(diario).map(([concepto, porEmpleado]) => [
+      concepto,
+      Object.fromEntries(Object.entries(porEmpleado).map(([empleado, dias]) => [empleado, sumarDias(dias)])),
+    ])
+  );
 }
 
 // Totales por fila, por persona y general
@@ -71,19 +89,19 @@ export function esMediaHora(valor) {
   return Math.abs(valor * 2 - Math.round(valor * 2)) < 1e-9;
 }
 
-// Índice {fila: {empleado: horas}} -> celdas para la API (solo las que tienen horas)
-export function aplanarCeldas(indice, conceptos) {
+// Estado del editor -> celdas para la API (solo las que tienen horas)
+export function aplanarCeldas(indice, diario) {
   const celdas = [];
-  for (const [fila, porEmpleado] of Object.entries(indice)) {
-    const esConcepto = conceptos.includes(fila);
+  for (const [proyecto, porEmpleado] of Object.entries(indice)) {
     for (const [empleado, horas] of Object.entries(porEmpleado)) {
-      if (!horas) continue;
-      celdas.push({
-        concepto: esConcepto ? fila : CONCEPTO_PROYECTO,
-        proyecto: esConcepto ? null : fila,
-        empleado,
-        horas,
-      });
+      if (horas) celdas.push({ concepto: CONCEPTO_PROYECTO, proyecto, empleado, fecha: null, horas });
+    }
+  }
+  for (const [concepto, porEmpleado] of Object.entries(diario)) {
+    for (const [empleado, dias] of Object.entries(porEmpleado)) {
+      for (const [fecha, horas] of Object.entries(dias)) {
+        if (horas) celdas.push({ concepto, proyecto: null, empleado, fecha, horas });
+      }
     }
   }
   return celdas;
