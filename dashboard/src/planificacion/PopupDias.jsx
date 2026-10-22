@@ -11,6 +11,9 @@ const conMayuscula = (texto) => texto.charAt(0).toUpperCase() + texto.slice(1);
 const sinVacios = (valores) =>
   Object.fromEntries(Object.entries(valores).filter(([, horas]) => horas).sort());
 
+// Las vacaciones son de día completo: se marcan con una casilla y valen la jornada diaria
+const CONCEPTO_VACACIONES = "Vacaciones";
+
 // Detalle por día (lunes a viernes) de las vacaciones o la formación de una persona.
 // Los festivos y los días que ya tienen el otro concepto no se pueden rellenar.
 export default function PopupDias({
@@ -26,10 +29,12 @@ export default function PopupDias({
 }) {
   const [borrador, setBorrador] = useState(() => ({ ...valores }));
   const jornada = empleado.jornada_diaria;
+  const porDias = concepto === CONCEPTO_VACACIONES;
 
   const excedeJornada = (horas) => jornada != null && horas > jornada + 1e-9;
   const invalido = dias.some((d) => {
     const horas = borrador[d.fecha] || 0;
+    if (porDias) return false;
     return horas < 0 || !esMediaHora(horas) || excedeJornada(horas);
   });
   const hayCambios = JSON.stringify(sinVacios(borrador)) !== JSON.stringify(sinVacios(valores));
@@ -50,6 +55,23 @@ export default function PopupDias({
                 {otroConcepto} ese día ({formatearHoras(otro)} h)
               </span>
             );
+          } else if (porDias) {
+            // Vacaciones: día completo o nada
+            contenido = (
+              <label className="flex items-center gap-2 text-sm">
+                <span className={`tabular-nums ${horas ? "text-salvia-950" : "text-salvia-950/40"}`}>
+                  {formatearHoras(horas || jornada) || 0} h
+                </span>
+                <input
+                  type="checkbox"
+                  className="h-5 w-5 accent-salvia-900 disabled:cursor-not-allowed"
+                  checked={horas > 0}
+                  disabled={!editable || jornada == null}
+                  onChange={(e) => setBorrador((b) => ({ ...b, [d.fecha]: e.target.checked ? jornada : 0 }))}
+                  aria-label={`Vacaciones el ${d.nombre}`}
+                />
+              </label>
+            );  
           } else if (editable) {
             contenido = (
               <div className="flex items-center gap-2">
@@ -82,6 +104,7 @@ export default function PopupDias({
       <div className="flex items-center justify-between gap-3 border-t border-salvia-900/10 px-6 py-4">
         <p className="text-xs text-salvia-950/60">
           Total: <span className="font-semibold text-salvia-950">{formatearHoras(sumarDias(borrador)) || 0} h</span>
+          {porDias && ` (${Object.values(borrador).filter(Boolean).length} días)`}
           {jornada != null && ` · Jornada diaria: ${formatearHoras(jornada)} h`}
         </p>
 

@@ -18,6 +18,9 @@ CONCEPTO_PROYECTO = "Proyecto"
 # Filas fijas que solo puede editar Administración
 CONCEPTOS_ADMINISTRACION = ("Vacaciones", "Formación")
 
+# Las vacaciones son de día completo: sus horas son siempre la jornada diaria de la persona
+CONCEPTO_VACACIONES = "Vacaciones"
+
 # Estados en los que un proyecto se puede añadir a la planificación (los acuerdos marco nunca:
 # se planifican sus contratos basados)
 ESTADOS_PLANIFICABLES = ("Aceptado", "En curso")
@@ -93,7 +96,8 @@ class PlanificacionSemana(Document):
 			h = flt(a.horas)
 			if h < 0:
 				frappe.throw("Las horas no pueden ser negativas.")
-			if abs(h * 2 - round(h * 2)) > 1e-9:
+			# Las vacaciones valen la jornada diaria, que no tiene por qué ser múltiplo de media hora
+			if a.concepto != CONCEPTO_VACACIONES and abs(h * 2 - round(h * 2)) > 1e-9:
 				frappe.throw(f"Las horas van en medias horas (0,5 · 1 · 1,5…): {horas(h)} no es válido.")
 
 			if a.concepto == CONCEPTO_PROYECTO:
@@ -157,8 +161,8 @@ class PlanificacionSemana(Document):
 			frappe.throw("Solo Administración puede modificar las horas de vacaciones y formación.")
 
 	def validar_dias(self, cambiadas, ahora):
-		"""En los días que cambian: no puede haber vacaciones y formación el mismo día, y entre las dos
-		no pueden superar la jornada diaria de la persona (horas semanales / 5)."""
+		"""En los días que cambian: no puede haber vacaciones y formación el mismo día, las vacaciones son
+		de jornada completa y la formación no puede superar la jornada diaria (horas semanales / 5)."""
 		dias_afectados = {(e, f) for c, _, e, f in cambiadas if c in CONCEPTOS_ADMINISTRACION}
 		if not dias_afectados:
 			return
@@ -178,6 +182,11 @@ class PlanificacionSemana(Document):
 				errores.append(f"{nombre}: el {dia} tiene vacaciones y formación a la vez.")
 			if empleado in equipo:
 				jornada = jornada_diaria(equipo[empleado]["horas_semanales"])
+				vacaciones = conceptos.get(CONCEPTO_VACACIONES)
+				if vacaciones and abs(vacaciones - jornada) > 1e-9:
+					errores.append(
+						f"{nombre}: las vacaciones del {dia} deben ser de jornada completa ({horas(jornada)} h)."
+					)
 				total = sum(conceptos.values())
 				if total > jornada + 1e-9:
 					errores.append(
