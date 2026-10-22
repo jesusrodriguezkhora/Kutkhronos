@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useFrappeGetCall } from "frappe-react-sdk";
 import SelectorSemana from "./SelectorSemana";
 import EditorSemana from "./EditorSemana";
-import { lunesActual } from "./calculo";
+import { primeraSemanaEditable } from "./calculo";
 import { formatearFecha } from "../lib/formato";
 import { mensajeDeError } from "../lib/errores";
 
@@ -27,9 +27,9 @@ function Avisos({ semana }) {
 
 export default function Planificacion() {
   // La pantalla abre en la semana actual, en el mes de su lunes
-  const [lunes, setLunes] = useState(lunesActual);
-  const [anio, setAnio] = useState(() => Number(lunesActual().slice(0, 4)));
-  const [mes, setMes] = useState(() => Number(lunesActual().slice(5, 7)));
+  const [lunes, setLunes] = useState(primeraSemanaEditable);
+  const [anio, setAnio] = useState(() => Number(primeraSemanaEditable().slice(0, 4)));
+  const [mes, setMes] = useState(() => Number(primeraSemanaEditable().slice(5, 7)));
   const [cambiosPendientes, setCambiosPendientes] = useState(false);
 
   const semanasMes = useFrappeGetCall("prototipo.api.planificacion.semanas_del_mes", { anio, mes });
@@ -56,7 +56,7 @@ export default function Planificacion() {
   // Al cambiar de mes: la semana actual si es de ese mes; si no, la primera del mes (cuando lleguen)
   const cambiarMes = (nuevoAnio, nuevoMes) => {
     if (!puedeSalir()) return;
-    const actual = lunesActual();
+    const actual = primeraSemanaEditable();
     const prefijo = `${nuevoAnio}-${String(nuevoMes).padStart(2, "0")}`;
     setAnio(nuevoAnio);
     setMes(nuevoMes);
@@ -65,7 +65,7 @@ export default function Planificacion() {
 
   const irASemanaActual = () => {
     if (!puedeSalir()) return;
-    const actual = lunesActual();
+    const actual = primeraSemanaEditable();
     setAnio(Number(actual.slice(0, 4)));
     setMes(Number(actual.slice(5, 7)));
     setLunes(actual);
@@ -83,7 +83,7 @@ export default function Planificacion() {
         anio={anio}
         mes={mes}
         semanas={semanas}
-        semanaActual={lunesActual()}
+        semanaActual={primeraSemanaEditable()}
         lunes={lunes}
         cargando={semanasMes.isLoading}
         onCambiarMes={cambiarMes}

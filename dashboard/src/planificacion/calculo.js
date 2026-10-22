@@ -21,10 +21,12 @@ export function aISO(fecha) {
   return `${fecha.getFullYear()}-${mm}-${dd}`;
 }
 
-// Lunes de la semana de hoy, como "AAAA-MM-DD"
-export function lunesActual() {
+// Primera semana que todavía se puede planificar. Una semana se cierra el martes a las 00:00
+// (igual que es_pasada en el servidor), así que es la actual si hoy es lunes y, si no, la siguiente.
+export function primeraSemanaEditable() {
   const hoy = new Date();
-  const lunes = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - ((hoy.getDay() + 6) % 7));
+  const desfase = hoy.getDay() === 1 ? 0 : 7;
+  const lunes = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - ((hoy.getDay() + 6) % 7) + desfase);
   return aISO(lunes);
 }
 

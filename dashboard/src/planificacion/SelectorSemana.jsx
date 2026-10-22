@@ -49,7 +49,7 @@ export default function SelectorSemana({
             onClick={onIrASemanaActual}
             className="rounded-full border border-salvia-900/30 px-4 py-2 text-sm font-medium text-salvia-950/70 hover:border-salvia-900 hover:bg-salvia hover:text-salvia-950"
           >
-            ↺ Volver a la semana actual
+            ↺ Volver a la semana a planificar
           </button>
         )}
       </div>
@@ -74,7 +74,7 @@ export default function SelectorSemana({
               }`}
             >
               {s.etiqueta.replace("Semana del ", "")}
-              {s.lunes === semanaActual && <span className="ml-1.5 text-xs font-semibold">· actual</span>}
+              {s.lunes === semanaActual && <span className="ml-1.5 text-xs font-semibold">· A planificar</span>}
               {s.festivos.length > 0 && (
                 <span className="ml-1.5" title="Tiene festivos">
                   ★
