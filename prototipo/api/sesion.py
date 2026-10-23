@@ -14,10 +14,14 @@ from prototipo.roles import (
 @frappe.whitelist()
 def mi_perfil():
 	"""Datos del usuario de la sesión y los módulos de la SPA a los que tiene acceso."""
+	es_gestion = tiene_rol(*ROLES_GESTION)
 	modulos = []
-	if tiene_rol(*ROLES_GESTION):
-		# El primero es la página de entrada
-				modulos += ["panel", "proyectos", "planificacion", "clientes", "empleados"]
+	if es_gestion:
+		# El orden del menú y la página de entrada los decide MODULOS en la SPA
+		modulos += ["panel", "proyectos", "planificacion", "clientes", "empleados"]
+	if tiene_rol(ROL_EMPLEADO):
+		# Empleados y coordinadores imputan sus horas
+		modulos.append("imputacion")
 
 	return {
 		"usuario": frappe.session.user,
@@ -26,7 +30,7 @@ def mi_perfil():
 		"modulos": modulos,
 		"imputa_horas": tiene_rol(ROL_EMPLEADO),
 		# Roles que puede dar al crear o editar cuentas en la página Empleados
-		"roles_asignables": roles_asignables() if modulos else [],
+		"roles_asignables": roles_asignables() if es_gestion else [],
 		# Si ve y edita posición, salario, horas y coste por hora en la página Empleados
-		"ve_datos_laborales": bool(modulos) and tiene_rol(*ROLES_DATOS_LABORALES),
+		"ve_datos_laborales": es_gestion and tiene_rol(*ROLES_DATOS_LABORALES),
 	}

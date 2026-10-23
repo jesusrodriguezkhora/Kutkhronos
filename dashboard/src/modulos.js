@@ -3,6 +3,7 @@ import Proyectos from "./proyectos/Proyectos";
 import Clientes from "./clientes/Clientes";
 import Empleados from "./empleados/Empleados";
 import Planificacion from "./planificacion/Planificacion";
+import Imputacion from "./imputacion/Imputacion";
 
 // Módulos de la SPA. El orden es el del menú; el primero disponible es la página de entrada.
 // "clave" debe coincidir con los valores que devuelve prototipo.api.sesion.mi_perfil
@@ -12,4 +13,5 @@ export const MODULOS = [
   { clave: "planificacion", ruta: "/planificacion", etiqueta: "Planificación", Componente: Planificacion },
   { clave: "clientes", ruta: "/clientes", etiqueta: "Clientes", Componente: Clientes },
   { clave: "empleados", ruta: "/empleados", etiqueta: "Empleados", Componente: Empleados },
+  { clave: "imputacion", ruta: "/imputacion", etiqueta: "Imputación", Componente: Imputacion },
 ];
