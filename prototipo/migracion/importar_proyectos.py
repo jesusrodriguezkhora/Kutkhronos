@@ -263,6 +263,8 @@ def importar_fila(registro, datos, codigos, clientes):
 
 def importar(ruta, hoja=None, simular=True):
 	frappe.set_user("Administrator")
+	# Los proyectos del Excel ya estaban aceptados o en curso sin fee estimate: se importan tal cual
+	frappe.flags.importando_proyectos = True
 	simular = simular not in (False, 0, "0", "false", "False", "no")
 
 	campos = {f.fieldname for f in frappe.get_meta("Proyecto").fields}

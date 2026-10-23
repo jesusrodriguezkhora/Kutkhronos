@@ -28,6 +28,16 @@ VIA_BASADO = "Heredada"
 # Campos exclusivos de las subvenciones
 CAMPOS_SUBVENCION = ("lider_proyecto", "miembros_consorcio")
 
+# Para pasar a estos estados, los proyectos de estos tipos necesitan un fee estimate (Propuesta)
+# guardado con honorarios
+ESTADOS_CON_FEE = ("Aceptado", "En curso")
+TIPOS_CON_FEE = ("Contrato", "Contrato basado", "Subvención")
+
+
+def tiene_fee(proyecto):
+	"""¿Tiene el proyecto un fee estimate guardado con honorarios? (la Propuesta se llama como el proyecto)"""
+	return flt(frappe.db.get_value("Propuesta", proyecto, "honorarios")) > 0
+
 
 def calcular_consumido(acuerdo, excluir=None):
 	"""Suma el importe de los contratos basados computables de un acuerdo marco."""
@@ -83,6 +93,7 @@ class Proyecto(Document):
 		self.normalizar()
 		self.validar_fechas()
 		self.validar_responsable()
+		self.validar_fee_estimate()
 
 		if self.tipo == "Acuerdo marco":
 			self.validar_acuerdo_marco()
@@ -131,6 +142,27 @@ class Proyecto(Document):
 			return
 		if self.responsable not in {u.name for u in responsables_posibles()}:
 			frappe.throw("El responsable debe ser un empleado o coordinador activo.")
+
+	def validar_fee_estimate(self):
+		"""Para pasar a aceptado o en curso hace falta un fee estimate guardado con honorarios.
+		Solo se comprueba al cambiar de estado: los proyectos que ya estaban así (p. ej., migrados) se
+		siguen pudiendo editar. La importación de proyectos se salta la regla."""
+		if frappe.flags.importando_proyectos:
+			return
+		if self.tipo not in TIPOS_CON_FEE or self.estado not in ESTADOS_CON_FEE:
+			return
+		if not self.is_new() and not self.has_value_changed("estado"):
+			return
+		if self.is_new():
+			frappe.throw(
+				f"Un proyecto nuevo no puede crearse en estado {self.estado}: primero guárdalo como "
+				"oportunidad y prepara su fee estimate."
+			)
+		if not tiene_fee(self.name):
+			frappe.throw(
+				f"Para pasar a {self.estado} hace falta un fee estimate guardado con honorarios. "
+				"Guárdalo en la pestaña Fee Estimate y vuelve a cambiar el estado."
+			)
 
 	def validar_acuerdo_marco(self):
 		if flt(self.importe) <= 0:

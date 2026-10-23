@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useFrappeCreateDoc, useFrappeGetCall, useFrappeUpdateDoc } from "frappe-react-sdk";
-import { TIPOS_SUELTOS, VIAS_NO_SUBVENCION, ESTADOS } from "./opciones";
+import { TIPOS_SUELTOS, VIAS_NO_SUBVENCION, ESTADOS, ESTADOS_CON_FEE, TIPOS_CON_FEE } from "./opciones";
 import { ESTILOS } from "../lib/estilos";
 import { mensajeDeError } from "../lib/errores";
 import { formatearImporte, formatearFecha } from "../lib/formato";
@@ -169,6 +169,11 @@ export default function FichaProyecto({
   const responsables = respuestaResponsables?.message ?? [];
 
   const esSubvencion = datos.tipo === "Subvención";
+
+  // Un proyecto nuevo que necesita fee no puede nacer aceptado ni en curso (su fee aún no existe)
+  const exigeFee = TIPOS_CON_FEE.includes(datos.tipo);
+  const estadosPosibles = esNuevo && exigeFee ? ESTADOS.filter((e) => !ESTADOS_CON_FEE.includes(e)) : ESTADOS;
+
   const hayCambios =
     JSON.stringify(datos) !== JSON.stringify(valoresIniciales(proyecto, acuerdoMarco));
 
@@ -180,6 +185,8 @@ export default function FichaProyecto({
       ...d,
       tipo,
       via: tipo === "Subvención" ? "Subvención" : d.via === "Subvención" ? "" : d.via,
+      estado:
+        esNuevo && TIPOS_CON_FEE.includes(tipo) && ESTADOS_CON_FEE.includes(d.estado) ? "Oportunidad" : d.estado,
     }));
 
     const cerrar = () => {
@@ -350,7 +357,7 @@ export default function FichaProyecto({
       <Selector
         etiqueta="Estado"
         valor={datos.estado}
-        opciones={ESTADOS}
+        opciones={estadosPosibles}
         onChange={(v) => cambiar("estado", v)}
       />
 
@@ -432,6 +439,10 @@ export default function FichaProyecto({
 
       <p className="text-xs text-salvia-950/50 sm:col-span-2">
         {esNuevo && "El código se generará automáticamente al guardar. "}
+        {exigeFee &&
+          (esNuevo
+            ? "Para pasarlo a aceptado o en curso, guárdalo primero y prepara su fee estimate. "
+            : "Para pasar a aceptado o en curso hace falta un fee estimate guardado con honorarios. ")}
         {esBasado && (
           <>
             Contrato basado del acuerdo marco{" "}

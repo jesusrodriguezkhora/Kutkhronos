@@ -2,6 +2,8 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import cint, flt
 
+from prototipo.prototipo.doctype.proyecto.proyecto import ESTADOS_CON_FEE, TIPOS_CON_FEE
+
 # Categorías de personal de la propuesta, en el orden de la tabla.
 # Son las posiciones de Datos Laborales: de ellas sale el coste/hora medio.
 POSICIONES = ("Director", "Coordinador", "Consultor Senior", "Consultor", "Prácticas")
@@ -37,6 +39,7 @@ def porcentaje(valor, base):
 
 class Propuesta(Document):
 	def validate(self):
+		self.validar_honorarios_obligatorios()
 		self.validar_importes()
 		self.completar_lineas()
 		self.calcular()
@@ -82,5 +85,15 @@ class Propuesta(Document):
 		self.margen_neto = flt(self.margen_bruto - self.gastos_indirectos, 2)
 		self.margen_bruto_pct = flt(porcentaje(self.margen_bruto, honorarios), 2)
 		self.margen_neto_pct = flt(porcentaje(self.margen_neto, honorarios), 2)
+
+	def validar_honorarios_obligatorios(self):
+		"""Un proyecto aceptado o en curso debe tener honorarios en su fee estimate."""
+		if flt(self.honorarios) > 0:
+			return
+		proyecto = frappe.db.get_value("Proyecto", self.proyecto, ["tipo", "estado"], as_dict=True)
+		if proyecto and proyecto.tipo in TIPOS_CON_FEE and proyecto.estado in ESTADOS_CON_FEE:
+			frappe.throw(
+				f"{self.proyecto} está en estado {proyecto.estado}: su fee estimate debe tener honorarios."
+			)
 
 	

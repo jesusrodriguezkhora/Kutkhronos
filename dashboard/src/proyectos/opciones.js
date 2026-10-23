@@ -11,3 +11,7 @@ export const VIAS_NO_SUBVENCION = ["Contrato menor", "Licitación pública", "Co
 
 // Estados en los que un acuerdo marco admite contratos basados (mismos que en proyecto.py)
 export const ESTADOS_ACUERDO_CON_BASADOS = ["Aceptado", "En curso", "Cerrado"];
+
+// Para pasar a estos estados, los proyectos de estos tipos necesitan un fee estimate guardado (mismo que proyecto.py)
+export const ESTADOS_CON_FEE = ["Aceptado", "En curso"];
+export const TIPOS_CON_FEE = ["Contrato", "Contrato basado", "Subvención"];
