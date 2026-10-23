@@ -63,7 +63,7 @@ function calcular(valores, posiciones, costeHora, porcentajeIndirectos) {
 
 // "2026-10-19 12:18:33.123" -> "Última edición el 19/10/2026 a las 12:18 por Ana García"
 function textoUltimaEdicion(propuesta) {
-  if (!propuesta) return "Este proyecto todavía no tiene propuesta guardada.";
+  if (!propuesta) return "Este proyecto todavía no tiene fee estimate guardado.";
   const [fecha, hora] = propuesta.modificado.split(" ");
   return `Última edición el ${formatearFecha(fecha)} a las ${hora.slice(0, 5)} por ${propuesta.modificado_por}.`;
 }
@@ -162,7 +162,7 @@ export default function Propuesta({ proyecto, onCambiosPendientes }) {
   }, [hayCambios, onCambiosPendientes]);
 
   if (isLoading || (info && !valores)) {
-    return <p className="p-6 text-sm text-salvia-950/50">Cargando propuesta…</p>;
+    return <p className="p-6 text-sm text-salvia-950/50">Cargando fee estimate…</p>;
   }
   if (errorCarga || !info) {
     return <p className="p-6 text-sm text-red-600">{mensajeDeError(errorCarga)}</p>;
@@ -232,7 +232,6 @@ export default function Propuesta({ proyecto, onCambiosPendientes }) {
               <Fila
                 key={l.categoria}
                 categoria={l.categoria}
-                detalle={l.sinCoste ? "Sin empleados con coste/hora en esta posición" : l.coste_hora ? formatearCosteHora(l.coste_hora) : null}
                 avisar={l.sinCoste}
                 horas={
                   <Entrada

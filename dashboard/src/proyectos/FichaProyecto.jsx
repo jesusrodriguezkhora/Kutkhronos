@@ -31,7 +31,7 @@ function valoresIniciales(proyecto, acuerdoMarco) {
 // Pestañas bajo la cabecera. La propuesta solo existe para proyectos ya guardados.
 const PESTANAS = [
   { clave: "datos", etiqueta: "Datos" },
-  { clave: "propuesta", etiqueta: "Propuesta" },
+  { clave: "propuesta", etiqueta: "Fee Estimate" },
 ];
 
 function Pestanas({ activa, onCambiar, propuestaDisponible }) {
@@ -47,7 +47,7 @@ function Pestanas({ activa, onCambiar, propuestaDisponible }) {
             role="tab"
             aria-selected={activo}
             disabled={deshabilitada}
-            title={deshabilitada ? "Guarda el proyecto para preparar su propuesta" : undefined}
+            title={deshabilitada ? "Guarda el proyecto para preparar su fee" : undefined}
             onClick={() => onCambiar(clave)}
             className={`-mb-px border-b-2 py-3 text-sm font-semibold uppercase tracking-wider transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
               activo
