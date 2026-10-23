@@ -1,4 +1,5 @@
-import { calcularTotales, formatearHoras, superaMaximo } from "./calculo";
+import { calcularTotales, formatearHoras, superaMaximo } from "./calculo"
+import { useState } from "react";
 
 // Mismo estilo que las tablas del Pipeline, Clientes y Empleados: cabecera salvia-900 en mayúsculas,
 // filas blancas separadas por líneas finas y resaltado salvia al pasar el ratón.
@@ -17,6 +18,16 @@ const FONDO_CONCEPTO = "bg-salvia-50 transition-colors group-hover:bg-salvia-100
 const FIJA_ARRIBA = "sticky top-0 z-20";
 const ESQUINA_IZQUIERDA = "sticky left-0 top-0 z-30";
 const ESQUINA_DERECHA = "sticky right-0 top-0 z-30 border-l border-l-white/10";
+
+// Texto sin tildes y en minúsculas, para buscar sin importar cómo se escriba
+const normalizar = (texto) =>
+  (texto || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+// ¿La fila de proyecto coincide con la búsqueda? (código, cliente o descripción)
+function coincide(fila, busqueda) {
+  const buscado = normalizar(busqueda.trim());
+  return !buscado || [fila.name, fila.cliente, fila.descripcion].some((campo) => normalizar(campo).includes(buscado));
+}
 
 function CabeceraEmpleado({ empleado }) {
   return (
@@ -100,8 +111,11 @@ export default function TablaPlanificacion({
   renderCelda = celdaLectura,
   onQuitarFila,
 }) {
+  const [busqueda, setBusqueda] = useState("");
   const claves = [...filas.map((f) => f.name), ...conceptos];
   const totales = calcularTotales(indice, claves, empleados);
+  // Se filtra después de calcular los totales: los totales siempre son de todos los proyectos
+  const visibles = filas.filter((f) => coincide(f, busqueda));
 
   if (empleados.length === 0) {
     return (
@@ -116,7 +130,18 @@ export default function TablaPlanificacion({
       <table className="min-w-full border-collapse text-sm">
         <thead>
           <tr>
-            <th className={`${CELDA} ${CABECERA} ${ESQUINA_IZQUIERDA} text-left align-bottom`}>Proyecto</th>
+            <th className={`${CELDA} ${CABECERA} ${ESQUINA_IZQUIERDA} text-left align-bottom`}>
+              <div>Proyecto</div>
+              <input
+                type="search"
+                value={busqueda}
+                onChange={(ev) => setBusqueda(ev.target.value)}
+                onKeyDown={(ev) => ev.key === "Escape" && setBusqueda("")}
+                placeholder="Buscar código, cliente…"
+                aria-label="Buscar proyecto"
+                className="mt-2 w-full min-w-[12rem] rounded-md border border-white/15 bg-white/10 px-2 py-1 text-sm font-normal normal-case tracking-normal text-salvia-100 outline-none placeholder:text-salvia-200/50 focus:border-salvia-200 focus:ring-1 focus:ring-salvia-200"
+              />
+            </th>
             {empleados.map((e) => (
               <CabeceraEmpleado key={e.usuario} empleado={e} />
             ))}
@@ -131,10 +156,17 @@ export default function TablaPlanificacion({
             <tr>
               <td colSpan={empleados.length + 2} className="bg-white px-4 py-6 text-sm text-salvia-950/50">
                 No hay proyectos que mostrar en esta semana.
+                 {filas.length > 0 && visibles.length === 0 && (
+            <tr>
+              <td colSpan={empleados.length + 2} className="bg-white px-4 py-6 text-sm text-salvia-950/50">
+                Ningún proyecto coincide con «{busqueda.trim()}».
               </td>
             </tr>
           )}
-          {filas.map((f) => (
+              </td>
+            </tr>
+          )}
+          {visibles.map((f) => (
             <FilaProyecto
               key={f.name}
               fila={f}
