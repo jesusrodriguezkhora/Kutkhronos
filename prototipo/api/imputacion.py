@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 import frappe
-from frappe.utils import flt, getdate, today
+from frappe.utils import flt, today
 
 from prototipo.api.planificacion import (
 	NOMBRES_DIA,

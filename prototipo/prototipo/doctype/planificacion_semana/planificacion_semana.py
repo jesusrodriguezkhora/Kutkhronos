@@ -28,6 +28,9 @@ CONCEPTOS = (*CONCEPTOS_SEMANALES, CONCEPTO_VACACIONES)
 # se planifican sus contratos basados)
 ESTADOS_PLANIFICABLES = ("Aceptado", "En curso")
 
+# Longitud máxima del comentario de una celda (indicaciones para quien hace el trabajo)
+LONGITUD_MAXIMA_COMENTARIO = 500
+
 
 def clave(asignacion):
 	"""Identifica una celda: (concepto, proyecto, empleado, fecha). El proyecto solo en las filas de
@@ -95,8 +98,18 @@ class PlanificacionSemana(Document):
 		festivos = set(festivos_de_semana(self.semana))
 
 		valores = {}
+		comentarios = {}
 		for a in self.asignaciones:
 			h = flt(a.horas)
+			comentario = (a.comentario or "").strip()
+			if comentario:
+				if a.concepto == CONCEPTO_VACACIONES:
+					frappe.throw("Las vacaciones no llevan comentario.")
+				if len(comentario) > LONGITUD_MAXIMA_COMENTARIO:
+					frappe.throw(
+						f"El comentario de {a.proyecto or a.concepto} ({a.empleado}) supera los "
+						f"{LONGITUD_MAXIMA_COMENTARIO} caracteres."
+					)
 			if h < 0:
 				frappe.throw("Las horas no pueden ser negativas.")
 			# Las vacaciones valen la jornada diaria, que no tiene por qué ser múltiplo de media hora
@@ -125,17 +138,24 @@ class PlanificacionSemana(Document):
 				a.fecha = None
 
 			if not h:
+				if comentario:
+					frappe.throw(
+						f"{a.proyecto or a.concepto} ({a.empleado}) tiene un comentario: no se pueden dejar sus "
+						"horas a 0. Borra antes el comentario."
+					)
 				continue
 			k = clave(a)
 			if k in valores:
 				frappe.throw(f"Hay horas repetidas para {a.empleado} en {a.proyecto or a.concepto}.")
 			valores[k] = h
+			if comentario:
+				comentarios[k] = comentario
 
 		self.set("proyectos", [{"proyecto": p} for p in filas])
 		self.set(
 			"asignaciones",
 			[
-				{"concepto": c, "proyecto": p, "empleado": e, "fecha": f, "horas": h}
+				{"concepto": c, "proyecto": p, "empleado": e, "fecha": f, "horas": h, "comentario": comentarios.get((c, p, e, f))}
 				for (c, p, e, f), h in valores.items()
 			],
 		)

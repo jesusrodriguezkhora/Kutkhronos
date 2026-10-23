@@ -102,6 +102,7 @@ def celdas_de(doc, filtro=None):
 			"empleado": a.empleado,
 			"fecha": a.fecha,
 			"horas": flt(a.horas),
+			"comentario": a.comentario or None,
 		}
 		for a in (doc.asignaciones if doc else [])
 		if not filtro or filtro(a)
@@ -178,7 +179,7 @@ def obtener_semana(lunes):
 @frappe.whitelist(methods=["POST"])
 def guardar_semana(lunes, filas, celdas, modificado=None):
 	"""Crea o actualiza la planificación de una semana. Solo para los roles de gestión.
-	filas = [código de proyecto, ...]; celdas = [{concepto, proyecto, empleado, horas}, ...]
+	filas = [código de proyecto, ...]; [{concepto, proyecto, empleado, fecha, horas, comentario}, ...]
 	modificado = fecha de modificación que tenía la semana al abrirla, para no pisar a otra persona."""
 	exigir_rol(*ROLES_GESTION)
 	lunes = comprobar_lunes(lunes)
@@ -205,6 +206,7 @@ def guardar_semana(lunes, filas, celdas, modificado=None):
 				"empleado": c.get("empleado"),
 				"fecha": c.get("fecha"),
 				"horas": flt(c.get("horas")),
+				"comentario": c.get("comentario"),
 			}
 			for c in celdas
 		],
@@ -235,10 +237,13 @@ def copiar_semana_anterior(lunes):
 
 	return {
 		"filas": datos_proyectos([p for p in nombres if p in planificables]),
-		"celdas": celdas_de(
-			anterior,
-			lambda a: a.concepto == CONCEPTO_PROYECTO and a.proyecto in planificables and a.empleado in en_plantilla,
-		),
+		"celdas": [
+			{**c, "comentario": None}
+			for c in celdas_de(
+				anterior,
+				lambda a: a.concepto == CONCEPTO_PROYECTO and a.proyecto in planificables and a.empleado in en_plantilla,
+			)
+		],
 		"proyectos_omitidos": [p for p in nombres if p not in planificables],
 	}
 

@@ -18,4 +18,4 @@ class IntegrationTestTeletrabajoAnual(IntegrationTestCase):
 	Use this class for testing interactions between multiple components.
 	"""
 
-	pass
+	pass  # noqa: PIE790
