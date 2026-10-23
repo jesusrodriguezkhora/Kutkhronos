@@ -151,6 +151,7 @@ export default function EditorImputacion({ info, lunes, onGuardado, onCambiosPen
         valor={horas}
         onChange={(h) => cambiarCelda(fila.clave, dia.fecha, h)}
         etiqueta={`Horas de ${fila.titulo} el ${dia.nombre}`}
+        maximo={MAXIMO_DIARIO}
       />
     ) : (
       formatearHoras(horas)

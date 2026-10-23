@@ -1,5 +1,5 @@
 import { formatearHoras } from "../planificacion/calculo";
-import { calcularTotales } from "./calculo";
+import { MAXIMO_DIARIO, calcularTotales } from "./calculo";
 
 // Mismo estilo que la tabla de planificación
 const CELDA = "px-4 py-3";
@@ -112,11 +112,19 @@ export default function TablaImputacion({ filas, dias, indice, teletrabajo, rend
             <th scope="row" className={`${CELDA} bg-salvia-100 text-left`}>
               Total por día
             </th>
-            {dias.map((d) => (
-              <td key={d.fecha} className={`${CELDA} bg-salvia-100 text-center tabular-nums`}>
-                {formatearHoras(totales.porDia[d.fecha]) || "0"}
-              </td>
-            ))}
+            {dias.map((d) => {
+              const total = totales.porDia[d.fecha];
+              const excede = total > MAXIMO_DIARIO + 1e-9;
+              return (
+                <td
+                  key={d.fecha}
+                  className={`${CELDA} text-center tabular-nums ${excede ? "bg-red-50 text-red-700" : "bg-salvia-100"}`}
+                  title={excede ? `Supera el máximo de ${MAXIMO_DIARIO} h al día` : undefined}
+                >
+                  {formatearHoras(total) || "0"}
+                </td>
+              );
+            })}
             <td className={`${CELDA} border-l border-salvia-900/10 bg-salvia-100 text-right tabular-nums`}>
               {formatearHoras(totales.general) || "0"}
             </td>
