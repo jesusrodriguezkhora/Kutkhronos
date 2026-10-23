@@ -5,18 +5,18 @@ import { ESTILOS } from "../lib/estilos";
 
 // Botón "+ Añadir proyecto" que se convierte en un buscador de proyectos planificables
 // (aceptados o en curso, sin acuerdos marco). `excluir` son los que ya están en la tabla.
-export default function BuscadorProyecto({ excluir, onElegir }) {
+export default function BuscadorProyecto({
+  excluir,
+  onElegir,
+  metodo = "prototipo.api.planificacion.buscar_proyectos",
+}) {
   const [abierto, setAbierto] = useState(false);
   const [texto, setTexto] = useState("");
   const [activo, setActivo] = useState(0);
   const contenedor = useRef(null);
   const busqueda = useDebounced(texto, 250);
 
-  const { data, isLoading } = useFrappeGetCall(
-    "prototipo.api.planificacion.buscar_proyectos",
-    { texto: busqueda },
-    abierto ? undefined : null
-  );
+  const { data, isLoading } = useFrappeGetCall(metodo, { texto: busqueda }, abierto ? undefined : null);
   const resultados = (data?.message ?? []).filter((p) => !excluir.includes(p.name));
 
   // Cerrar al hacer clic fuera

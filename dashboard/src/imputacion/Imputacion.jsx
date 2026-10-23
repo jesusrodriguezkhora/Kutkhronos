@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useFrappeGetCall } from "frappe-react-sdk";
 import SelectorSemana from "../planificacion/SelectorSemana";
-import TablaImputacion from "./TablaImputacion";
-import { filasDe, indexarCeldas, lunesActual, ultimoDiaParaImputar, vacacionesPorDia, CONCEPTO_VACACIONES } from "./calculo";
+import EditorImputacion from "./EditorImputacion";
+import { lunesActual } from "./calculo";
 import { formatearFecha } from "../lib/formato";
 import { mensajeDeError } from "../lib/errores";
 
@@ -15,38 +15,18 @@ function Avisos({ semana }) {
   );
 }
 
-// Pie bajo la tabla, como en planificación: estado de la semana (y en el paso 4b, los botones)
-function PieSemana({ semana, children }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-salvia-900/10 pt-4">
-      <p className="text-xs text-salvia-950/50">
-        {semana.cerrada ? (
-          <span className="font-semibold text-salvia-950/70">Semana cerrada, solo lectura.</span>
-        ) : (
-          <>
-            <span className="font-semibold text-salvia-950/70">
-              Puedes imputar hasta el {formatearFecha(ultimoDiaParaImputar(semana.cierre))} incluido
-            </span>
-            {" · "}solo los días que ya han pasado.
-          </>
-        )}
-      </p>
-      {children}
-    </div>
-  );
-}
-
 export default function Imputacion() {
   // Abre en la semana actual, en el mes de su lunes
   const [lunes, setLunes] = useState(lunesActual);
   const [anio, setAnio] = useState(() => Number(lunesActual().slice(0, 4)));
   const [mes, setMes] = useState(() => Number(lunesActual().slice(5, 7)));
-  const [cambiosPendientes] = useState(false); // en el paso 4b lo actualizará el editor
+  const [cambiosPendientes, setCambiosPendientes] = useState(false);
+  const [guardados, setGuardados] = useState(0);
 
   const semanasMes = useFrappeGetCall("prototipo.api.imputacion.semanas_del_mes", { anio, mes });
   const semanas = semanasMes.data?.message?.semanas ?? [];
 
-  const { data, error, isLoading } = useFrappeGetCall(
+  const { data, error, isLoading, mutate } = useFrappeGetCall(
     "prototipo.api.imputacion.obtener_semana",
     { lunes },
     lunes ? undefined : null,
@@ -107,16 +87,17 @@ export default function Imputacion() {
       {lunes && info && (
         <>
           <Avisos semana={info.semana} />
-          {/* Paso 4a: solo lectura. En el 4b esto será <EditorImputacion ...> */}
-          <div className="space-y-4">
-            <TablaImputacion
-              filas={filasDe(info)}
-              dias={info.semana.dias}
-              indice={{ ...indexarCeldas(info.celdas), [CONCEPTO_VACACIONES]: vacacionesPorDia(info.semana.dias) }}
-              teletrabajo={info.teletrabajo}
-            />
-            <PieSemana semana={info.semana} />
-          </div>
+          {/* key: el editor empieza de cero al cambiar de semana y después de guardar */}
+          <EditorImputacion
+            key={`${lunes}|${guardados}`}
+            info={info}
+            lunes={lunes}
+            onGuardado={(nueva) => {
+              mutate({ message: nueva }, { revalidate: false });
+              setGuardados((n) => n + 1);
+            }}
+            onCambiosPendientes={setCambiosPendientes}
+          />
         </>
       )}
     </section>

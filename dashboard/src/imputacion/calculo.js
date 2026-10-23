@@ -4,6 +4,9 @@ import { aISO } from "../planificacion/calculo";
 export const CONCEPTO_PROYECTO = "Proyecto";
 export const CONCEPTO_VACACIONES = "Vacaciones";
 
+// Máximo de horas en un día, sumando todas las filas (mismo que MAXIMO_DIARIO en el servidor)
+export const MAXIMO_DIARIO = 24;
+
 // Lunes de la semana de hoy, como "AAAA-MM-DD"
 export function lunesActual() {
   const hoy = new Date();
