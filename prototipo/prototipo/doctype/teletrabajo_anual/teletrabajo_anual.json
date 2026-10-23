@@ -1,0 +1,99 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "creation": "2026-10-23 11:22:48.517054",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "empleado",
+  "anio",
+  "lunes",
+  "martes",
+  "miercoles",
+  "jueves",
+  "viernes",
+  "total"
+ ],
+ "fields": [
+  {
+   "fieldname": "empleado",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Empleado",
+   "options": "User",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "anio",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "A\u00f1o",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "lunes",
+   "fieldtype": "Int",
+   "label": "Lunes",
+   "read_only": 1
+  },
+  {
+   "fieldname": "martes",
+   "fieldtype": "Int",
+   "label": "Martes",
+   "read_only": 1
+  },
+  {
+   "fieldname": "miercoles",
+   "fieldtype": "Int",
+   "label": "Mi\u00e9rcoles",
+   "read_only": 1
+  },
+  {
+   "fieldname": "jueves",
+   "fieldtype": "Int",
+   "label": "Jueves",
+   "read_only": 1
+  },
+  {
+   "fieldname": "viernes",
+   "fieldtype": "Int",
+   "label": "Viernes",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Total",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-23 11:25:49.635352",
+ "modified_by": "Administrator",
+ "module": "Prototipo",
+ "name": "Teletrabajo Anual",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

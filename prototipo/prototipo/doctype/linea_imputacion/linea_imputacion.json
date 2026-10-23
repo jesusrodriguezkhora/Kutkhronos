@@ -1,0 +1,62 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "creation": "2026-10-23 11:14:17.857334",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "concepto",
+  "proyecto",
+  "fecha",
+  "horas"
+ ],
+ "fields": [
+  {
+   "default": "Proyecto",
+   "fieldname": "concepto",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Concepto",
+   "options": "Proyecto\nFormaci\u00f3n\nComercial\nInterno",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.concepto==\"Proyecto\"",
+   "fieldname": "proyecto",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Proyecto",
+   "options": "Proyecto"
+  },
+  {
+   "fieldname": "fecha",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "D\u00eda",
+   "reqd": 1
+  },
+  {
+   "fieldname": "horas",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Horas"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-23 11:16:41.574577",
+ "modified_by": "Administrator",
+ "module": "Prototipo",
+ "name": "Linea Imputacion",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
