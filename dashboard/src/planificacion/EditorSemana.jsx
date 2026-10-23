@@ -43,7 +43,7 @@ function BotonDias({ horas, editable, onAbrir, etiqueta }) {
       type="button"
       onClick={onAbrir}
       aria-label={etiqueta}
-      className="inline-flex items-center gap-1 rounded-lg border border-salvia-900/15 bg-white px-2 py-1 tabular-nums hover:border-salvia-900 hover:bg-salvia"
+      className="inline-flex w-16 items-center justify-center gap-1 rounded-lg border border-salvia-900/15 bg-white px-1 py-1 tabular-nums hover:border-salvia-900 hover:bg-salvia"
     >
       {horas ? formatearHoras(horas) : <span className="text-salvia-950/40">Días</span>}
       <span aria-hidden="true" className="text-xs text-salvia-950/50">
@@ -102,14 +102,6 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
       ...e,
       semanal: { ...e.semanal, [concepto]: { ...e.semanal[concepto], [empleado]: horas } },
     }));
-
-  const anadirFila = (proyecto) => setEstado((e) => ({ ...e, filas: [...e.filas, proyecto] }));
-
-  const quitarFila = (nombre) =>
-    setEstado((e) => {
-      const { [nombre]: _quitada, ...resto } = e.indice;
-      return { ...e, filas: e.filas.filter((f) => f.name !== nombre), indice: resto };
-    });
 
   const aplicarDias = (concepto, empleado, dias) => {
     setEstado((e) => ({

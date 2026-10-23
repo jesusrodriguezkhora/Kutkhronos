@@ -12,9 +12,15 @@ const FIJA_DERECHA = "sticky right-0 z-10 border-l border-salvia-900/10";
 const FONDO_FILA = "bg-white transition-colors group-hover:bg-salvia-50";
 const FONDO_CONCEPTO = "bg-salvia-50 transition-colors group-hover:bg-salvia-100";
 
+// Cabecera fija al hacer scroll vertical dentro de la tabla. Las esquinas (Proyecto y Total) están
+// fijas arriba y a un lado, y van por encima de todo.
+const FIJA_ARRIBA = "sticky top-0 z-20";
+const ESQUINA_IZQUIERDA = "sticky left-0 top-0 z-30";
+const ESQUINA_DERECHA = "sticky right-0 top-0 z-30 border-l border-l-white/10";
+
 function CabeceraEmpleado({ empleado }) {
   return (
-    <th className={`${CELDA} ${CABECERA} min-w-[7.5rem] text-right align-bottom`}>
+    <th className={`${CELDA} ${CABECERA} ${FIJA_ARRIBA} min-w-[7.5rem] text-center align-bottom`}>
       <div className="leading-tight">{empleado.nombre}</div>
       <div className="mt-0.5 text-xs font-normal normal-case tracking-normal text-salvia-200/60">
         {empleado.en_plantilla ? `máx. ${formatearHoras(empleado.maximo) || 0} h` : "fuera de plantilla"}
@@ -49,7 +55,7 @@ function FilaProyecto({ fila, empleados, indice, total, renderCelda, onQuitar })
         </div>
       </th>
       {empleados.map((e) => (
-        <td key={e.usuario} className={`${CELDA} ${FONDO_FILA} text-right tabular-nums`}>
+        <td key={e.usuario} className={`${CELDA} ${FONDO_FILA} text-center tabular-nums`}>
           {renderCelda(fila.name, e, indice[fila.name]?.[e.usuario] || 0)}
         </td>
       ))}
@@ -67,7 +73,7 @@ function FilaConcepto({ concepto, empleados, indice, total, renderCelda }) {
         {concepto}
       </th>
       {empleados.map((e) => (
-        <td key={e.usuario} className={`${CELDA} ${FONDO_CONCEPTO} text-right tabular-nums`}>
+        <td key={e.usuario} className={`${CELDA} ${FONDO_CONCEPTO} text-center tabular-nums`}>
           {renderCelda(concepto, e, indice[concepto]?.[e.usuario] || 0)}
         </td>
       ))}
@@ -106,15 +112,15 @@ export default function TablaPlanificacion({
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-salvia-900/10">
+    <div className="max-h-[70vh] overflow-auto rounded-xl border border-salvia-900/10">
       <table className="min-w-full border-collapse text-sm">
         <thead>
           <tr>
-            <th className={`${CELDA} ${CABECERA} ${FIJA_IZQUIERDA} text-left align-bottom`}>Proyecto</th>
+            <th className={`${CELDA} ${CABECERA} ${ESQUINA_IZQUIERDA} text-left align-bottom`}>Proyecto</th>
             {empleados.map((e) => (
               <CabeceraEmpleado key={e.usuario} empleado={e} />
             ))}
-            <th className={`${CELDA} ${CABECERA} ${FIJA_DERECHA} border-l-white/10 text-right align-bottom`}>
+            <th className={`${CELDA} ${CABECERA} ${ESQUINA_DERECHA} text-right align-bottom`}>
               Total
             </th>
           </tr>
@@ -162,7 +168,7 @@ export default function TablaPlanificacion({
               return (
                 <td
                   key={e.usuario}
-                  className={`${CELDA} text-right tabular-nums ${excede ? "bg-red-50 text-red-700" : "bg-salvia-100"}`}
+                  className={`${CELDA} text-center tabular-nums ${excede ? "bg-red-50 text-red-700" : "bg-salvia-100"}`}
                   title={excede ? `Supera el máximo de ${formatearHoras(e.maximo)} h` : undefined}
                 >
                   {formatearHoras(total) || "0"}
