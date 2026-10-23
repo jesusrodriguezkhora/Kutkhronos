@@ -6,13 +6,11 @@ import BuscadorProyecto from "../planificacion/BuscadorProyecto";
 import { esMediaHora, formatearHoras } from "../planificacion/calculo";
 import {
   CONCEPTO_PROYECTO,
-  CONCEPTO_VACACIONES,
   MAXIMO_DIARIO,
   calcularTotales,
   filasDe,
   indexarCeldas,
   ultimoDiaParaImputar,
-  vacacionesPorDia,
 } from "./calculo";
 import { formatearFecha } from "../lib/formato";
 import { mensajeDeError } from "../lib/errores";
@@ -34,11 +32,10 @@ function filaAnadida(proyecto) {
   };
 }
 
-// Filas imputables + índice -> celdas para la API (solo las que tienen horas; las vacaciones no se envían)
+// Filas + índice -> celdas para la API (solo las que tienen horas)
 function aplanar(filas, indice) {
   const celdas = [];
   for (const f of filas) {
-    if (f.soloLectura) continue;
     for (const [fecha, horas] of Object.entries(indice[f.clave] ?? {})) {
       if (horas) {
         celdas.push({ concepto: f.concepto, proyecto: f.concepto === CONCEPTO_PROYECTO ? f.clave : null, fecha, horas });
@@ -93,7 +90,7 @@ export default function EditorImputacion({ info, lunes, onGuardado, onCambiosPen
     ...estado.anadidos.map(filaAnadida),
     ...base.filter((f) => f.fija),
   ];
-  const indice = { ...estado.indice, [CONCEPTO_VACACIONES]: vacacionesPorDia(semana.dias) };
+  const indice = estado.indice;
 
   const hayCambios = resumen(filas, estado) !== resumen(filas, estadoInicial(info));
 
@@ -126,8 +123,7 @@ export default function EditorImputacion({ info, lunes, onGuardado, onCambiosPen
   const anadirProyecto = (proyecto) => setEstado((e) => ({ ...e, anadidos: [...e.anadidos, proyecto] }));
 
   // Horas imputadas en un día (sin vacaciones)
-  const imputadoEl = (fecha) =>
-    filas.filter((f) => !f.soloLectura).reduce((total, f) => total + (estado.indice[f.clave]?.[fecha] || 0), 0);
+  const imputadoEl = (fecha) => filas.reduce((total, f) => total + (estado.indice[f.clave]?.[fecha] || 0), 0);
 
   // --- Lo que impide guardar (el servidor lo vuelve a comprobar) ---
 
@@ -146,7 +142,7 @@ export default function EditorImputacion({ info, lunes, onGuardado, onCambiosPen
   // --- Celdas y casillas ---
 
   const renderCelda = (fila, dia, horas) =>
-    !fila.soloLectura && dia.editable ? (
+    dia.editable ? (
       <CampoHoras
         valor={horas}
         onChange={(h) => cambiarCelda(fila.clave, dia.fecha, h)}

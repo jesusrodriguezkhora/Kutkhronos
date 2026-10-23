@@ -11,8 +11,8 @@ const FONDO_BLOQUEADO = "bg-salvia-900/5 text-salvia-950/40";
 const diaYMes = (fecha) => `${fecha.slice(8, 10)}/${fecha.slice(5, 7)}`;
 const conMayuscula = (texto) => texto.charAt(0).toUpperCase() + texto.slice(1);
 
-// Un día sin imputación posible para la fila: festivo, o vacaciones (salvo en la propia fila de vacaciones)
-const bloqueado = (dia, fila) => !!dia.festivo || (!!dia.vacaciones && !fila.soloLectura);
+// Día sin imputación posible: festivo o vacaciones
+const bloqueado = (dia) => !!dia.festivo || !!dia.vacaciones;
 
 function CabeceraDia({ dia, renderTeletrabajo }) {
   let estado;
@@ -55,7 +55,7 @@ function Fila({ fila, dias, indice, total, renderCelda }) {
       {dias.map((d) => (
         <td
           key={d.fecha}
-          className={`${CELDA} text-center tabular-nums ${bloqueado(d, fila) ? FONDO_BLOQUEADO : fondo}`}
+          className={`${CELDA} text-center tabular-nums ${bloqueado(d) ? FONDO_BLOQUEADO : fondo}`}
         >
           {renderCelda(fila, d, indice[fila.clave]?.[d.fecha] || 0)}
         </td>
@@ -70,7 +70,7 @@ function Fila({ fila, dias, indice, total, renderCelda }) {
 // Valores por defecto: solo lectura
 const celdaLectura = (_fila, _dia, horas) => formatearHoras(horas);
 
-// Filas (proyectos, filas fijas, vacaciones) × días de lunes a viernes, con totales sin máximo.
+// Filas (proyectos y filas fijas) × días de lunes a viernes, con totales sin máximo.
 // renderCelda y renderTeletrabajo permiten al editor poner campos en lugar de texto.
 export default function TablaImputacion({ filas, dias, indice, teletrabajo, renderCelda = celdaLectura, renderTeletrabajo }) {
   const totales = calcularTotales(indice, filas, dias);

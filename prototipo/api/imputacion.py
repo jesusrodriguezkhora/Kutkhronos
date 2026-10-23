@@ -104,7 +104,6 @@ def obtener_semana(lunes):
 		"filas": filas,
 		# Filas fijas (salen siempre), con lo planificado
 		"conceptos": [{"concepto": c, "planificado": plan["conceptos"].get(c, 0)} for c in CONCEPTOS_IMPUTABLES],
-		"vacaciones_planificadas": sum(plan["vacaciones"].values()),
 		"celdas": [
 			{"concepto": l.concepto, "proyecto": l.proyecto, "fecha": l.fecha, "horas": flt(l.horas)}
 			for l in (doc.lineas if doc else [])

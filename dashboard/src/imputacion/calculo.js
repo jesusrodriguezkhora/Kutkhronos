@@ -37,9 +37,9 @@ export function vacacionesPorDia(dias) {
   return Object.fromEntries(dias.filter((d) => d.vacaciones).map((d) => [d.fecha, d.vacaciones]));
 }
 
-// Filas de la tabla: proyectos, filas fijas y, si las hay, vacaciones
+// Filas de la tabla: proyectos y filas fijas (las vacaciones se ven en la columna del día, no como fila)
 export function filasDe(info) {
-  const filas = [
+  return [
     ...info.filas.map((p) => ({
       clave: p.name,
       titulo: p.name,
@@ -55,17 +55,6 @@ export function filasDe(info) {
       fija: true,
     })),
   ];
-  if (info.semana.dias.some((d) => d.vacaciones)) {
-    filas.push({
-      clave: CONCEPTO_VACACIONES,
-      titulo: CONCEPTO_VACACIONES,
-      planificado: info.vacaciones_planificadas,
-      concepto: CONCEPTO_VACACIONES,
-      fija: true,
-      soloLectura: true,
-    });
-  }
-  return filas;
 }
 
 // Totales por fila, por día y general (las vacaciones cuentan en el total del día)
