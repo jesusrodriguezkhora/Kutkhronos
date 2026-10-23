@@ -243,10 +243,9 @@ def copiar_semana_anterior(lunes):
 	}
 
 
-@frappe.whitelist()
-def buscar_proyectos(texto=None):
-	"""Proyectos que se pueden añadir a una semana (para el buscador de 'Añadir proyecto')."""
-	exigir_rol(*ROLES_GESTION)
+def consultar_proyectos(texto=None):
+	"""Proyectos planificables (aceptados o en curso, sin acuerdos marco) que coinciden con el texto en
+	código, descripción o cliente. Máximo 20. La usan los buscadores de planificación e imputación."""
 	o_filtros = None
 	texto = (texto or "").strip()
 	if texto:
@@ -260,6 +259,13 @@ def buscar_proyectos(texto=None):
 		order_by="name asc",
 		limit_page_length=20,
 	)
+
+
+@frappe.whitelist()
+def buscar_proyectos(texto=None):
+	"""Buscador de proyectos para los roles de gestión."""
+	exigir_rol(*ROLES_GESTION)
+	return consultar_proyectos(texto)
 
 
 def filas_de_semana(doc, editable):
