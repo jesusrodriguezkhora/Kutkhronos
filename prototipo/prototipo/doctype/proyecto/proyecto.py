@@ -121,6 +121,8 @@ class Proyecto(Document):
 	def validar_fechas(self):
 		if self.fecha_fin and self.fecha_alta and getdate(self.fecha_fin) < getdate(self.fecha_alta):
 			frappe.throw("La fecha de fin no puede ser anterior a la fecha de alta.")
+		if self.fecha_fin and self.fecha_inicio and getdate(self.fecha_fin) < getdate(self.fecha_inicio):
+			frappe.throw("La fecha de fin no puede ser anterior a la fecha de inicio.")
 
 	def validar_responsable(self):
 		# Solo se comprueba al ponerlo o cambiarlo: si un empleado se da de baja más tarde,

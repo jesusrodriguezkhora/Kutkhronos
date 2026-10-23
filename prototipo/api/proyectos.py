@@ -16,6 +16,7 @@ CAMPOS = [
 	"importe_disponible",
 	"acuerdo_marco",
 	"descripcion",
+	"fecha_inicio",
 	"fecha_fin",
 	"responsable",
 	"lider_proyecto",

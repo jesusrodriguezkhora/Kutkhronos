@@ -21,6 +21,7 @@ function valoresIniciales(proyecto, acuerdoMarco) {
     importe: proyecto?.importe ?? "",
     estado: proyecto?.estado ?? "Oportunidad",
     descripcion: proyecto?.descripcion ?? "",
+    fecha_inicio: proyecto?.fecha_inicio ?? "",
     fecha_fin: proyecto?.fecha_fin ?? "",
     responsable: proyecto?.responsable ?? "",
     lider_proyecto: proyecto?.lider_proyecto ?? "",
@@ -218,6 +219,7 @@ export default function FichaProyecto({
       importe: datos.importe === "" ? 0 : Number(datos.importe),
       estado: datos.estado,
       descripcion: datos.descripcion || null,
+      fecha_inicio: datos.fecha_inicio || null,
       fecha_fin: datos.fecha_fin || null,
       responsable: datos.responsable || null,
     };
@@ -267,6 +269,7 @@ export default function FichaProyecto({
       <Dato etiqueta="Estado">{proyecto.estado}</Dato>
       <Dato etiqueta="Importe">{formatearImporte(proyecto.importe)}</Dato>
       <Dato etiqueta="Fecha de alta">{formatearFecha(proyecto.fecha_alta)}</Dato>
+      <Dato etiqueta="Fecha de inicio">{formatearFecha(proyecto.fecha_inicio)}</Dato>
       <Dato etiqueta="Fecha de fin">{formatearFecha(proyecto.fecha_fin)}</Dato>
       <Dato etiqueta="Responsable">{proyecto.responsable_nombre || proyecto.responsable}</Dato>
 
@@ -362,13 +365,25 @@ export default function FichaProyecto({
         etiqueta="Fecha de alta"
         valor={esNuevo ? "Se asignará al guardar" : formatearFecha(proyecto.fecha_alta)}
       />
+
+      <label className="block">
+        <span className={clases.etiqueta}>Fecha de inicio</span>
+        <input
+          type="date"
+          className={clases.campo}
+          value={datos.fecha_inicio}
+          max={datos.fecha_fin || undefined}
+          onChange={(e) => cambiar("fecha_inicio", e.target.value)}
+        />
+      </label>
+
       <label className="block">
         <span className={clases.etiqueta}>Fecha de fin</span>
         <input
           type="date"
           className={clases.campo}
           value={datos.fecha_fin}
-          min={proyecto?.fecha_alta}
+          min={datos.fecha_inicio || proyecto?.fecha_alta}
           onChange={(e) => cambiar("fecha_fin", e.target.value)}
         />
       </label>
