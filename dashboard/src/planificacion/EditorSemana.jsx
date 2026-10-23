@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useFrappePostCall } from "frappe-react-sdk";
 import TablaPlanificacion from "./TablaPlanificacion";
 import CampoHoras from "./CampoHoras";
-import BuscadorProyecto from "./BuscadorProyecto";
 import PopupDias from "./PopupDias";
 import {
   aplanarCeldas,
@@ -158,9 +157,12 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
   // --- Acciones ---
 
   const copiarSemanaAnterior = async () => {
+    const hayHorasDeProyectos = Object.values(estado.indice).some((porEmpleado) =>
+      Object.values(porEmpleado).some(Boolean)
+    );
     if (
-      estado.filas.length > 0 &&
-      !window.confirm("Se sustituirán los proyectos de esta semana por los de la semana anterior. ¿Continuar?")
+      hayHorasDeProyectos &&
+      !window.confirm("Se sustituirán las horas de proyectos de esta semana por las de la semana anterior. ¿Continuar?")
     ) {
       return;
     }
@@ -169,12 +171,13 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
     try {
       const copia = (await llamarCopiar({ lunes })).message;
       setEstado((e) => {
-        // Vacaciones, formación, comercial e interno de esta semana se mantienen; los proyectos se sustituyen
+        // Las filas ya están todas; solo se sustituyen las horas de proyectos.
+        // Vacaciones, formación, comercial e interno de esta semana se mantienen.
         const indice = {};
         for (const c of copia.celdas) {
           indice[c.proyecto] = { ...indice[c.proyecto], [c.empleado]: c.horas };
         }
-        return { ...e, filas: copia.filas, indice }
+        return { ...e, indice };
       });
       if (copia.proyectos_omitidos.length) {
         setAviso(
@@ -220,17 +223,13 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
         empleados={info.empleados}
         indice={indiceTabla}
         renderCelda={renderCelda}
-        onQuitarFila={editable ? quitarFila : undefined}
       />
 
-      {editable && (
+      {editable && info.hay_semana_anterior && (
         <div className="flex flex-wrap items-center gap-3">
-          <BuscadorProyecto excluir={estado.filas.map((f) => f.name)} onElegir={anadirFila} />
-          {info.hay_semana_anterior && (
-            <button type="button" onClick={copiarSemanaAnterior} disabled={copiando} className={BOTON_SECUNDARIO}>
-              {copiando ? "Copiando…" : "Copiar semana anterior"}
-            </button>
-          )}
+          <button type="button" onClick={copiarSemanaAnterior} disabled={copiando} className={BOTON_SECUNDARIO}>
+            {copiando ? "Copiando…" : "Copiar semana anterior"}
+          </button>
         </div>
       )}
 

@@ -165,7 +165,7 @@ def obtener_semana(lunes):
 	return {
 		"semana": info,
 		"empleados": empleados,
-		"filas": datos_proyectos([p.proyecto for p in doc.proyectos] if doc else []),
+		"filas": filas_de_semana(doc, info["editable"]),
 		"celdas": celdas_de(doc),
 		"conceptos": CONCEPTOS,
 		"puede_editar_vacaciones": tiene_rol(ROL_ADMINISTRACION),
@@ -215,7 +215,7 @@ def guardar_semana(lunes, filas, celdas, modificado=None):
 
 @frappe.whitelist()
 def copiar_semana_anterior(lunes):
-	"""Filas de proyecto y sus horas de la semana anterior, para cargarlas en el editor (no guarda nada).
+	"""Horas de proyecto de la semana anterior, para cargarlas en el editor (no guarda nada).
 	Se quedan fuera los proyectos que ya no se pueden planificar y las personas que ya no están en la
 	plantilla. Vacaciones y formación no se copian."""
 	exigir_rol(*ROLES_GESTION)
@@ -260,3 +260,15 @@ def buscar_proyectos(texto=None):
 		order_by="name asc",
 		limit_page_length=20,
 	)
+
+
+def filas_de_semana(doc, editable):
+	"""Filas de proyecto que se muestran en una semana, ordenadas por código.
+	- Editable: todos los proyectos planificables (aceptados o en curso, sin acuerdos marco) más los que
+	  ya tengan horas en la semana aunque hayan dejado de serlo, para no perder esas horas de vista.
+	- Cerrada: solo los proyectos con horas (lo que realmente se planificó)."""
+	con_horas = {a.proyecto for a in (doc.asignaciones if doc else []) if a.concepto == CONCEPTO_PROYECTO}
+	nombres = set(con_horas)
+	if editable:
+		nombres |= set(frappe.get_all("Proyecto", filters=FILTRO_PLANIFICABLES, pluck="name"))
+	return datos_proyectos(sorted(nombres))

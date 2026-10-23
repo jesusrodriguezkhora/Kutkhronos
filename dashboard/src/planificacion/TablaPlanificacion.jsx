@@ -83,8 +83,9 @@ function celdaLectura(_fila, _empleado, horas) {
   return formatearHoras(horas);
 }
 
-// Tabla filas (proyectos + vacaciones + formación) × personas, con totales.
-// renderCelda permite al editor sustituir el texto por un campo de entrada; onQuitarFila, quitar proyectos.
+// Tabla filas (proyectos + filas fijas) × personas, con totales.
+// renderCelda permite al editor sustituir el texto por un campo de entrada. onQuitarFila es opcional
+// (planificación ya no lo usa; se mantiene para el módulo de imputación).
 export default function TablaPlanificacion({
   filas,
   conceptos,
@@ -123,7 +124,7 @@ export default function TablaPlanificacion({
           {filas.length === 0 && (
             <tr>
               <td colSpan={empleados.length + 2} className="bg-white px-4 py-6 text-sm text-salvia-950/50">
-                Esta semana no tiene proyectos planificados.
+                No hay proyectos que mostrar en esta semana.
               </td>
             </tr>
           )}
