@@ -14,7 +14,7 @@ function Leyenda({ terminada }) {
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-salvia-900/10 pt-4 text-xs text-salvia-950/60">
       <span className="font-semibold text-salvia-950/70">Horas cargadas / planificadas</span>
       {muestra("bg-amber-100 ring-1 ring-amber-300", "Desviación de más del 15 %")}
-      {muestra("bg-red-100 ring-1 ring-red-300", "Más del 30 %")}
+      {muestra("bg-red-100 ring-1 ring-red-300", "Desviación de más del 30 %")}
       {muestra("bg-sky-100 ring-1 ring-sky-300", "Sin planificar")}
       {!terminada && (
         <span>

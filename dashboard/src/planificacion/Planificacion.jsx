@@ -119,7 +119,7 @@ export default function Planificacion() {
               onClick={volverAPlanificacion}
               aria-label="Volver a la planificación"
               title="Volver a la planificación"
-              className="grid h-10 w-10 place-items-center rounded-lg border border-salvia-900/20 text-salvia-950/70 hover:border-salvia-900 hover:bg-salvia hover:text-salvia-950"
+              className="inline-flex items-center rounded-lg bg-salvia-900 px-3 py-2 text-salvia-200 hover:bg-salvia hover:text-salvia-950"
             >
               <IconoVolver />
             </button>
