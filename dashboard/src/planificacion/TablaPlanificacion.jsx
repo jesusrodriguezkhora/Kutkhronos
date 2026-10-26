@@ -49,10 +49,10 @@ function FilaProyecto({ fila, empleados, indice, total, renderCelda, onQuitar })
       <th scope="row" className={`${CELDA} ${FIJA_IZQUIERDA} ${FONDO_FILA} max-w-[16rem] text-left font-normal`}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <div className="font-mono font-medium">{fila.name}</div>
+            <div className="font-medium">{fila.descripcion || "—"}</div>
             <div className="truncate text-xs text-salvia-950/50" title={fila.descripcion || undefined}>
               {fila.cliente ? `${fila.cliente} · ` : ""}
-              {fila.descripcion || "—"}
+              {fila.name}
             </div>
           </div>
           {onQuitar && (
