@@ -3,6 +3,8 @@ import { useFrappePostCall } from "frappe-react-sdk";
 import TablaPlanificacion from "./TablaPlanificacion";
 import CampoHoras from "./CampoHoras";
 import PopupDias from "./PopupDias";
+import PopupComentario from "./PopupComentario";
+import BotonComentario, { HuecoComentario } from "./BotonComentario";
 import {
   aplanarCeldas,
   calcularTotales,
@@ -29,8 +31,8 @@ function estadoInicial(info) {
 
 // Lo que se guardaría, en un orden estable: para saber si hay cambios
 function resumen(estado) {
-  const celdas = aplanarCeldas(estado.indice, estado.semanal, estado.diario)
-    .map((c) => `${c.concepto}|${c.proyecto ?? ""}|${c.empleado}|${c.fecha ?? ""}|${c.horas}`)
+  const celdas = aplanarCeldas(estado.indice, estado.semanal, estado.diario, estado.comentarios)
+    .map((c) => `${c.concepto}|${c.proyecto ?? ""}|${c.empleado}|${c.fecha ?? ""}|${c.horas}|${c.comentario ?? ""}`)
     .sort();
   return JSON.stringify([estado.filas.map((f) => f.name), celdas]);
 }
@@ -65,6 +67,7 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
   const [error, setError] = useState(null);
   const [aviso, setAviso] = useState(null);
   const [popup, setPopup] = useState(null); // { concepto, empleado } del detalle por día abierto
+  const [popupComentario, setPopupComentario] = useState(null); // { fila, empleado } del comentario abierto
   const { call: llamarGuardar, loading: guardando } = useFrappePostCall(
     "prototipo.api.planificacion.guardar_semana"
   );
@@ -111,6 +114,17 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
     setPopup(null);
   };
 
+  const aplicarComentario = (fila, empleado, texto) => {
+    setEstado((e) => ({
+      ...e,
+      comentarios: { ...e.comentarios, [fila]: { ...e.comentarios[fila], [empleado]: texto || undefined } },
+    }));
+    setPopupComentario(null);
+  };
+
+  // Horas de una celda de proyecto o de concepto semanal
+  const horasDe = (fila, empleado) => (estado.indice[fila] ?? estado.semanal[fila])?.[empleado] || 0;
+
   // Vacaciones: solo Administración. El resto de filas, cualquier rol de gestión. Las semanas cerradas no se editan.
   const puedeEditar = (fila) => editable && (fila !== CONCEPTO_VACACIONES || info.puede_editar_vacaciones);
 
@@ -125,14 +139,34 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
         />
       );
     }
-    if (!puedeEditar(fila)) return formatearHoras(horas);
+
+    const editableCelda = puedeEditar(fila);
+    const comentario = estado.comentarios[fila]?.[empleado.usuario];
+    // Editable: con horas (o con un comentario que haya que borrar). Solo lectura: si hay comentario.
+    const conBocadillo = editableCelda ? horas > 0 || !!comentario : !!comentario;
     const cambiar = conceptos.includes(fila) ? cambiarSemanal : cambiarCelda;
+
     return (
-      <CampoHoras
-        valor={horas}
-        onChange={(h) => cambiar(fila, empleado.usuario, h)}
-        etiqueta={`Horas de ${empleado.nombre} en ${fila}`}
-      />
+      <div className="inline-flex items-center gap-1">
+        {editableCelda ? (
+          <CampoHoras
+            valor={horas}
+            onChange={(h) => cambiar(fila, empleado.usuario, h)}
+            etiqueta={`Horas de ${empleado.nombre} en ${fila}`}
+          />
+        ) : (
+          <span>{formatearHoras(horas)}</span>
+        )}
+        {conBocadillo ? (
+          <BotonComentario
+            tieneComentario={!!comentario}
+            onClick={() => setPopupComentario({ fila, empleado })}
+            etiqueta={`Comentario de ${empleado.nombre} en ${fila}`}
+          />
+        ) : (
+          <HuecoComentario />
+        )}
+      </div>
     );
   };
 
@@ -144,6 +178,9 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
   const excedidos = info.empleados.filter((e) => superaMaximo(totales.porEmpleado[e.usuario], e.maximo));
   const horasInvalidas = [...Object.values(estado.indice), ...Object.values(estado.semanal)].some((porEmpleado) =>
     Object.values(porEmpleado).some((h) => h < 0 || !esMediaHora(h))
+  );
+  const comentariosSinHoras = Object.entries(estado.comentarios).some(([fila, porEmpleado]) =>
+    Object.entries(porEmpleado).some(([empleado, texto]) => texto && !horasDe(fila, empleado))
   );
 
   // --- Acciones ---
@@ -163,13 +200,17 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
     try {
       const copia = (await llamarCopiar({ lunes })).message;
       setEstado((e) => {
-        // Las filas ya están todas; solo se sustituyen las horas de proyectos.
-        // Vacaciones, formación, comercial e interno de esta semana se mantienen.
+        // Se sustituyen las horas y los comentarios de proyectos. Vacaciones, formación, comercial e interno se mantienen.
         const indice = {};
         for (const c of copia.celdas) {
           indice[c.proyecto] = { ...indice[c.proyecto], [c.empleado]: c.horas };
         }
         return { ...e, indice };
+
+        const comentarios = Object.fromEntries(
+          Object.entries(e.comentarios).filter(([fila]) => conceptos.includes(fila))
+        );
+        return { ...e, indice, comentarios };
       });
       if (copia.proyectos_omitidos.length) {
         setAviso(
@@ -188,7 +229,7 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
       const respuesta = await llamarGuardar({
         lunes,
         filas: estado.filas.map((f) => f.name),
-        celdas: aplanarCeldas(estado.indice, estado.semanal, estado.diario),
+        celdas: aplanarCeldas(estado.indice, estado.semanal, estado.diario, estado.comentarios),
         modificado: info.modificado,
       });
       onGuardado(respuesta.message);
@@ -206,6 +247,7 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
   let motivoNoGuardar;
   if (excedidos.length) motivoNoGuardar = "Hay personas por encima de su máximo";
   else if (horasInvalidas) motivoNoGuardar = "Hay horas que no son medias horas";
+  else if (comentariosSinHoras) motivoNoGuardar = "Hay celdas con comentario y sin horas: borra antes el comentario";
 
   return (
     <div className="space-y-4">
@@ -279,6 +321,16 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
           editable={puedeEditar(popup.concepto)}
           onAplicar={(dias) => aplicarDias(popup.concepto, popup.empleado.usuario, dias)}
           onCerrar={() => setPopup(null)}
+        />
+      )}
+      {popupComentario && (
+        <PopupComentario
+          titulo={popupComentario.fila}
+          subtitulo={popupComentario.empleado.nombre}
+          valor={estado.comentarios[popupComentario.fila]?.[popupComentario.empleado.usuario]}
+          editable={puedeEditar(popupComentario.fila)}
+          onAplicar={(texto) => aplicarComentario(popupComentario.fila, popupComentario.empleado.usuario, texto)}
+          onCerrar={() => setPopupComentario(null)}
         />
       )}
     </div>
