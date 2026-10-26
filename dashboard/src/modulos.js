@@ -13,5 +13,5 @@ export const MODULOS = [
   { clave: "planificacion", ruta: "/planificacion", etiqueta: "Planificación", Componente: Planificacion },
   { clave: "clientes", ruta: "/clientes", etiqueta: "Clientes", Componente: Clientes },
   { clave: "empleados", ruta: "/empleados", etiqueta: "Empleados", Componente: Empleados },
-  { clave: "imputacion", ruta: "/imputacion", etiqueta: "Imputación", Componente: Imputacion },
+  { clave: "imputacion", ruta: "/carga", etiqueta: "Carga", Componente: Imputacion },
 ];
