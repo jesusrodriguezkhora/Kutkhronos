@@ -77,7 +77,17 @@ export default function Planificacion() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Planificación</h1>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Planificación</h1>
+        {cambiosPendientes && (
+          <span
+            role="status"
+            className="rounded-full bg-red-50 px-3 py-1 text-sm font-medium text-red-700 ring-1 ring-red-200"
+          >
+            Hay cambios sin guardar
+          </span>
+        )}
+      </div>
 
       <SelectorSemana
         anio={anio}
