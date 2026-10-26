@@ -130,7 +130,6 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
 
   const renderCelda = (fila, empleado, horas) => {
     if (fila === CONCEPTO_VACACIONES) {
-          if (fila === CONCEPTO_VACACIONES) {
       // Mismo hueco que el bocadillo de las demás celdas, para que la columna quede alineada
       return (
         <div className="inline-flex items-center gap-1">
@@ -143,7 +142,6 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
           <HuecoComentario />
         </div>
       );
-    }
     }
 
     const editableCelda = puedeEditar(fila);

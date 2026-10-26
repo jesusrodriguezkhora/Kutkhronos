@@ -34,7 +34,7 @@ function coincide(fila, busqueda) {
 
 function CabeceraEmpleado({ empleado }) {
   return (
-    <th className={`${CELDA} ${CABECERA} ${FIJA_ARRIBA} min-w-[7.5rem] text-center align-bottom`}>
+    <th className={`${CELDA_PERSONA} ${CABECERA} ${FIJA_ARRIBA} min-w-[9rem] text-center align-bottom`}>
       <div className="leading-tight">{empleado.nombre}</div>
       <div className="mt-0.5 text-xs font-normal normal-case tracking-normal text-salvia-200/60">
         {empleado.en_plantilla ? `máx. ${formatearHoras(empleado.maximo) || 0} h` : "fuera de plantilla"}
@@ -148,7 +148,7 @@ export default function TablaPlanificacion({
             {empleados.map((e) => (
               <CabeceraEmpleado key={e.usuario} empleado={e} />
             ))}
-              <th className={`${CELDA_PERSONA} ${CABECERA} ${FIJA_ARRIBA} min-w-[9rem] text-center align-bottom`}>
+              <th className={`${CELDA} ${CABECERA} ${ESQUINA_DERECHA} text-right align-bottom`}>
               Total
             </th>
           </tr>
