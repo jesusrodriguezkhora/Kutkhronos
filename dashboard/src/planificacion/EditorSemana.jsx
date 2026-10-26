@@ -130,14 +130,20 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
 
   const renderCelda = (fila, empleado, horas) => {
     if (fila === CONCEPTO_VACACIONES) {
+          if (fila === CONCEPTO_VACACIONES) {
+      // Mismo hueco que el bocadillo de las demás celdas, para que la columna quede alineada
       return (
-        <BotonDias
-          horas={horas}
-          editable={puedeEditar(fila)}
-          onAbrir={() => setPopup({ concepto: fila, empleado })}
-          etiqueta={`${fila} de ${empleado.nombre}: detalle por día`}
-        />
+        <div className="inline-flex items-center gap-1">
+          <BotonDias
+            horas={horas}
+            editable={puedeEditar(fila)}
+            onAbrir={() => setPopup({ concepto: fila, empleado })}
+            etiqueta={`${fila} de ${empleado.nombre}: detalle por día`}
+          />
+          <HuecoComentario />
+        </div>
       );
+    }
     }
 
     const editableCelda = puedeEditar(fila);

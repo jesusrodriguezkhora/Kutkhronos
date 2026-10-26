@@ -5,6 +5,9 @@ import { useState } from "react";
 // filas blancas separadas por líneas finas y resaltado salvia al pasar el ratón.
 const CELDA = "px-4 py-3";
 const CABECERA = "bg-salvia-900 text-xs font-semibold uppercase tracking-wider text-salvia-200";
+// Cabecera y total de cada persona: a la derecha, el relleno normal (1rem) más el hueco del bocadillo
+// (1,5rem + 0,25rem de separación). Así se centran sobre el campo de horas, no sobre campo + bocadillo.
+const CELDA_PERSONA = "py-3 pl-4 pr-11";
 
 // Columnas fijas a izquierda (proyecto) y derecha (total), para que no se pierdan con el scroll
 // horizontal. Necesitan fondo opaco; en las filas, el resaltado del ratón llega vía "group".
@@ -145,7 +148,7 @@ export default function TablaPlanificacion({
             {empleados.map((e) => (
               <CabeceraEmpleado key={e.usuario} empleado={e} />
             ))}
-            <th className={`${CELDA} ${CABECERA} ${ESQUINA_DERECHA} text-right align-bottom`}>
+              <th className={`${CELDA_PERSONA} ${CABECERA} ${FIJA_ARRIBA} min-w-[9rem] text-center align-bottom`}>
               Total
             </th>
           </tr>
@@ -200,7 +203,7 @@ export default function TablaPlanificacion({
               return (
                 <td
                   key={e.usuario}
-                  className={`${CELDA} text-center tabular-nums ${excede ? "bg-red-50 text-red-700" : "bg-salvia-100"}`}
+                  className={`${CELDA_PERSONA} text-center tabular-nums ${excede ? "bg-red-50 text-red-700" : "bg-salvia-100"}`}
                   title={excede ? `Supera el máximo de ${formatearHoras(e.maximo)} h` : undefined}
                 >
                   {formatearHoras(total) || "0"}
