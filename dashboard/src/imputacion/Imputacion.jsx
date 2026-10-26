@@ -64,7 +64,7 @@ export default function Imputacion() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Imputación de horas</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Carga de horas</h1>
 
       <SelectorSemana
         anio={anio}

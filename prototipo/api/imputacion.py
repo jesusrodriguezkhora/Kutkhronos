@@ -77,7 +77,7 @@ def obtener_semana(lunes):
 	# Proyectos: los planificados para esta persona esta semana y los que ya haya imputado
 	imputados = {l.proyecto for l in (doc.lineas if doc else []) if l.concepto == CONCEPTO_PROYECTO}
 	filas = [
-		{**p, "planificado": plan["proyectos"].get(p.name, 0)}
+		{**p, "planificado": plan["proyectos"].get(p.name, 0), "comentario": plan["comentarios"].get(p.name)}
 		for p in datos_proyectos(sorted(set(plan["proyectos"]) | imputados))
 	]
 
@@ -103,7 +103,10 @@ def obtener_semana(lunes):
 		},
 		"filas": filas,
 		# Filas fijas (salen siempre), con lo planificado
-		"conceptos": [{"concepto": c, "planificado": plan["conceptos"].get(c, 0)} for c in CONCEPTOS_IMPUTABLES],
+		"conceptos": [
+			{"concepto": c, "planificado": plan["conceptos"].get(c, 0), "comentario": plan["comentarios"].get(c)}
+			for c in CONCEPTOS_IMPUTABLES
+		],
 		"celdas": [
 			{"concepto": l.concepto, "proyecto": l.proyecto, "fecha": l.fecha, "horas": flt(l.horas)}
 			for l in (doc.lineas if doc else [])

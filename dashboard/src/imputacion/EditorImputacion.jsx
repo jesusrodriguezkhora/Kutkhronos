@@ -63,7 +63,7 @@ function PieSemana({ semana, children }) {
         ) : (
           <>
             <span className="font-semibold text-salvia-950/70">
-              Puedes imputar hasta el {formatearFecha(ultimoDiaParaImputar(semana.cierre))} incluido
+              Puedes cargar hasta el {formatearFecha(ultimoDiaParaImputar(semana.cierre))} incluido
             </span>
             {" · "}solo los días que ya han pasado.
           </>
@@ -163,7 +163,7 @@ export default function EditorImputacion({ info, lunes, onGuardado, onCambiosPen
         className={`inline-flex items-center gap-1.5 ${
           activo ? "cursor-pointer text-salvia-200" : "text-salvia-200/50"
         } ${marcado && sinHoras ? "text-red-300" : ""}`}
-        title={dia.editable && sinHoras && !marcado ? "Imputa horas este día para marcar teletrabajo" : undefined}
+        title={dia.editable && sinHoras && !marcado ? "Carga horas este día para marcar teletrabajo" : undefined}
       >
         <input
           type="checkbox"
@@ -224,7 +224,7 @@ export default function EditorImputacion({ info, lunes, onGuardado, onCambiosPen
       )}
       {teletrabajoSinHoras.length > 0 && (
         <p className="text-sm text-red-700">
-          Teletrabajo sin horas: {teletrabajoSinHoras.map(diaYMes).join(", ")}. Imputa horas o desmarca el
+          Teletrabajo sin horas: {teletrabajoSinHoras.map(diaYMes).join(", ")}. Carga horas o desmarca el
           teletrabajo.
         </p>
       )}
