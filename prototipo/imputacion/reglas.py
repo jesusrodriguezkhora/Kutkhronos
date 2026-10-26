@@ -30,8 +30,9 @@ def esta_cerrada(semana):
 
 def planificado_de(empleado, semana):
 	"""Lo planificado para una persona en una semana:
-	{"proyectos": {proyecto: horas}, "conceptos": {concepto: horas}, "vacaciones": {fecha: horas}}"""
-	resultado = {"proyectos": {}, "conceptos": {}, "vacaciones": {}}
+	{"proyectos": {proyecto: horas}, "conceptos": {concepto: horas}, "vacaciones": {fecha: horas},
+	 "comentarios": {proyecto o concepto: texto}}"""
+	resultado = {"proyectos": {}, "conceptos": {}, "vacaciones": {}, "comentarios": {}}
 	plan = frappe.db.get_value("Planificacion Semana", {"semana": getdate(semana)})
 	if not plan:
 		return resultado
@@ -39,7 +40,7 @@ def planificado_de(empleado, semana):
 	for a in frappe.get_all(
 		"Asignacion Planificacion",
 		filters={"parenttype": "Planificacion Semana", "parent": plan, "empleado": empleado},
-		fields=["concepto", "proyecto", "fecha", "horas"],
+		fields=["concepto", "proyecto", "fecha", "horas", "comentario"],
 	):
 		if a.concepto == CONCEPTO_PROYECTO:
 			resultado["proyectos"][a.proyecto] = flt(a.horas)
@@ -47,6 +48,9 @@ def planificado_de(empleado, semana):
 			resultado["vacaciones"][getdate(a.fecha)] = flt(a.horas)
 		else:
 			resultado["conceptos"][a.concepto] = flt(a.horas)
+		if a.comentario and a.concepto != CONCEPTO_VACACIONES:
+			fila = a.proyecto if a.concepto == CONCEPTO_PROYECTO else a.concepto
+			resultado["comentarios"][fila] = a.comentario
 	return resultado
 
 

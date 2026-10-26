@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { formatearHoras } from "../planificacion/calculo";
+import BotonComentario from "../planificacion/BotonComentario";
+import PopupComentario from "../planificacion/PopupComentario";
 import { MAXIMO_DIARIO, calcularTotales } from "./calculo";
 
 // Mismo estilo que la tabla de planificación
@@ -30,33 +33,42 @@ function CabeceraDia({ dia, renderTeletrabajo }) {
   );
 }
 
-function Fila({ fila, dias, indice, total, renderCelda }) {
+// Una fila: nombre, lo planificado y, si hay indicaciones de planificación, el bocadillo a la derecha
+function Fila({ fila, dias, indice, total, renderCelda, onVerComentario }) {
   const fondo = fila.fija ? FONDO_CONCEPTO : FONDO_FILA;
   return (
     <tr className="group">
       <th scope="row" className={`${CELDA} ${fondo} max-w-[18rem] text-left font-normal`}>
-        <div className={fila.fija ? "font-medium" : "font-mono font-medium"}>{fila.titulo}</div>
-        {fila.subtitulo && (
-          <div className="truncate text-xs text-salvia-950/50" title={fila.subtitulo}>
-            {fila.subtitulo}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className={fila.fija ? "font-medium" : "font-mono font-medium"}>{fila.titulo}</div>
+            {fila.subtitulo && (
+              <div className="truncate text-xs text-salvia-950/50" title={fila.subtitulo}>
+                {fila.subtitulo}
+              </div>
+            )}
+            <div className="mt-1.5">
+              {fila.planificado ? (
+                <span className="inline-flex items-baseline gap-1 rounded-md bg-salvia-900/10 px-2 py-0.5 text-sm text-salvia-950">
+                  Planificado
+                  <span className="font-bold tabular-nums">{formatearHoras(fila.planificado)} h</span>
+                </span>
+              ) : (
+                <span className="text-xs text-salvia-950/50">Sin planificar</span>
+              )}
+            </div>
           </div>
-        )}
-        <div className="mt-1.5">
-          {fila.planificado ? (
-            <span className="inline-flex items-baseline gap-1 rounded-md bg-salvia-900/10 px-2 py-0.5 text-sm text-salvia-950">
-              Planificado
-              <span className="font-bold tabular-nums">{formatearHoras(fila.planificado)} h</span>
-            </span>
-          ) : (
-            <span className="text-xs text-salvia-950/50">Sin planificar</span>
+          {fila.comentario && (
+            <BotonComentario
+              tieneComentario
+              onClick={() => onVerComentario(fila)}
+              etiqueta={`Indicaciones para ${fila.titulo}`}
+            />
           )}
         </div>
       </th>
       {dias.map((d) => (
-        <td
-          key={d.fecha}
-          className={`${CELDA} text-center tabular-nums ${bloqueado(d) ? FONDO_BLOQUEADO : fondo}`}
-        >
+        <td key={d.fecha} className={`${CELDA} text-center tabular-nums ${bloqueado(d) ? FONDO_BLOQUEADO : fondo}`}>
           {renderCelda(fila, d, indice[fila.clave]?.[d.fecha] || 0)}
         </td>
       ))}
@@ -67,13 +79,23 @@ function Fila({ fila, dias, indice, total, renderCelda }) {
   );
 }
 
-// Valores por defecto: solo lectura
+// Valor por defecto de una celda: solo lectura
 const celdaLectura = (_fila, _dia, horas) => formatearHoras(horas);
 
 // Filas (proyectos y filas fijas) × días de lunes a viernes, con totales sin máximo.
 // renderCelda y renderTeletrabajo permiten al editor poner campos en lugar de texto.
-export default function TablaImputacion({ filas, dias, indice, teletrabajo, renderCelda = celdaLectura, renderTeletrabajo }) {
+export default function TablaImputacion({
+  filas,
+  dias,
+  indice,
+  teletrabajo,
+  renderCelda = celdaLectura,
+  renderTeletrabajo,
+}) {
+  // Fila cuyo comentario se está leyendo (null = popup cerrado)
+  const [comentarioAbierto, setComentarioAbierto] = useState(null);
   const totales = calcularTotales(indice, filas, dias);
+
   const teletrabajoLectura = (dia) => (
     <label className="inline-flex items-center gap-1.5 text-salvia-200/80">
       <input type="checkbox" className="h-4 w-4 accent-salvia" checked={teletrabajo.includes(dia.fecha)} disabled readOnly />
@@ -103,6 +125,7 @@ export default function TablaImputacion({ filas, dias, indice, teletrabajo, rend
               indice={indice}
               total={totales.porFila[f.clave]}
               renderCelda={renderCelda}
+              onVerComentario={setComentarioAbierto}
             />
           ))}
         </tbody>
@@ -131,6 +154,16 @@ export default function TablaImputacion({ filas, dias, indice, teletrabajo, rend
           </tr>
         </tfoot>
       </table>
+
+      {comentarioAbierto && (
+        <PopupComentario
+          titulo={comentarioAbierto.titulo}
+          subtitulo="Indicaciones de planificación"
+          valor={comentarioAbierto.comentario}
+          editable={false}
+          onCerrar={() => setComentarioAbierto(null)}
+        />
+      )}
     </div>
   );
 }

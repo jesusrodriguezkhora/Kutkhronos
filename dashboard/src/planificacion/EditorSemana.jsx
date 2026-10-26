@@ -211,10 +211,6 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
         }
         return { ...e, indice };
 
-        const comentarios = Object.fromEntries(
-          Object.entries(e.comentarios).filter(([fila]) => conceptos.includes(fila))
-        );
-        return { ...e, indice, comentarios };
       });
       if (copia.proyectos_omitidos.length) {
         setAviso(
