@@ -7,6 +7,7 @@ from prototipo.roles import (
 	ROLES_DATOS_LABORALES,
 	ROLES_DIRECCION,
 	ROLES_GESTION,
+	ROLES_SOLO_DIRECCION,
 	exigir_rol,
 	rol_principal,
 	roles_asignables,
@@ -57,7 +58,7 @@ def comprobar_gestionable(usuario):
 	roles = set(frappe.get_roles(usuario))
 	if not roles & set(ROLES_APP):
 		frappe.throw("Solo se pueden gestionar cuentas de la aplicación.")
-	if roles & set(ROLES_DIRECCION) and not tiene_rol(*ROLES_DIRECCION):
+	if roles & set(ROLES_SOLO_DIRECCION) and not tiene_rol(*ROLES_DIRECCION):
 		frappe.throw("No tienes permiso para modificar esta cuenta.", frappe.PermissionError)
 
 
@@ -131,7 +132,7 @@ def listar_empleados():
 		u["rol"] = rol_principal(roles[u.name])
 		# Mismas reglas que comprobar_gestionable, para que la SPA solo muestre los botones útiles
 		u["editable"] = u.name != frappe.session.user and (
-			soy_direccion or not roles[u.name] & set(ROLES_DIRECCION)
+			soy_direccion or not roles[u.name] & set(ROLES_SOLO_DIRECCION)
 		)
 		if ve_laborales:
 			u.update(laborales.get(u.name) or dict.fromkeys(CAMPOS_LABORALES))
