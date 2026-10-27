@@ -4,12 +4,25 @@ import { formatearHoras } from "./calculo";
 const UMBRAL_AMARILLO = 0.15;
 const UMBRAL_ROJO = 0.3;
 
-const FONDOS = {
-  azul: "bg-sky-100 text-sky-900",
-  amarillo: "bg-amber-100 text-amber-900",
-  rojo: "bg-red-100 text-red-800",
+// Color del icono de aviso según la desviación
+const COLOR_ICONO = {
+  azul: "text-sky-600",
+  amarillo: "text-amber-500",
+  rojo: "text-red-600",
 };
 
+// Triángulo de aviso (icono "exclamation-triangle" sólido de Heroicons, licencia MIT)
+export function IconoAdvertencia({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={`h-4 w-4 ${className}`} aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
+      />
+    </svg>
+  );
+}
 // Mismo estilo que la tabla de planificación
 const CELDA = "px-4 py-3";
 const CABECERA = "bg-salvia-900 text-xs font-semibold uppercase tracking-wider text-salvia-200";
@@ -36,29 +49,36 @@ function textoDesviacion(real, planificado) {
   return `${porcentaje > 0 ? "+" : porcentaje < 0 ? "−" : ""}${Math.abs(porcentaje)} %`;
 }
 
-// "6 / 8" (real / planificado). Vacío si no hay ninguna de las dos.
+// "6 / 8" (cargado / planificado) y, si hay desviación, el icono de aviso a la derecha.
+// Vacío si no hay ninguna de las dos.
 function Valor({ real, planificado, terminada, className = "", negrita = false }) {
   const hay = real || planificado;
   const color = hay ? colorDe(real, planificado, terminada) : null;
+  const desviacion = textoDesviacion(real, planificado);
+
   return (
-    <td
-      className={`${CELDA} whitespace-nowrap text-center tabular-nums ${color ? FONDOS[color] : className} ${
-        negrita ? "font-semibold" : ""
-      }`}
-      title={hay ? textoDesviacion(real, planificado) : undefined}
-    >
+    <td className={`${CELDA} ${className} whitespace-nowrap text-center tabular-nums ${negrita ? "font-semibold" : ""}`}>
       {hay ? (
-        <>
-          {formatearHoras(real) || "0"}
-          <span className="opacity-50"> / {formatearHoras(planificado) || "0"}</span>
-        </>
+        <span className="inline-flex items-center gap-1.5">
+          <span>
+            {formatearHoras(real) || "0"}
+            <span className="opacity-50"> / {formatearHoras(planificado) || "0"}</span>
+          </span>
+          {color ? (
+            <span role="img" aria-label={`Desviación: ${desviacion}`} title={desviacion}>
+              <IconoAdvertencia className={COLOR_ICONO[color]} />
+            </span>
+          ) : (
+            // Mismo hueco que el icono, para que los números queden alineados en la columna
+            <span aria-hidden="true" className="h-4 w-4" />
+          )}
+        </span>
       ) : (
         ""
       )}
     </td>
   );
 }
-
 // Celdas de la API -> {fila: {empleado: {real, planificado}}}
 function indexar(celdas) {
   const indice = {};
