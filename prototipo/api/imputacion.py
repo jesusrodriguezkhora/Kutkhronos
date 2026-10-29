@@ -20,7 +20,7 @@ from prototipo.imputacion.reglas import (
 )
 from prototipo.planificacion.festivos import festivos_detalle
 from prototipo.planificacion.semanas import dias_de_semana, lunes_de
-from prototipo.roles import ROL_EMPLEADO, exigir_rol
+from prototipo.roles import ROL_EMPLEADO, ROLES_GESTION, exigir_rol, tiene_rol
 
 # Todo es siempre de la persona de la sesión: no hay forma de pedir la imputación de otra
 
@@ -34,9 +34,12 @@ def imputacion_de(empleado, lunes):
 
 @frappe.whitelist()
 def semanas_del_mes(anio, mes):
-	"""Semanas de un mes (las que tienen su lunes en él), con si se pueden imputar todavía."""
-	exigir_rol(ROL_EMPLEADO)
+	"""Semanas de un mes (las que tienen su lunes en él), con si se pueden imputar todavía.
+	Para quien imputa y, para la supervisión, para los roles de gestión."""
+	exigir_rol(ROL_EMPLEADO, *ROLES_GESTION)
 	empleado = frappe.session.user
+	# CEO y Administración no imputan: ninguna semana es editable para ellos
+	imputa = tiene_rol(ROL_EMPLEADO)
 	anio, mes = int(anio), int(mes)
 	if not 1 <= mes <= 12:
 		frappe.throw("Mes no válido.")
@@ -51,8 +54,8 @@ def semanas_del_mes(anio, mes):
 				"lunes": lunes,
 				"etiqueta": etiqueta(lunes),
 				"festivos": festivos_detalle(dias[0], dias[-1]),
-				"editable": bool(dias_editables(empleado, lunes)),
-				"imputada": bool(frappe.db.exists("Imputacion Semana", {"empleado": empleado, "semana": lunes})),
+				"editable": imputa and bool(dias_editables(empleado, lunes)),
+				"imputada": imputa and bool(frappe.db.exists("Imputacion Semana", {"empleado": empleado, "semana": lunes})),
 			}
 		)
 		lunes += timedelta(days=7)
