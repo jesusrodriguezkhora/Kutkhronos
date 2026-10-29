@@ -1,6 +1,6 @@
 import { formatearHoras } from "./calculo";
 
-// Umbrales de desviación entre horas reales y planificadas (en valor absoluto)
+// Umbrales de desviación por encima de lo planificado (solo desviaciones positivas)
 const UMBRAL_AMARILLO = 0.15;
 const UMBRAL_ROJO = 0.3;
 
@@ -32,11 +32,12 @@ const ESQUINA_IZQUIERDA = "sticky left-0 top-0 z-30";
 const FONDO_FILA = "bg-white";
 const FONDO_CONCEPTO = "bg-salvia-50";
 
-// Color de una celda o un total. Solo en semanas terminadas (imputación cerrada).
+// Color del aviso de una celda o un total. Solo en semanas terminadas (carga cerrada) y solo cuando se
+// ha cargado más de lo planificado: por encima de los umbrales, o con horas sin planificar (azul).
 export function colorDe(real, planificado, terminada) {
   if (!terminada) return null;
   if (!planificado) return real > 0 ? "azul" : null;
-  const desviacion = Math.abs(real - planificado) / planificado;
+  const desviacion = (real - planificado) / planificado; // positiva si se cargó más de lo planificado
   if (desviacion > UMBRAL_ROJO + 1e-9) return "rojo";
   if (desviacion > UMBRAL_AMARILLO + 1e-9) return "amarillo";
   return null;
