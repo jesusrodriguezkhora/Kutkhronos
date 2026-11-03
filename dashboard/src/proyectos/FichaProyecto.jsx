@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useFrappeCreateDoc, useFrappeGetCall, useFrappeUpdateDoc } from "frappe-react-sdk";
-import { TIPOS_SUELTOS, VIAS_NO_SUBVENCION, ESTADOS, ESTADOS_CON_FEE, TIPOS_CON_FEE } from "./opciones";
+import { TIPOS_SUELTOS, VIAS_NO_SUBVENCION, ESTADOS, ESTADOS_CON_FEE, TIPOS_CON_FEE, ESTADOS_CON_GASTOS } from "./opciones";
 import { ESTILOS } from "../lib/estilos";
 import { mensajeDeError } from "../lib/errores";
 import { formatearImporte, formatearFecha } from "../lib/formato";
@@ -8,6 +8,7 @@ import BuscadorCliente from "../componentes/BuscadorCliente";
 import CampoImporte from "../componentes/CampoImporte";
 import AreaTexto from "../componentes/AreaTexto";
 import Propuesta from "./Propuesta";
+import Gastos from "./Gastos";
 
 const clases = ESTILOS.claro;
 
@@ -29,16 +30,22 @@ function valoresIniciales(proyecto, acuerdoMarco) {
   };
 }
 
-// Pestañas bajo la cabecera. La propuesta solo existe para proyectos ya guardados.
+// Pestañas bajo la cabecera. La propuesta solo existe para proyectos ya guardados; los gastos, solo
+// para proyectos aceptados, en curso o cerrados (si no, la pestaña no se muestra).
 const PESTANAS = [
   { clave: "datos", etiqueta: "Datos" },
   { clave: "propuesta", etiqueta: "Fee Estimate" },
+  { clave: "gastos", etiqueta: "Gastos" },
 ];
 
-function Pestanas({ activa, onCambiar, propuestaDisponible }) {
+// Clases completas (Tailwind solo genera las que aparecen escritas tal cual en el código)
+const COLUMNAS = { 2: "grid-cols-2", 3: "grid-cols-3" };
+
+function Pestanas({ activa, onCambiar, propuestaDisponible, gastosDisponibles }) {
+  const visibles = PESTANAS.filter((p) => p.clave !== "gastos" || gastosDisponibles);
   return (
-    <div role="tablist" className="grid grid-cols-2 border-b border-salvia-900/10">
-      {PESTANAS.map(({ clave, etiqueta }) => {
+    <div role="tablist" className={`grid ${COLUMNAS[visibles.length]} border-b border-salvia-900/10`}>
+      {visibles.map(({ clave, etiqueta }) => {
         const deshabilitada = clave === "propuesta" && !propuestaDisponible;
         const activo = activa === clave;
         return (
@@ -149,6 +156,9 @@ export default function FichaProyecto({
   const esNuevo = !proyecto;
   const esNuevoBasado = esNuevo && !!acuerdoMarco;
   const esBasado = esNuevoBasado || !!proyecto?.acuerdo_marco;
+
+  // La pestaña Gastos solo existe en proyectos guardados que han salido de oportunidad
+  const gastosDisponibles = !esNuevo && ESTADOS_CON_GASTOS.includes(proyecto.estado);
 
   const [editando, setEditando] = useState(esNuevo || editarAlAbrir);
   const [datos, setDatos] = useState(() => valoresIniciales(proyecto, acuerdoMarco));
@@ -482,7 +492,7 @@ export default function FichaProyecto({
           </button>
         </div>
 
-        <Pestanas activa={pestana} onCambiar={setPestana} propuestaDisponible={!esNuevo} />
+        <Pestanas activa={pestana} onCambiar={setPestana} propuestaDisponible={!esNuevo} gastosDisponibles={gastosDisponibles} />
 
         {/* Pestaña Datos: lo que ya había (detalle o edición del proyecto) */}
         {pestana === "datos" && (
@@ -543,6 +553,13 @@ export default function FichaProyecto({
         {!esNuevo && (
           <div className={pestana === "propuesta" ? "flex min-h-0 flex-1 flex-col" : "hidden"}>
             <Propuesta proyecto={proyecto.name} onCambiosPendientes={setPropuestaConCambios} />
+          </div>
+        )}
+        
+        {/* Pestaña Gastos: solo lectura; se pide de nuevo cada vez que se abre */}
+        {pestana === "gastos" && gastosDisponibles && (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <Gastos proyecto={proyecto.name} />
           </div>
         )}
       </form>
