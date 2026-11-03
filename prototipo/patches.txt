@@ -6,3 +6,4 @@
 # Patches added in this section will be executed after doctypes are migrated
 prototipo.patches.renombrar_observaciones_a_descripcion
 prototipo.patches.renombrar_posiciones
+prototipo.patches.congelar_coste_imputacion

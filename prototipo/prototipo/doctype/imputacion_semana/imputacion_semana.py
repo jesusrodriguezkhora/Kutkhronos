@@ -2,6 +2,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import flt, getdate
 
+from prototipo.gastos import coste_actual
 from prototipo.imputacion.reglas import (
 	CONCEPTO_PROYECTO,
 	MAXIMO_DIARIO,
@@ -135,10 +136,23 @@ class ImputacionSemana(Document):
 				frappe.throw(f"El día de teletrabajo {t.fecha or '(vacío)'} no es de esta semana.")
 			teletrabajo.add(getdate(t.fecha))
 
+		# Coste congelado: cada celda guarda la posición de la persona y el coste/hora medio de esa
+		# posición del momento en que se cargó por primera vez. Si después cambian, no se recalcula.
+		antes = self.get_doc_before_save()
+		congelado = {clave(l): (l.posicion, flt(l.coste_hora)) for l in (antes.lineas if antes else [])}
+		actual = coste_actual(self.empleado)
+
 		self.set(
 			"lineas",
 			[
-				{"concepto": c, "proyecto": p, "fecha": f, "horas": h}
+				{
+					"concepto": c,
+					"proyecto": p,
+					"fecha": f,
+					"horas": h,
+					"posicion": congelado.get((c, p, f), actual)[0],
+					"coste_hora": congelado.get((c, p, f), actual)[1],
+				}
 				for (c, p, f), h in sorted(valores.items(), key=lambda x: (x[0][2], x[0][0], x[0][1] or ""))
 			],
 		)
