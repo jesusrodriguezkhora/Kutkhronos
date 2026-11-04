@@ -5,8 +5,10 @@ import Login from "./auth/Login";
 import Cabecera from "./layout/Cabecera";
 import SinModulos from "./layout/SinModulos";
 import { MODULOS } from "./modulos";
+import { useEsMovil } from "./hooks/useEsMovil";
 
 function Aplicacion({ onCerrarSesion }) {
+  const esMovil = useEsMovil();
   const { data, error, isLoading } = useFrappeGetCall("prototipo.api.sesion.mi_perfil");
 
   // Reserva el hueco de la barra de desplazamiento: así la cabecera y el contenido miden lo mismo
@@ -32,13 +34,14 @@ function Aplicacion({ onCerrarSesion }) {
   }
 
   const perfil = data.message;
-  const disponibles = MODULOS.filter((m) => perfil.modulos.includes(m.clave));
+  // En móvil, solo los módulos marcados como "movil" (por ahora, Carga de horas)
+  const disponibles = MODULOS.filter((m) => perfil.modulos.includes(m.clave) && (!esMovil || m.movil));
 
   return (
     <div className="min-h-screen bg-salvia-50 text-salvia-950">
       <Cabecera nombre={perfil.nombre} modulos={disponibles} onCerrarSesion={onCerrarSesion} />
 
-      <main className="mx-auto max-w-7xl px-8 py-10">
+      <main className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10">
         <Routes>
           {disponibles.map((m) => (
             <Route key={m.clave} path={m.ruta} element={<m.Componente />} />
