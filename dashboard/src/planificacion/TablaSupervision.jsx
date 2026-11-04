@@ -60,18 +60,20 @@ function Valor({ real, planificado, terminada, className = "", negrita = false }
   return (
     <td className={`${CELDA} ${className} whitespace-nowrap text-center tabular-nums ${negrita ? "font-semibold" : ""}`}>
       {hay ? (
-        <span className="inline-flex items-center gap-1.5">
-          <span>
-            {formatearHoras(real) || "0"}
-            <span className="opacity-50"> / {formatearHoras(planificado) || "0"}</span>
-          </span>
-          {color ? (
-            <span role="img" aria-label={`Desviación: ${desviacion}`} title={desviacion}>
+        // El número va centrado; el aviso, en posición absoluta a su derecha, no ocupa espacio
+        // y por eso no desplaza el número respecto a la cabecera
+        <span className="relative inline-block">
+          {formatearHoras(real) || "0"}
+          <span className="opacity-50"> / {formatearHoras(planificado) || "0"}</span>
+          {color && (
+            <span
+              role="img"
+              aria-label={`Desviación: ${desviacion}`}
+              title={desviacion}
+              className="absolute left-full top-1/2 ml-1.5 -translate-y-1/2"
+            >
               <IconoAdvertencia className={COLOR_ICONO[color]} />
             </span>
-          ) : (
-            // Mismo hueco que el icono, para que los números queden alineados en la columna
-            <span aria-hidden="true" className="h-4 w-4" />
           )}
         </span>
       ) : (
@@ -126,7 +128,7 @@ export default function TablaSupervision({ info }) {
           <tr>
             <th className={`${CELDA} ${CABECERA} ${ESQUINA_IZQUIERDA} text-left align-bottom`}>Proyecto</th>
             {info.empleados.map((e) => (
-              <th key={e.usuario} className={`${CELDA} ${CABECERA} ${FIJA_ARRIBA} min-w-[5.5rem] text-center align-bottom md:min-w-[7rem]`}>
+              <th key={e.usuario} className={`${CELDA} ${CABECERA} ${FIJA_ARRIBA} min-w-[6rem] text-center align-bottom md:min-w-[8rem]`}>
                 {e.nombre}
               </th>
             ))}
