@@ -24,11 +24,15 @@ function estadoInicial(info) {
   return { indice: indexarCeldas(info.celdas), teletrabajo: [...info.teletrabajo].sort(), anadidos: [] };
 }
 
-function filaAnadida(proyecto) {
+// Fila añadida con el buscador: un proyecto o una de las filas fijas (Formación, Comercial, Interno)
+function filaAnadida(elegido) {
+  if (elegido.concepto) {
+    return { clave: elegido.concepto, titulo: elegido.concepto, planificado: 0, concepto: elegido.concepto, fija: true };
+  }
   return {
-    clave: proyecto.name,
-    titulo: proyecto.name,
-    subtitulo: [proyecto.cliente, proyecto.descripcion].filter(Boolean).join(" · "),
+    clave: elegido.name,
+    titulo: elegido.name,
+    subtitulo: [elegido.cliente, elegido.descripcion].filter(Boolean).join(" · "),
     planificado: 0,
     concepto: CONCEPTO_PROYECTO,
   };
@@ -86,12 +90,14 @@ export default function EditorImputacion({ info, lunes, onGuardado, onCambiosPen
     "prototipo.api.imputacion.guardar_semana"
   );
 
-  // Proyectos (planificados, imputados y añadidos), luego las filas fijas y las vacaciones
+  // Proyectos (planificados, cargados y añadidos) y debajo las filas fijas (planificadas, cargadas y añadidas)
   const base = filasDe(info);
+  const anadidas = estado.anadidos.map(filaAnadida);
   const filas = [
     ...base.filter((f) => !f.fija),
-    ...estado.anadidos.map(filaAnadida),
+    ...anadidas.filter((f) => !f.fija),
     ...base.filter((f) => f.fija),
+    ...anadidas.filter((f) => f.fija),
   ];
   const indice = estado.indice;
 
@@ -228,7 +234,7 @@ export default function EditorImputacion({ info, lunes, onGuardado, onCambiosPen
       {semana.editable && (
         <BuscadorProyecto
           metodo="prototipo.api.imputacion.buscar_proyectos"
-          excluir={filas.filter((f) => f.concepto === CONCEPTO_PROYECTO).map((f) => f.clave)}
+          excluir={filas.map((f) => f.clave)}
           onElegir={anadirProyecto}
         />
       )}

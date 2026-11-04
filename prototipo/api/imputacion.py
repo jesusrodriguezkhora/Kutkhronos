@@ -1,3 +1,4 @@
+import unicodedata
 from datetime import date, timedelta
 
 import frappe
@@ -79,6 +80,7 @@ def obtener_semana(lunes):
 
 	# Proyectos: los planificados para esta persona esta semana y los que ya haya imputado
 	imputados = {l.proyecto for l in (doc.lineas if doc else []) if l.concepto == CONCEPTO_PROYECTO}
+	conceptos_cargados = {l.concepto for l in (doc.lineas if doc else []) if l.concepto != CONCEPTO_PROYECTO}
 	filas = [
 		{**p, "planificado": plan["proyectos"].get(p.name, 0), "comentario": plan["comentarios"].get(p.name)}
 		for p in datos_proyectos(sorted(set(plan["proyectos"]) | imputados))
@@ -105,10 +107,12 @@ def obtener_semana(lunes):
 			"cierre": cierre(lunes),
 		},
 		"filas": filas,
-		# Filas fijas (salen siempre), con lo planificado
+		# Filas fijas: solo las planificadas para esta persona esta semana o las que ya tienen horas cargadas
+		# (el resto se añaden con el buscador, como los proyectos)
 		"conceptos": [
 			{"concepto": c, "planificado": plan["conceptos"].get(c, 0), "comentario": plan["comentarios"].get(c)}
 			for c in CONCEPTOS_IMPUTABLES
+			if plan["conceptos"].get(c) or c in conceptos_cargados
 		],
 		"celdas": [
 			{"concepto": l.concepto, "proyecto": l.proyecto, "fecha": l.fecha, "horas": flt(l.horas)}
@@ -154,8 +158,20 @@ def guardar_semana(lunes, celdas, teletrabajo):
 	return obtener_semana(lunes)
 
 
+def sin_tildes(texto):
+	"""Minúsculas y sin tildes, para buscar "formacion" y encontrar "Formación"."""
+	return unicodedata.normalize("NFD", texto or "").encode("ascii", "ignore").decode().lower()
+
+
 @frappe.whitelist()
 def buscar_proyectos(texto=None):
-	"""Buscador de "Añadir proyecto" de la imputación: los mismos proyectos que en planificación."""
+	"""Buscador de "Añadir proyecto" de la carga de horas: primero Formación, Comercial e Interno (si
+	coinciden con el texto) y después los mismos proyectos que en planificación."""
 	exigir_rol(ROL_EMPLEADO)
-	return consultar_proyectos(texto)
+	buscado = sin_tildes((texto or "").strip())
+	conceptos = [
+		{"name": c, "concepto": c, "descripcion": "Horas sin proyecto", "cliente": None}
+		for c in CONCEPTOS_IMPUTABLES
+		if buscado in sin_tildes(c)
+	]
+	return conceptos + consultar_proyectos(texto)
