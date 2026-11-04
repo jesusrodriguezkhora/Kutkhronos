@@ -76,9 +76,6 @@ export default function VistaDia({
             >
               <span className="text-sm font-bold">{INICIAL[d.nombre]}</span>
               <span className="text-xs opacity-70">{diaYMes(d.fecha)}</span>
-              <span className="mt-0.5 text-[11px] tabular-nums opacity-70">
-                {horas ? `${formatearHoras(horas)} h` : "·"}
-              </span>
             </button>
           );
         })}
