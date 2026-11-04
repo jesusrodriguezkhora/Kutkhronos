@@ -6,6 +6,7 @@ import EditorImputacion from "./EditorImputacion";
 import { lunesActual } from "./calculo";
 import { formatearFecha } from "../lib/formato";
 import { mensajeDeError } from "../lib/errores";
+import { useEsMovil } from "../hooks/useEsMovil";
 
 function Avisos({ semana }) {
   if (semana.festivos.length === 0) return null;
@@ -31,6 +32,7 @@ export default function Imputacion() {
   const perfil = useFrappeGetCall("prototipo.api.sesion.mi_perfil").data?.message;
   const imputa = !!perfil?.imputa_horas;
   const supervisa = !!perfil?.supervisa;
+  const esMovil = useEsMovil();
 
   // Abre en la semana actual, en el mes de su lunes
   const [lunes, setLunes] = useState(lunesActual);
@@ -41,6 +43,14 @@ export default function Imputacion() {
   // Modo supervisión: horas cargadas frente a planificadas de la misma semana (solo lectura)
   const [supervision, setSupervision] = useState(false);
 
+  // Supervisión solo en escritorio: su tabla tiene una columna por persona y no se lee en un móvil
+  const enSupervision = supervision;
+
+  // Día elegido en la vista por día del móvil. Vive aquí (y no en el editor) para que no se pierda al
+  // guardar; al cambiar de semana vuelve al de por defecto (hoy o el lunes).
+  const [diaMovil, setDiaMovil] = useState(null);
+  useEffect(() => setDiaMovil(null), [lunes]);
+
   const semanasMes = useFrappeGetCall("prototipo.api.imputacion.semanas_del_mes", { anio, mes });
   const semanas = semanasMes.data?.message?.semanas ?? [];
 
@@ -48,7 +58,7 @@ export default function Imputacion() {
   const { data, error, isLoading, mutate } = useFrappeGetCall(
     "prototipo.api.imputacion.obtener_semana",
     { lunes },
-    lunes && imputa && !supervision ? undefined : null,
+    lunes && imputa && !enSupervision ? undefined : null,
     { revalidateOnFocus: false, revalidateOnReconnect: false }
   );
   const info = data?.message;
@@ -108,7 +118,7 @@ export default function Imputacion() {
           </div>
 
           {supervisa &&
-            (supervision ? (
+            (enSupervision ? (
               <button
                 type="button"
                 onClick={volverACarga}
@@ -129,7 +139,7 @@ export default function Imputacion() {
             ))}
         </div>
 
-        {supervision && (
+        {enSupervision && (
           <p className="text-sm font-medium text-salvia-950/70">
             Modo supervisión · horas cargadas / planificadas de la semana
           </p>
@@ -152,7 +162,7 @@ export default function Imputacion() {
 
       {semanasMes.error && <p className="text-sm text-red-600">{mensajeDeError(semanasMes.error)}</p>}
 
-      {supervision ? (
+      {enSupervision ? (
         <Supervision lunes={lunes} />
       ) : !imputa ? (
         // CEO y Administración: no tienen tabla de carga propia
@@ -180,6 +190,8 @@ export default function Imputacion() {
                   setGuardados((n) => n + 1);
                 }}
                 onCambiosPendientes={setCambiosPendientes}
+                diaMovil={diaMovil}
+                onElegirDiaMovil={setDiaMovil}
               />
             </>
           )}

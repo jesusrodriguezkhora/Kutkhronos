@@ -24,7 +24,7 @@ export function IconoAdvertencia({ className = "" }) {
   );
 }
 // Mismo estilo que la tabla de planificación
-const CELDA = "px-4 py-3";
+const CELDA = "px-2 py-2 md:px-4 md:py-3";
 const CABECERA = "bg-salvia-900 text-xs font-semibold uppercase tracking-wider text-salvia-200";
 const FIJA_IZQUIERDA = "sticky left-0 z-10";
 const FIJA_ARRIBA = "sticky top-0 z-20";
@@ -126,7 +126,7 @@ export default function TablaSupervision({ info }) {
           <tr>
             <th className={`${CELDA} ${CABECERA} ${ESQUINA_IZQUIERDA} text-left align-bottom`}>Proyecto</th>
             {info.empleados.map((e) => (
-              <th key={e.usuario} className={`${CELDA} ${CABECERA} ${FIJA_ARRIBA} min-w-[7rem] text-center align-bottom`}>
+              <th key={e.usuario} className={`${CELDA} ${CABECERA} ${FIJA_ARRIBA} min-w-[5.5rem] text-center align-bottom md:min-w-[7rem]`}>
                 {e.nombre}
               </th>
             ))}
@@ -142,7 +142,7 @@ export default function TablaSupervision({ info }) {
             const total = sumar(info.empleados.map((e) => indice[f.clave]?.[e.usuario]));
             return (
               <tr key={f.clave}>
-                <th scope="row" className={`${CELDA} ${FIJA_IZQUIERDA} ${fondo} max-w-[16rem] text-left font-normal`}>
+                <th scope="row" className={`${CELDA} ${FIJA_IZQUIERDA} ${fondo} max-w-[9rem] text-left font-normal md:max-w-[16rem]`}>
                   <div className={f.fija ? "font-medium" : "font-mono font-medium"}>{f.titulo}</div>
                   {f.subtitulo && (
                     <div className="truncate text-xs text-salvia-950/50" title={f.subtitulo}>

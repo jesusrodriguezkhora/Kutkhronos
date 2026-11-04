@@ -7,3 +7,12 @@ html.con-aplicacion {
   scrollbar-gutter: stable;
   background-color: theme("colors.salvia.50");
 }
+
+/* En móvil, letra de 16 px en los campos: con menos, Safari (iPhone) hace zoom al tocarlos */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

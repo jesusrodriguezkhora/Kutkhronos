@@ -14,6 +14,8 @@ import {
 } from "./calculo";
 import { formatearFecha } from "../lib/formato";
 import { mensajeDeError } from "../lib/errores";
+import VistaDia from "./VistaDia";
+import { useEsMovil } from "../hooks/useEsMovil";
 
 const diaYMes = (fecha) => `${fecha.slice(8, 10)}/${fecha.slice(5, 7)}`;
 
@@ -75,7 +77,8 @@ function PieSemana({ semana, children }) {
 }
 
 // Imputación de una semana con su edición. Se monta de nuevo (key) al cambiar de semana o tras guardar.
-export default function EditorImputacion({ info, lunes, onGuardado, onCambiosPendientes }) {
+export default function EditorImputacion({ info, lunes, onGuardado, onCambiosPendientes, diaMovil, onElegirDiaMovil }) {
+  const esMovil = useEsMovil();
   const semana = info.semana;
   const [estado, setEstado] = useState(() => estadoInicial(info));
   const [error, setError] = useState(null);
@@ -200,14 +203,27 @@ export default function EditorImputacion({ info, lunes, onGuardado, onCambiosPen
 
   return (
     <div className="space-y-4">
-      <TablaImputacion
-        filas={filas}
-        dias={semana.dias}
-        indice={indice}
-        teletrabajo={estado.teletrabajo}
-        renderCelda={renderCelda}
-        renderTeletrabajo={renderTeletrabajo}
-      />
+      {esMovil ? (
+        <VistaDia
+          semana={semana}
+          filas={filas}
+          indice={indice}
+          teletrabajo={estado.teletrabajo}
+          diaElegido={diaMovil}
+          onElegirDia={onElegirDiaMovil}
+          onCambiarCelda={cambiarCelda}
+          onCambiarTeletrabajo={cambiarTeletrabajo}
+        />
+      ) : (
+        <TablaImputacion
+          filas={filas}
+          dias={semana.dias}
+          indice={indice}
+          teletrabajo={estado.teletrabajo}
+          renderCelda={renderCelda}
+          renderTeletrabajo={renderTeletrabajo}
+        />
+      )}
 
       {semana.editable && (
         <BuscadorProyecto
