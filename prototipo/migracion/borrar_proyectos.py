@@ -8,6 +8,8 @@
   (planificación, imputación de horas, gastos directos...). Se borran directamente en la base
   de datos, sin hooks ni "Deleted Document": solo para resetear datos. En producción son
   datos reales.
+- Al borrar, reinicia la numeración de los códigos (contadores CON-, AM-, SUB- y los de los contratos
+  basados de cada acuerdo): la siguiente importación vuelve a empezar por 001.
 
 Uso (desde frappe-bench). Por defecto es una SIMULACIÓN: borra todo y al final deshace los cambios.
 
@@ -50,6 +52,17 @@ def vaciar(doctype):
 	frappe.db.delete(doctype)
 	return total
 
+# Contadores de los códigos de proyecto en tabSeries: CON-26-, AM-26-, SUB-26-, los antiguos de cuatro
+# cifras (CON-2026-) y los de los contratos basados de cada acuerdo (AM-26-001-)
+PATRON_SERIES = r"^(CON|AM|SUB)-[0-9]{2}([0-9]{2})?-"
+
+def reiniciar_series():
+	"""Borra los contadores de los códigos de proyecto, para que la numeración vuelva a empezar por 001.
+	Solo los de proyectos: el resto de series (p. ej. GD- de los gastos directos) no se tocan."""
+	series = frappe.db.sql_list("select name from `tabSeries` where name regexp %s", PATRON_SERIES)
+	if series:
+		frappe.db.sql("delete from `tabSeries` where name regexp %s", PATRON_SERIES)
+	return series
 
 def borrar(simular=True, dependientes=False):
 	# Los archivos adjuntos podrían borrarse del disco aunque la base de datos haga rollback,
@@ -81,13 +94,17 @@ def borrar(simular=True, dependientes=False):
 			errores.append((nombre, strip_html(str(e)) or repr(e)))
 
 	restantes = frappe.db.count("Proyecto")
+	
+	# 3. Si se han borrado todos los proyectos, la numeración vuelve a empezar
+	series = reiniciar_series() if not errores and not restantes else []
+
 	guardado = not simular and not errores
 	if guardado:
 		frappe.db.commit()
 	else:
 		frappe.db.rollback()
 
-	# 3. Resumen
+	# 4. Resumen
 	if guardado:
 		titulo = "BORRADO GUARDADO"
 	elif simular:
@@ -102,6 +119,7 @@ def borrar(simular=True, dependientes=False):
 	print(f"  Proyectos encontrados:  {len(orden)} ({len(basados)} contratos basados)")
 	print(f"  Proyectos {'borrados' if guardado else 'que se borrarían'}: {borrados}")
 	print(f"  Restantes tras borrar:  {restantes}")
+	print(f"  Contadores reiniciados: {len(series)}")
 	print(f"  Errores:                {len(errores)}")
 	for nombre, mensaje in errores:
 		print(f"    {nombre}: {mensaje}")
