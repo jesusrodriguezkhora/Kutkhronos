@@ -11,9 +11,11 @@
 
 Uso (desde frappe-bench). Por defecto es una SIMULACIÓN: borra todo y al final deshace los cambios.
 
-    bench --site <site> execute prototipo.migracion.borrar_proyectos.borrar
-    bench --site <site> execute prototipo.migracion.borrar_proyectos.borrar --kwargs "{'dependientes': True}"
-    bench --site <site> execute prototipo.migracion.borrar_proyectos.borrar --kwargs "{'dependientes': True, 'simular': False}"
+    bench borrar-proyectos [--dependientes] [--guardar]
+	
+	Por ejemplo:
+	bench borrar-proyectos --dependientes                                    # simula
+    bench borrar-proyectos --dependientes --guardar                          # borra (pide confirmación)
 """
 import frappe
 from frappe.utils import strip_html
@@ -75,7 +77,7 @@ def borrar(simular=True, dependientes=False):
 		try:
 			frappe.delete_doc("Proyecto", nombre, ignore_permissions=True)
 			borrados += 1
-		except Exception as e:
+		except Exception as e:  # noqa: BLE001
 			errores.append((nombre, strip_html(str(e)) or repr(e)))
 
 	restantes = frappe.db.count("Proyecto")

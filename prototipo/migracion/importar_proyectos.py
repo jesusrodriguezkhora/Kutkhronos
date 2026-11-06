@@ -10,11 +10,11 @@
 
 Uso (desde frappe-bench). Por defecto es una SIMULACIÓN: lo hace todo y al final deshace los cambios.
 
-    bench --site <site> execute prototipo.migracion.importar_proyectos.importar \\
-        --kwargs "{'ruta': '/ruta/HOJA-fixed.xlsx'}"
+    bench importar-proyectos <excel> [--hoja Hoja1] [--guardar]
 
-    bench --site <site> execute prototipo.migracion.importar_proyectos.importar \\
-        --kwargs "{'ruta': '/ruta/HOJA-fixed.xlsx', 'simular': False}"
+	Por ejemplo: 
+	bench importar-proyectos "HOJA DE PROYECTOS 2026-fixed.xlsx"            # simula
+	bench importar-proyectos "HOJA DE PROYECTOS 2026-fixed.xlsx" --guardar  # guarda
 
 Deja un informe junto al Excel: <nombre>-informe.csv (fila, ID_ORIGEN, código en Khronos, resultado).
 """
