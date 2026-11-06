@@ -219,6 +219,23 @@ def clave_duplicado(tipo, descripcion, fecha_inicio):
 	Por fecha de inicio: la de alta es el día de la importación y cambia de una ejecución a otra."""
 	return (tipo, normalizar(descripcion), getdate(fecha_inicio) if fecha_inicio else None)
 
+def pares_repetidos(validos):
+	"""Filas que comparten cliente y descripción (sin tildes, mayúsculas ni espacios repetidos):
+	{fila: [las otras filas con el mismo par]}. En un contrato basado sin CLIENTE se usa el de su
+	acuerdo padre. Solo es un aviso: los proyectos se importan igual."""
+	cliente_de = {registro["id_origen"]: registro.get("cliente") for registro, _, _ in validos}
+	grupos = {}
+	for registro, datos, _ in validos:
+		cliente = registro.get("cliente") or cliente_de.get(registro.get("acuerdo_padre"))
+		clave = (normalizar(str(cliente or "")), normalizar(datos["descripcion"]))
+		grupos.setdefault(clave, []).append(registro["fila"])
+	return {
+		fila: [otra for otra in filas if otra != fila]
+		for filas in grupos.values()
+		if len(filas) > 1
+		for fila in filas
+	}
+
 
 # --- Clientes ----------------------------------------------------------------
 
@@ -316,6 +333,9 @@ def importar(ruta, hoja=None, simular=True):
 		except ValueError as e:
 			anotar(registro, "error", mensaje=str(e))
 
+	# Aviso si un mismo par cliente + descripción aparece en varias filas del Excel
+	repetidos = pares_repetidos(validos)
+
 	# 2. Primero contratos y acuerdos marco (por fecha de inicio, para que la numeración siga el orden
 	#    cronológico); después los contratos basados, cuando ya existen sus acuerdos.
 	def orden(item):
@@ -337,6 +357,10 @@ def importar(ruta, hoja=None, simular=True):
 			avisos.append(f"cliente nuevo: {registro['cliente']}")
 		if not datos["fecha_inicio"]:
 			avisos.append("sin FECHA INICIO: sin fecha de inicio y código con el año actual")
+
+		if registro["fila"] in repetidos:
+			otras = ", ".join(str(f) for f in repetidos[registro["fila"]])
+			avisos.append(f"cliente y descripción repetidos en la fila {otras}")
 
 	errores = [r for r in informe if r["resultado"] == "error"]
 	guardado = not simular and not errores
@@ -368,10 +392,16 @@ def importar(ruta, hoja=None, simular=True):
 		(f"Proyectos {verbo}", creados),
 		(f"Clientes {verbo}", clientes_creados),
 		("Errores", len(errores)),
+		("Cliente+descripción repetidos", len(repetidos)),
 	):
 		print(f"  {etiqueta + ':':<28}{valor}")
 	for r in errores:
 		print(f"    fila {r['fila']} ({r['id_origen']}): {r['mensaje']}")
 	print(f"  Informe: {ruta_informe}\n")
+
+	if repetidos:
+		print("  Cliente y descripción repetidos (se importan igual; revisa si son el mismo proyecto):")
+		for fila, otras in sorted(repetidos.items()):
+			print(f"    fila {fila}: igual que la fila {', '.join(str(o) for o in otras)}")
 
 	return {"guardado": guardado, "proyectos": creados, "clientes": clientes_creados, "errores": len(errores)}
