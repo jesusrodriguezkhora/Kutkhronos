@@ -79,9 +79,13 @@ class Proyecto(Document):
 			self.name = f"{self.acuerdo_marco}-{getseries(self.acuerdo_marco + '-', 2)}"
 		elif self.tipo in PREFIJOS:
 			prefijo = PREFIJOS[self.tipo]
-			# Año de la fecha de alta en dos cifras (CON-26-001). Normalmente es el año actual;
-			# solo la migración crea proyectos con fechas pasadas.
-			anio = str(getdate(self.fecha_alta or nowdate()).year)
+			# Año del código en dos cifras (CON-26-001): el de la fecha de alta, que normalmente es el año
+			# actual. En la importación del Excel, el alta es el día de la importación, así que se usa la
+			# fecha de inicio (la única fecha de referencia que tenemos de esos proyectos).
+			fecha_codigo = self.fecha_alta
+			if frappe.flags.importando_proyectos and self.fecha_inicio:
+				fecha_codigo = self.fecha_inicio
+			anio = str(getdate(fecha_codigo or nowdate()).year)
 			# La serie sigue la numeración que ya tuviera ese año con el formato anterior
 			# de cuatro cifras (CON-2026-001)
 			continuar_serie(f"{prefijo}-{anio[2:]}-", f"{prefijo}-{anio}-")
@@ -130,8 +134,8 @@ class Proyecto(Document):
 	# --- Fase 2: comprobar las reglas que dependen del usuario ---
 
 	def validar_fechas(self):
-		if self.fecha_fin and self.fecha_alta and getdate(self.fecha_fin) < getdate(self.fecha_alta):
-			frappe.throw("La fecha de fin no puede ser anterior a la fecha de alta.")
+		# La fecha de alta es solo cuándo se registró en Khronos: un proyecto importado puede haber
+		# terminado antes. La regla que importa es entre inicio y fin.
 		if self.fecha_fin and self.fecha_inicio and getdate(self.fecha_fin) < getdate(self.fecha_inicio):
 			frappe.throw("La fecha de fin no puede ser anterior a la fecha de inicio.")
 

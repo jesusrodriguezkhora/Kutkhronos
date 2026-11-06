@@ -400,7 +400,7 @@ export default function FichaProyecto({
           type="date"
           className={clases.campo}
           value={datos.fecha_fin}
-          min={datos.fecha_inicio || proyecto?.fecha_alta}
+           min={datos.fecha_inicio || undefined}
           onChange={(e) => cambiar("fecha_fin", e.target.value)}
         />
       </label>

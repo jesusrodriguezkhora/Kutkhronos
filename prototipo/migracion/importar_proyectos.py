@@ -1,6 +1,7 @@
 """Importa en Khronos los proyectos de la hoja limpia (<nombre>-fixed.xlsx, generada por limpiar.py).
 
-- Los códigos los genera Khronos (autoname del DocType Proyecto, con el año de la fecha de alta).
+- Los códigos los genera Khronos (autoname del DocType Proyecto) con el año de la FECHA INICIO del
+  Excel, que se guarda como fecha de inicio. La fecha de alta es el día de la importación.
 - Los clientes que no existan se crean (se comparan sin tildes, mayúsculas ni espacios repetidos).
 - Los contratos basados se enlazan con su acuerdo marco a través de la columna ACUERDO PADRE,
   que contiene el ID_ORIGEN del acuerdo. El ID_ORIGEN no se guarda en Khronos: solo sirve para
@@ -205,16 +206,18 @@ def preparar(registro, responsables):
 		"estado": estado,
 		"importe": a_importe(registro.get("importe")),
 		"via": registro.get("via") or VIA_POR_DEFECTO,
-		"fecha_alta": a_fecha(registro.get("fecha_inicio")),
+		"fecha_alta": getdate(nowdate()),
+		"fecha_inicio": a_fecha(registro.get("fecha_inicio")),
 		"fecha_fin": a_fecha(registro.get("fecha_fin")),
 		"responsable": responsable,
 		"descripcion": str(registro["proyecto"]),
 	}, aviso
 
 
-def clave_duplicado(tipo, descripcion, fecha_alta):
-	"""Para detectar proyectos que ya están en Khronos (p. ej. si se lanza la importación dos veces)."""
-	return (tipo, normalizar(descripcion), getdate(fecha_alta or nowdate()))
+def clave_duplicado(tipo, descripcion, fecha_inicio):
+	"""Para detectar proyectos que ya están en Khronos (p. ej. si se lanza la importación dos veces).
+	Por fecha de inicio: la de alta es el día de la importación y cambia de una ejecución a otra."""
+	return (tipo, normalizar(descripcion), getdate(fecha_inicio) if fecha_inicio else None)
 
 
 # --- Clientes ----------------------------------------------------------------
@@ -276,8 +279,8 @@ def importar(ruta, hoja=None, simular=True):
 	clientes = {normalizar(c.customer_name): c.name for c in frappe.get_all("Customer", fields=["name", "customer_name"])}
 	responsables = indice_responsables()
 	existentes = {
-		clave_duplicado(p.tipo, p.descripcion, p.fecha_alta): p.name
-		for p in frappe.get_all("Proyecto", fields=["name", "tipo", "descripcion", "fecha_alta"])
+		clave_duplicado(p.tipo, p.descripcion, p.fecha_inicio): p.name
+		for p in frappe.get_all("Proyecto", fields=["name", "tipo", "descripcion", "fecha_inicio"])
 	}
 
 	informe = []
@@ -306,24 +309,24 @@ def importar(ruta, hoja=None, simular=True):
 				raise ValueError("ID_ORIGEN repetido en el Excel")
 			vistos.add(id_origen)
 			datos, aviso = preparar(registro, responsables)
-			duplicado = existentes.get(clave_duplicado(datos["tipo"], datos["descripcion"], datos["fecha_alta"]))
+			duplicado = existentes.get(clave_duplicado(datos["tipo"], datos["descripcion"], datos["fecha_inicio"]))
 			if duplicado:
 				raise ValueError(f"ya existe en Khronos como {duplicado} (¿importación repetida?)")
 			validos.append((registro, datos, aviso))
 		except ValueError as e:
 			anotar(registro, "error", mensaje=str(e))
 
-	# 2. Primero contratos y acuerdos marco (por fecha, para que la numeración siga el orden
+	# 2. Primero contratos y acuerdos marco (por fecha de inicio, para que la numeración siga el orden
 	#    cronológico); después los contratos basados, cuando ya existen sus acuerdos.
 	def orden(item):
 		registro, datos, _ = item
-		return (datos["tipo"] == "Contrato basado", datos["fecha_alta"] or date.max, registro["fila"])
+		return (datos["tipo"] == "Contrato basado", datos["fecha_inicio"] or date.max, registro["fila"])
 
 	codigos = {}  # ID_ORIGEN -> código en Khronos de lo creado en esta ejecución
 	creados, clientes_creados = 0, 0
 	for registro, datos, aviso in sorted(validos, key=orden):
 		try:
-			codigo, nuevos = importar_fila(registro, datos, codigos, clientes)
+			nuevos = importar_fila(registro, datos, codigos, clientes)
 		except Exception as e:  # noqa: BLE001
 			anotar(registro, "error", mensaje=strip_html(str(e)) or repr(e))
 			continue
@@ -332,9 +335,8 @@ def importar(ruta, hoja=None, simular=True):
 		avisos = [aviso]
 		if nuevos:
 			avisos.append(f"cliente nuevo: {registro['cliente']}")
-		if not datos["fecha_alta"]:
-			avisos.append("sin FECHA INICIO: fecha de alta = hoy")
-		anotar(registro, "creado", codigo, "; ".join(filter(None, avisos)))
+		if not datos["fecha_inicio"]:
+			avisos.append("sin FECHA INICIO: sin fecha de inicio y código con el año actual")
 
 	errores = [r for r in informe if r["resultado"] == "error"]
 	guardado = not simular and not errores
