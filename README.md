@@ -57,7 +57,7 @@ bench --site development.localhost list-apps
 **Paso 2 — Instalar esta app**
 
 ```
-bench get-app https://github.com/TU_USUARIO/prototipo.git
+bench get-app https://github.com/jesusrodriguezkhora/prototipo.git
 bench --site development.localhost install-app prototipo
 ```
 
