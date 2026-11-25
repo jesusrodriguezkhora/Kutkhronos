@@ -212,6 +212,7 @@ export default function Proyectos() {
           titulo="Eliminar proyecto"
           metodo="prototipo.api.proyectos.eliminar_proyecto"
           argumentos={{ proyecto: aEliminar.name }}
+          textoConfirmacion={aEliminar.name}
           onCerrar={() => setAEliminar(null)}
           onEliminado={() => mutate()}
         >

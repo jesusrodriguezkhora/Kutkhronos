@@ -122,9 +122,13 @@ def obtener_proyectos(filtros=None):
 
 
 @frappe.whitelist(methods=["POST"])
-def eliminar_proyecto(proyecto):
-	"""Borra un proyecto. Solo para los roles de gestión (y con el permiso de borrar Proyecto)."""
+def eliminar_proyecto(proyecto, confirmacion=None):
+	"""Borra un proyecto. Solo para los roles de gestión (y con el permiso de borrar Proyecto).
+	Hay que confirmar escribiendo su código (`confirmacion`), sin distinguir mayúsculas."""
 	exigir_rol(*ROLES_GESTION)
+
+	if (confirmacion or "").strip().upper() != (proyecto or "").strip().upper():
+		frappe.throw("Para eliminar el proyecto, escribe su código exactamente.")
 
 	if not frappe.db.exists("Proyecto", proyecto):
 		frappe.throw("El proyecto no existe.")
