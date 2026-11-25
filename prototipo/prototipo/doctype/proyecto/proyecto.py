@@ -1,7 +1,9 @@
+import math
+
 import frappe
 from frappe.model.document import Document
 from frappe.model.naming import getseries, make_autoname
-from frappe.utils import flt, fmt_money, getdate, nowdate
+from frappe.utils import add_months, flt, fmt_money, getdate, nowdate
 
 from prototipo.api.responsables import responsables_posibles
 
@@ -67,6 +69,26 @@ def continuar_serie(nueva, anterior):
 	if actual:
 		frappe.db.sql("insert into `tabSeries` (name, current) values (%s, %s)", (nueva, actual[0][0]))
 
+CALCULO_POR_DURACION = "Por duración"
+
+
+def meses_entre(inicio, fin):
+	"""Meses de inicio a fin, redondeando siempre al siguiente mes entero (15/01 -> 10/07 = 6;
+	01/01/2026 -> 01/01/2027 = 12)."""
+	inicio, fin = getdate(inicio), getdate(fin)
+	meses = (fin.year - inicio.year) * 12 + fin.month - inicio.month
+	if getdate(add_months(inicio, meses)) > fin:
+		meses -= 1
+	if getdate(add_months(inicio, meses)) < fin:
+		meses += 1
+	return max(meses, 0)
+
+
+def a_meses(duracion, unidad):
+	"""Duración en meses enteros (1,5 años = 18 meses), redondeando hacia arriba si no sale exacto."""
+	meses = flt(duracion) * (12 if unidad == "Años" else 1)
+	return math.ceil(meses - 1e-9)
+
 
 class Proyecto(Document):
 	# begin: auto-generated types
@@ -95,6 +117,7 @@ class Proyecto(Document):
 
 	def validate(self):
 		self.normalizar()
+		self.calcular_duracion()
 		self.validar_fechas()
 		self.validar_responsable()
 		self.validar_fee_estimate()
@@ -131,6 +154,27 @@ class Proyecto(Document):
 				frappe.throw("La vía Heredada solo es para contratos basados.")
 			for campo in CAMPOS_SUBVENCION:
 				self.set(campo, None)
+
+	def calcular_duracion(self):
+		"""Duración y fecha de fin, una calculada a partir de la otra según calculo_duracion:
+		- Por fecha de fin: duración = meses entre inicio y fin (en meses, o en años con decimales).
+		- Por duración: fecha de fin = inicio + N meses (mismo día; los años se pasan a meses)."""
+		self.unidad_duracion = self.unidad_duracion or "Meses"
+
+		if self.calculo_duracion == CALCULO_POR_DURACION:
+			if flt(self.duracion) <= 0:
+				frappe.throw("Indica una duración mayor que cero.")
+			if not self.fecha_inicio:
+				frappe.throw("Para calcular la fecha de fin por duración hace falta la fecha de inicio.")
+			self.fecha_fin = add_months(getdate(self.fecha_inicio), a_meses(self.duracion, self.unidad_duracion))
+			return
+
+		self.calculo_duracion = "Por fecha de fin"
+		if self.fecha_inicio and self.fecha_fin and getdate(self.fecha_fin) >= getdate(self.fecha_inicio):
+			meses = meses_entre(self.fecha_inicio, self.fecha_fin)
+			self.duracion = meses if self.unidad_duracion == "Meses" else flt(meses / 12, 2)
+		else:
+			self.duracion = None
 
 	# --- Fase 2: comprobar las reglas que dependen del usuario ---
 

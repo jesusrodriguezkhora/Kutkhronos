@@ -24,6 +24,9 @@ CAMPOS = [
 	"facturacion",
 	"canarias",
 	"motivo_rechazo",
+	"calculo_duracion",
+	"duracion",
+	"unidad_duracion",
 ]
 
 # Filtros que aceptamos por igualdad exacta

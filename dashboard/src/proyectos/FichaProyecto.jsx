@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useFrappeCreateDoc, useFrappeGetCall, useFrappeUpdateDoc } from "frappe-react-sdk";
 import { TIPOS_SUELTOS, VIAS_NO_SUBVENCION, ESTADOS, ESTADOS_CON_FEE, TIPOS_CON_FEE, ESTADOS_CON_GASTOS } from "./opciones";
+import { POR_DURACION, POR_FECHA_FIN, UNIDADES, duracionDesdeFechas, finDesdeDuracion, textoDuracion } from "./duracion";
 import { ESTILOS } from "../lib/estilos";
 import { mensajeDeError } from "../lib/errores";
 import { formatearImporte, formatearFecha } from "../lib/formato";
@@ -24,6 +25,9 @@ function valoresIniciales(proyecto, acuerdoMarco) {
     descripcion: proyecto?.descripcion ?? "",
     fecha_inicio: proyecto?.fecha_inicio ?? "",
     fecha_fin: proyecto?.fecha_fin ?? "",
+    calculo_duracion: proyecto?.calculo_duracion || POR_FECHA_FIN,
+    duracion: proyecto?.duracion ?? "",
+    unidad_duracion: proyecto?.unidad_duracion || "Meses",
     responsable: proyecto?.responsable ?? "",
     facturacion: proyecto?.facturacion ?? "",
     canarias: !!proyecto?.canarias,
@@ -199,6 +203,16 @@ export default function FichaProyecto({
 
   const cambiar = (campo, valor) => setDatos((d) => ({ ...d, [campo]: valor }));
 
+  // Duración y fecha de fin: una sale de la otra (el servidor lo vuelve a calcular al guardar)
+  const porDuracion = datos.calculo_duracion === POR_DURACION;
+  const finCalculado = porDuracion
+    ? finDesdeDuracion(datos.fecha_inicio, datos.duracion, datos.unidad_duracion)
+    : datos.fecha_fin;
+  const duracionCalculada = porDuracion
+    ? datos.duracion
+    : duracionDesdeFechas(datos.fecha_inicio, datos.fecha_fin, datos.unidad_duracion);
+  const faltaInicioParaDuracion = porDuracion && !datos.fecha_inicio;
+
   // Al elegir tipo, la vía sigue la regla Subvención ⟺ vía Subvención
   const cambiarTipo = (tipo) =>
     setDatos((d) => ({
@@ -247,7 +261,10 @@ export default function FichaProyecto({
       estado: datos.estado,
       descripcion: datos.descripcion || null,
       fecha_inicio: datos.fecha_inicio || null,
-      fecha_fin: datos.fecha_fin || null,
+      fecha_fin: finCalculado || null,
+      calculo_duracion: datos.calculo_duracion,
+      duracion: duracionCalculada === "" ? null : Number(duracionCalculada),
+      unidad_duracion: datos.unidad_duracion,
       responsable: datos.responsable || null,
       facturacion: datos.facturacion.trim() || null,
       canarias: datos.canarias ? 1 : 0,
@@ -286,7 +303,7 @@ export default function FichaProyecto({
 
   const subtitulo = esNuevo ? null : editando ? "Editando" : proyecto.tipo;
   const etiquetaCliente = esSubvencion ? "Donante" : "Cliente";
-  const puedeGuardar = !guardando && datos.tipo && datos.via && !faltaMotivo;
+  const puedeGuardar = !guardando && datos.tipo && datos.via && !faltaMotivo && !faltaInicioParaDuracion;
 
   // --- Cuerpo en modo detalle ---
   const vistaDetalle = !esNuevo && (
@@ -301,6 +318,7 @@ export default function FichaProyecto({
       <Dato etiqueta="Fecha de alta">{formatearFecha(proyecto.fecha_alta)}</Dato>
       <Dato etiqueta="Fecha de inicio">{formatearFecha(proyecto.fecha_inicio)}</Dato>
       <Dato etiqueta="Fecha de fin">{formatearFecha(proyecto.fecha_fin)}</Dato>
+      <Dato etiqueta="Duración">{textoDuracion(proyecto.duracion, proyecto.unidad_duracion)}</Dato>
       <Dato etiqueta="Responsable">{proyecto.responsable_nombre || proyecto.responsable}</Dato>
       <Dato etiqueta="Facturación">{proyecto.facturacion}</Dato>
       <Dato etiqueta="Canarias">{proyecto.canarias ? "Sí (factura sin IVA)" : "No"}</Dato>
@@ -429,21 +447,81 @@ export default function FichaProyecto({
           type="date"
           className={clases.campo}
           value={datos.fecha_inicio}
-          max={datos.fecha_fin || undefined}
+          max={!porDuracion && datos.fecha_fin ? datos.fecha_fin : undefined}
           onChange={(e) => cambiar("fecha_inicio", e.target.value)}
         />
       </label>
 
-      <label className="block">
-        <span className={clases.etiqueta}>Fecha de fin</span>
-        <input
-          type="date"
-          className={clases.campo}
-          value={datos.fecha_fin}
-           min={datos.fecha_inicio || undefined}
-          onChange={(e) => cambiar("fecha_fin", e.target.value)}
-        />
-      </label>
+      <div className="space-y-3 rounded-lg border border-salvia-900/10 p-4 sm:col-span-2">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+          <span className={clases.etiqueta}>Duración</span>
+          {[POR_FECHA_FIN, POR_DURACION].map((modo) => (
+            <label key={modo} className="inline-flex items-center gap-1.5 text-salvia-950">
+              <input
+                type="radio"
+                name="calculo_duracion"
+                className="h-4 w-4 accent-salvia-900"
+                checked={datos.calculo_duracion === modo}
+                onChange={() => cambiar("calculo_duracion", modo)}
+              />
+              {modo}
+            </label>
+          ))}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <label className="block">
+            <span className={clases.etiqueta}>Fecha de fin</span>
+            {porDuracion ? (
+              <CampoLectura etiqueta="" valor={finCalculado ? formatearFecha(finCalculado) : "—"} />
+            ) : (
+              <input
+                type="date"
+                className={clases.campo}
+                value={datos.fecha_fin}
+                min={datos.fecha_inicio || undefined}
+                onChange={(e) => cambiar("fecha_fin", e.target.value)}
+              />
+            )}
+          </label>
+
+          <label className="block">
+            <span className={clases.etiqueta}>Número</span>
+            {porDuracion ? (
+              <input
+                type="number"
+                min="0"
+                step="any"
+                inputMode="decimal"
+                className={clases.campo}
+                value={datos.duracion}
+                onChange={(e) => cambiar("duracion", e.target.value)}
+              />
+            ) : (
+              <CampoLectura etiqueta="" valor={duracionCalculada === "" ? "—" : String(duracionCalculada).replace(".", ",")} />
+            )}
+          </label>
+
+          <label className="block">
+            <span className={clases.etiqueta}>Unidad</span>
+            <select
+              className={clases.campo}
+              value={datos.unidad_duracion}
+              onChange={(e) => cambiar("unidad_duracion", e.target.value)}
+            >
+              {UNIDADES.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        {faltaInicioParaDuracion && (
+          <p className="text-xs text-red-700">Para calcular la fecha de fin por duración, indica la fecha de inicio.</p>
+        )}
+      </div>
 
       <SelectorResponsable
         valor={datos.responsable}
