@@ -98,6 +98,7 @@ class Proyecto(Document):
 		self.validar_fechas()
 		self.validar_responsable()
 		self.validar_fee_estimate()
+		self.validar_motivo_rechazo()
 
 		if self.tipo == "Acuerdo marco":
 			self.validar_acuerdo_marco()
@@ -167,6 +168,22 @@ class Proyecto(Document):
 				f"Para pasar a {self.estado} hace falta un fee estimate guardado con honorarios. "
 				"Guárdalo en la pestaña Fee Estimate y vuelve a cambiar el estado."
 			)
+
+	def validar_motivo_rechazo(self):
+		"""Al pasar a Rechazado hace falta un motivo; si sale de Rechazado, el motivo se borra.
+		Los que ya estaban rechazados sin motivo (p. ej. migrados) se siguen pudiendo editar, y la
+		importación del Excel no lo exige."""
+		if self.estado != "Rechazado":
+			self.motivo_rechazo = None
+			return
+
+		self.motivo_rechazo = (self.motivo_rechazo or "").strip() or None
+		if frappe.flags.importando_proyectos or self.motivo_rechazo:
+			return
+		pasa_a_rechazado = self.is_new() or self.has_value_changed("estado")
+		borra_el_motivo = not self.is_new() and self.has_value_changed("motivo_rechazo")
+		if pasa_a_rechazado or borra_el_motivo:
+			frappe.throw("Indica el motivo de rechazo del proyecto.")
 
 	def validar_acuerdo_marco(self):
 		if flt(self.importe) <= 0:

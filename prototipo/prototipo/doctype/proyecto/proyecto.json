@@ -19,6 +19,7 @@
   "fecha_fin",
   "responsable",
   "canarias",
+  "motivo_rechazo",
   "facturacion",
   "horas_imputadas",
   "descripcion",
@@ -153,6 +154,12 @@
    "fieldname": "canarias",
    "fieldtype": "Check",
    "label": "Canarias"
+  },
+  {
+   "depends_on": "eval:doc.estado==\"Rechazado\"",
+   "fieldname": "motivo_rechazo",
+   "fieldtype": "Small Text",
+   "label": "Motivo de rechazo"
   }
  ],
  "grid_page_length": 50,
@@ -164,7 +171,7 @@
    "link_fieldname": "acuerdo_marco"
   }
  ],
- "modified": "2026-11-25 10:46:20.630340",
+ "modified": "2026-11-25 10:56:34.274340",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Proyecto",

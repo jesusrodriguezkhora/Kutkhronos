@@ -27,6 +27,7 @@ function valoresIniciales(proyecto, acuerdoMarco) {
     responsable: proyecto?.responsable ?? "",
     facturacion: proyecto?.facturacion ?? "",
     canarias: !!proyecto?.canarias,
+    motivo_rechazo: proyecto?.motivo_rechazo ?? "",
     lider_proyecto: proyecto?.lider_proyecto ?? "",
     miembros_consorcio: proyecto?.miembros_consorcio ?? "",
   };
@@ -182,6 +183,13 @@ export default function FichaProyecto({
 
   const esSubvencion = datos.tipo === "Subvención";
 
+  // El motivo de rechazo solo existe en Rechazado. Es obligatorio al pasar a Rechazado (o si ya tenía
+  // uno); los que ya estaban rechazados sin motivo se pueden seguir editando (mismo criterio que el servidor).
+  const esRechazado = datos.estado === "Rechazado";
+  const motivoObligatorio =
+    esRechazado && (esNuevo || proyecto.estado !== "Rechazado" || !!proyecto.motivo_rechazo);
+  const faltaMotivo = motivoObligatorio && !datos.motivo_rechazo.trim();
+
   // Un proyecto nuevo que necesita fee no puede nacer aceptado ni en curso (su fee aún no existe)
   const exigeFee = TIPOS_CON_FEE.includes(datos.tipo);
   const estadosPosibles = esNuevo && exigeFee ? ESTADOS.filter((e) => !ESTADOS_CON_FEE.includes(e)) : ESTADOS;
@@ -243,6 +251,7 @@ export default function FichaProyecto({
       responsable: datos.responsable || null,
       facturacion: datos.facturacion.trim() || null,
       canarias: datos.canarias ? 1 : 0,
+      motivo_rechazo: esRechazado ? datos.motivo_rechazo.trim() || null : null,
     };
     // Cliente y vía de un contrato basado los fija el servidor (herencia del acuerdo)
     if (!esBasado) {
@@ -277,7 +286,7 @@ export default function FichaProyecto({
 
   const subtitulo = esNuevo ? null : editando ? "Editando" : proyecto.tipo;
   const etiquetaCliente = esSubvencion ? "Donante" : "Cliente";
-  const puedeGuardar = !guardando && datos.tipo && datos.via;
+  const puedeGuardar = !guardando && datos.tipo && datos.via && !faltaMotivo;
 
   // --- Cuerpo en modo detalle ---
   const vistaDetalle = !esNuevo && (
@@ -317,6 +326,15 @@ export default function FichaProyecto({
           </Dato>
           <Dato etiqueta="Miembros del consorcio" ancho>
             {proyecto.miembros_consorcio}
+          </Dato>
+        </>
+      )}
+
+      {proyecto.estado === "Rechazado" && (
+        <>
+          <TituloSeccion>Motivo de rechazo</TituloSeccion>
+          <Dato etiqueta="" ancho>
+            {proyecto.motivo_rechazo}
           </Dato>
         </>
       )}
@@ -376,6 +394,22 @@ export default function FichaProyecto({
         opciones={estadosPosibles}
         onChange={(v) => cambiar("estado", v)}
       />
+
+      {esRechazado && (
+        <div className="sm:col-span-2">
+          <AreaTexto
+            etiqueta={motivoObligatorio ? "Motivo de rechazo *" : "Motivo de rechazo"}
+            valor={datos.motivo_rechazo}
+            onChange={(v) => cambiar("motivo_rechazo", v)}
+            clases={clases}
+            filas={3}
+            placeholder="Por qué se ha rechazado el proyecto"
+          />
+          {faltaMotivo && (
+            <p className="mt-1 text-xs text-red-700">Indica el motivo de rechazo para poder guardar.</p>
+          )}
+        </div>
+      )}
 
       <CampoImporte
         etiqueta="Importe"

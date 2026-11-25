@@ -23,6 +23,7 @@ CAMPOS = [
 	"miembros_consorcio",
 	"facturacion",
 	"canarias",
+	"motivo_rechazo",
 ]
 
 # Filtros que aceptamos por igualdad exacta
