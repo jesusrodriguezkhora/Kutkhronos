@@ -4,9 +4,10 @@ from frappe.utils import cint, flt
 
 from prototipo.prototipo.doctype.proyecto.proyecto import ESTADOS_CON_FEE, TIPOS_CON_FEE
 
-# Categorías de personal de la propuesta, en el orden de la tabla.
-# Son las posiciones de Datos Laborales: de ellas sale el coste/hora medio.
-POSICIONES = ("Director", "Coordinador", "Consultor Senior", "Consultor", "Prácticas")
+# Categorías de personal de la propuesta, en el orden de la tabla. Son posiciones de Datos Laborales:
+# de ellas sale el coste/hora medio. Director existe como posición de los empleados, pero no entra
+# en el fee (ni, por tanto, en la pestaña Gastos).
+POSICIONES = ("Coordinador", "Consultor Senior", "Consultor", "Prácticas", "Beca")
 
 # Gastos indirectos: porcentaje fijo de los honorarios
 PORCENTAJE_INDIRECTOS = 12
