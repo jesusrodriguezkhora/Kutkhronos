@@ -176,25 +176,21 @@ class Proyecto(Document):
 				self.set(campo, None)
 
 	def calcular_duracion(self):
-		"""Duración y fecha de fin, una calculada a partir de la otra según calculo_duracion:
-		- Por fecha de fin: duración = meses entre inicio y fin (en meses, o en años con decimales).
-		- Por duración: fecha de fin = inicio + N meses (mismo día; los años se pasan a meses)."""
+		"""Duración y fecha de fin, una calculada a partir de la otra. La fecha de fin manda: con inicio y
+		fin, la duración sale de las fechas (meses redondeando al alza, o años con dos decimales); sin
+		fin, la fecha de fin sale de la duración (mismo día N meses después)."""
 		self.unidad_duracion = self.unidad_duracion or "Meses"
+		if flt(self.duracion) < 0:
+			frappe.throw("La duración no puede ser negativa.")
 
-		if self.calculo_duracion == CALCULO_POR_DURACION:
-			if flt(self.duracion) <= 0:
-				frappe.throw("Indica una duración mayor que cero.")
-			if not self.fecha_inicio:
-				frappe.throw("Para calcular la fecha de fin por duración hace falta la fecha de inicio.")
+		if self.fecha_inicio and self.fecha_fin:
+			if getdate(self.fecha_fin) >= getdate(self.fecha_inicio):
+				meses = meses_entre(self.fecha_inicio, self.fecha_fin)
+				self.duracion = meses if self.unidad_duracion == "Meses" else flt(meses / 12, 2)
+			else:
+				self.duracion = None  # el error lo da validar_fechas
+		elif self.fecha_inicio and flt(self.duracion) > 0:
 			self.fecha_fin = add_months(getdate(self.fecha_inicio), a_meses(self.duracion, self.unidad_duracion))
-			return
-
-		self.calculo_duracion = "Por fecha de fin"
-		if self.fecha_inicio and self.fecha_fin and getdate(self.fecha_fin) >= getdate(self.fecha_inicio):
-			meses = meses_entre(self.fecha_inicio, self.fecha_fin)
-			self.duracion = meses if self.unidad_duracion == "Meses" else flt(meses / 12, 2)
-		else:
-			self.duracion = None
 
 	# --- Fase 2: comprobar las reglas que dependen del usuario ---
 

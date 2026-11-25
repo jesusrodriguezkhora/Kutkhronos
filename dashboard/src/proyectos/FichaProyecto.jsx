@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useFrappeCreateDoc, useFrappeGetCall, useFrappeUpdateDoc } from "frappe-react-sdk";
 import { TIPOS_SUELTOS, VIAS_NO_SUBVENCION, ESTADOS, ESTADOS_CON_FEE, TIPOS_CON_FEE, ESTADOS_CON_GASTOS } from "./opciones";
-import { POR_DURACION, POR_FECHA_FIN, UNIDADES, duracionDesdeFechas, finDesdeDuracion, textoDuracion } from "./duracion";
+import { UNIDADES, duracionDesdeFechas, finDesdeDuracion, textoDuracion } from "./duracion";
 import { aniosDelProyecto, alinear, repartir, sumar } from "./importes";
 import { ESTILOS } from "../lib/estilos";
 import { mensajeDeError } from "../lib/errores";
@@ -27,7 +27,6 @@ function valoresIniciales(proyecto, acuerdoMarco) {
     descripcion: proyecto?.descripcion ?? "",
     fecha_inicio: proyecto?.fecha_inicio ?? "",
     fecha_fin: proyecto?.fecha_fin ?? "",
-    calculo_duracion: proyecto?.calculo_duracion || POR_FECHA_FIN,
     duracion: proyecto?.duracion ?? "",
     unidad_duracion: proyecto?.unidad_duracion || "Meses",
     responsable: proyecto?.responsable ?? "",
@@ -205,19 +204,35 @@ export default function FichaProyecto({
 
   const cambiar = (campo, valor) => setDatos((d) => ({ ...d, [campo]: valor }));
 
-  // Duración y fecha de fin: una sale de la otra (el servidor lo vuelve a calcular al guardar)
-  const porDuracion = datos.calculo_duracion === POR_DURACION;
-  const finCalculado = porDuracion
-    ? finDesdeDuracion(datos.fecha_inicio, datos.duracion, datos.unidad_duracion)
-    : datos.fecha_fin;
-  const duracionCalculada = porDuracion
-    ? datos.duracion
-    : duracionDesdeFechas(datos.fecha_inicio, datos.fecha_fin, datos.unidad_duracion);
-  const faltaInicioParaDuracion = porDuracion && !datos.fecha_inicio;
+  // Fecha de fin y duración: al cambiar una, se recalcula la otra (el servidor lo repite al guardar).
+  const cambiarFin = (fin) =>
+    setDatos((d) => ({ ...d, fecha_fin: fin, duracion: duracionDesdeFechas(d.fecha_inicio, fin, d.unidad_duracion) }));
 
+  const cambiarDuracion = (duracion) =>
+    setDatos((d) => ({
+      ...d,
+      duracion,
+      fecha_fin: finDesdeDuracion(d.fecha_inicio, duracion, d.unidad_duracion) || d.fecha_fin,
+    }));
+
+  // Misma fecha de fin, expresada en la otra unidad (sin fin, el número se reinterpreta y mueve el fin)
+  const cambiarUnidad = (unidad) =>
+    setDatos((d) =>
+      d.fecha_inicio && d.fecha_fin
+        ? { ...d, unidad_duracion: unidad, duracion: duracionDesdeFechas(d.fecha_inicio, d.fecha_fin, unidad) }
+        : { ...d, unidad_duracion: unidad, fecha_fin: finDesdeDuracion(d.fecha_inicio, d.duracion, unidad) || d.fecha_fin }
+    );
+
+  // Al cambiar el inicio: con fecha de fin, se recalcula la duración; sin ella, el fin a partir de la duración
+  const cambiarInicio = (inicio) =>
+    setDatos((d) =>
+      d.fecha_fin
+        ? { ...d, fecha_inicio: inicio, duracion: duracionDesdeFechas(inicio, d.fecha_fin, d.unidad_duracion) }
+        : { ...d, fecha_inicio: inicio, fecha_fin: finDesdeDuracion(inicio, d.duracion, d.unidad_duracion) }
+    );
   // Importe por año: una fila por año natural. Sin filas guardadas (o sin tocar), el reparto por
   // defecto sigue al importe; con filas, se conservan y solo se avisa si no cuadran.
-  const anios = aniosDelProyecto(datos.fecha_inicio, finCalculado);
+  const anios = aniosDelProyecto(datos.fecha_inicio, datos.fecha_fin);
   const filasAnuales = datos.importes_anuales.length
     ? alinear(datos.importes_anuales, anios)
     : repartir(datos.importe, anios);
@@ -276,9 +291,8 @@ export default function FichaProyecto({
       estado: datos.estado,
       descripcion: datos.descripcion || null,
       fecha_inicio: datos.fecha_inicio || null,
-      fecha_fin: finCalculado || null,
-      calculo_duracion: datos.calculo_duracion,
-      duracion: duracionCalculada === "" ? null : Number(duracionCalculada),
+      fecha_fin: datos.fecha_fin || null,
+      duracion: datos.duracion === "" || datos.duracion == null ? null : Number(datos.duracion),
       unidad_duracion: datos.unidad_duracion,
       importes_anuales: filasAnuales.map((f) => ({ anio: f.anio, importe: Number(f.importe) || 0 })),
       responsable: datos.responsable || null,
@@ -319,7 +333,7 @@ export default function FichaProyecto({
 
   const subtitulo = esNuevo ? null : editando ? "Editando" : proyecto.tipo;
   const etiquetaCliente = esSubvencion ? "Donante" : "Cliente";
-  const puedeGuardar = !guardando && datos.tipo && datos.via && !faltaMotivo && !faltaInicioParaDuracion && !anualNoCuadra;
+  const puedeGuardar = !guardando && datos.tipo && datos.via && !faltaMotivo && !anualNoCuadra;
 
   // --- Cuerpo en modo detalle ---
   const vistaDetalle = !esNuevo && (
@@ -471,94 +485,40 @@ export default function FichaProyecto({
           type="date"
           className={clases.campo}
           value={datos.fecha_inicio}
-          max={!porDuracion && datos.fecha_fin ? datos.fecha_fin : undefined}
-          onChange={(e) => cambiar("fecha_inicio", e.target.value)}
+          max={datos.fecha_fin || undefined}
+          onChange={(e) => cambiarInicio(e.target.value)}
         />
       </label>
 
       <div className="space-y-3 rounded-lg border border-salvia-900/10 p-4 sm:col-span-2">
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
           <span className={clases.etiqueta}>Duración</span>
-          {[POR_FECHA_FIN, POR_DURACION].map((modo) => (
-            <label key={modo} className="inline-flex items-center gap-1.5 text-salvia-950">
-              <input
-                type="radio"
-                name="calculo_duracion"
-                className="h-4 w-4 accent-salvia-900"
-                checked={datos.calculo_duracion === modo}
-                onChange={() => cambiar("calculo_duracion", modo)}
-              />
-              {modo}
-            </label>
-          ))}
+          <span className="text-xs text-salvia-950/50">Cambia la fecha de fin o la duración: la otra se calcula sola.</span>
         </div>
-
-        {anios.length > 0 && (
-        <div className="space-y-3 rounded-lg border border-salvia-900/10 p-4 sm:col-span-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className={clases.etiqueta}>Importe por año</span>
-            <span className={`text-xs tabular-nums ${anualNoCuadra ? "text-red-700" : "text-salvia-950/50"}`}>
-              Suma {formatearImporte(sumaAnual)} de {formatearImporte(Number(datos.importe) || 0)}
-            </span>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-3">
-            {filasAnuales.map((f, i) => (
-              <div key={f.anio}>
-                <div className="mb-1 text-sm font-medium text-salvia-950">
-                  Año {i + 1} <span className="text-xs font-normal text-salvia-950/50">· {f.anio}</span>
-                </div>
-                <CampoImporte etiqueta="" valor={f.importe} onChange={(v) => cambiarAnual(f.anio, v)} clases={clases} />
-              </div>
-            ))}
-          </div>
-
-          {anualNoCuadra && (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
-              <span>La suma por año no coincide con el importe total. Ajusta los años o repártelo de nuevo.</span>
-              <button
-                type="button"
-                onClick={repartirAnual}
-                className="rounded-md bg-white px-3 py-1 font-semibold text-red-700 ring-1 ring-red-200 hover:bg-red-100"
-              >
-                Repartir a partes iguales
-              </button>
-            </div>
-          )}
-        </div>
-      )}
 
         <div className="grid gap-4 sm:grid-cols-3">
           <label className="block">
             <span className={clases.etiqueta}>Fecha de fin</span>
-            {porDuracion ? (
-              <CampoLectura etiqueta="" valor={finCalculado ? formatearFecha(finCalculado) : "—"} />
-            ) : (
-              <input
-                type="date"
-                className={clases.campo}
-                value={datos.fecha_fin}
-                min={datos.fecha_inicio || undefined}
-                onChange={(e) => cambiar("fecha_fin", e.target.value)}
-              />
-            )}
+            <input
+              type="date"
+              className={clases.campo}
+              value={datos.fecha_fin}
+              min={datos.fecha_inicio || undefined}
+              onChange={(e) => cambiarFin(e.target.value)}
+            />
           </label>
 
           <label className="block">
             <span className={clases.etiqueta}>Número</span>
-            {porDuracion ? (
-              <input
-                type="number"
-                min="0"
-                step="any"
-                inputMode="decimal"
-                className={clases.campo}
-                value={datos.duracion}
-                onChange={(e) => cambiar("duracion", e.target.value)}
-              />
-            ) : (
-              <CampoLectura etiqueta="" valor={duracionCalculada === "" ? "—" : String(duracionCalculada).replace(".", ",")} />
-            )}
+            <input
+              type="number"
+              min="0"
+              step="any"
+              inputMode="decimal"
+              className={clases.campo}
+              value={datos.duracion}
+              onChange={(e) => cambiarDuracion(e.target.value)}
+            />
           </label>
 
           <label className="block">
@@ -566,7 +526,7 @@ export default function FichaProyecto({
             <select
               className={clases.campo}
               value={datos.unidad_duracion}
-              onChange={(e) => cambiar("unidad_duracion", e.target.value)}
+              onChange={(e) => cambiarUnidad(e.target.value)}
             >
               {UNIDADES.map((u) => (
                 <option key={u} value={u}>
@@ -577,8 +537,8 @@ export default function FichaProyecto({
           </label>
         </div>
 
-        {faltaInicioParaDuracion && (
-          <p className="text-xs text-red-700">Para calcular la fecha de fin por duración, indica la fecha de inicio.</p>
+        {!datos.fecha_inicio && Number(datos.duracion) > 0 && (
+          <p className="text-xs text-salvia-950/60">Indica la fecha de inicio para calcular la fecha de fin.</p>
         )}
       </div>
 

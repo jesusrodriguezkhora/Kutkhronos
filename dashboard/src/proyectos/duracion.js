@@ -1,8 +1,6 @@
 // Duración de un proyecto: mismas reglas que calcular_duracion en proyecto.py
 import { aISO } from "../planificacion/calculo";
 
-export const POR_FECHA_FIN = "Por fecha de fin";
-export const POR_DURACION = "Por duración";
 export const UNIDADES = ["Meses", "Años"];
 
 const partes = (iso) => iso.split("-").map(Number);

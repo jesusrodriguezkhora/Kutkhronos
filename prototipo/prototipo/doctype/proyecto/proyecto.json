@@ -18,7 +18,6 @@
   "fecha_alta",
   "fecha_inicio",
   "fecha_fin",
-  "calculo_duracion",
   "duracion",
   "unidad_duracion",
   "responsable",
@@ -166,13 +165,6 @@
    "label": "Motivo de rechazo"
   },
   {
-   "default": "Por fecha de fin",
-   "fieldname": "calculo_duracion",
-   "fieldtype": "Select",
-   "label": "C\u00e1lculo de la duraci\u00f3n",
-   "options": "Por fecha de fin\nPor duracion"
-  },
-  {
    "fieldname": "duracion",
    "fieldtype": "Float",
    "label": "Duraci\u00f3n",
@@ -201,7 +193,7 @@
    "link_fieldname": "acuerdo_marco"
   }
  ],
- "modified": "2026-11-25 12:33:49.883792",
+ "modified": "2026-11-25 12:53:30.604174",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Proyecto",
