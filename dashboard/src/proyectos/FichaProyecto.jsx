@@ -8,6 +8,7 @@ import { mensajeDeError } from "../lib/errores";
 import { formatearImporte, formatearFecha } from "../lib/formato";
 import BuscadorCliente from "../componentes/BuscadorCliente";
 import CampoImporte from "../componentes/CampoImporte";
+import CampoFecha from "../componentes/CampoFecha";
 import AreaTexto from "../componentes/AreaTexto";
 import Propuesta from "./Propuesta";
 import Gastos from "./Gastos";
@@ -481,12 +482,12 @@ export default function FichaProyecto({
 
       <label className="block">
         <span className={clases.etiqueta}>Fecha de inicio</span>
-        <input
-          type="date"
+        <CampoFecha
+          etiqueta="Fecha de inicio"
           className={clases.campo}
-          value={datos.fecha_inicio}
+          valor={datos.fecha_inicio}
           max={datos.fecha_fin || undefined}
-          onChange={(e) => cambiarInicio(e.target.value)}
+          onChange={cambiarInicio}
         />
       </label>
 
@@ -499,12 +500,12 @@ export default function FichaProyecto({
         <div className="grid gap-4 sm:grid-cols-3">
           <label className="block">
             <span className={clases.etiqueta}>Fecha de fin</span>
-            <input
-              type="date"
+            <CampoFecha
+              etiqueta="Fecha de fin"
               className={clases.campo}
-              value={datos.fecha_fin}
+              valor={datos.fecha_fin}
               min={datos.fecha_inicio || undefined}
-              onChange={(e) => cambiarFin(e.target.value)}
+              onChange={cambiarFin}
             />
           </label>
 
