@@ -58,7 +58,7 @@ function textoIndicador(acuerdo, basados) {
   return texto;
 }
 
-function Fila({ datos, flecha, indicador, esBasado, atenuada, acciones }) {
+function Fila({ datos, flecha, indicador, esBasado, atenuada, acciones, anio }) {
   const celda = atenuada ? "opacity-40" : "";
 
   return (
@@ -86,10 +86,10 @@ function Fila({ datos, flecha, indicador, esBasado, atenuada, acciones }) {
       <div className={celda}>{datos.via || "—"}</div>
 
       <div className={`${celda} text-right tabular-nums`}>
-        <div className="font-medium">{formatearImporte(datos.importe)}</div>
+        <div className="font-medium">{formatearImporte(anio ? datos.importe_anio : datos.importe)}</div>
         {datos.tipo === "Acuerdo marco" && (
           <div className="text-xs text-salvia-950/50">
-            Disp. {formatearImporte(datos.importe_disponible)}
+            Disp. {formatearImporte(anio ? datos.disponible_anio : datos.importe_disponible)}
           </div>
         )}
       </div>
@@ -109,9 +109,10 @@ function Fila({ datos, flecha, indicador, esBasado, atenuada, acciones }) {
 
 export default function FilaProyecto({
   proyecto,
+  anio, // año del Pipeline (null = Total)
   desplegado,
   onAlternar,
-  acciones, // { onVerDetalle, onEditar, onEliminar }, se aplican al proyecto y a sus contratos basados
+  acciones,
   onAnadirContratoBasado,
 }) {
   const esAcuerdo = proyecto.tipo === "Acuerdo marco";
@@ -121,6 +122,7 @@ export default function FilaProyecto({
     <div>
       <Fila
         datos={proyecto}
+        anio={anio}
         atenuada={!proyecto.cumple_filtro}
         acciones={acciones}
         flecha={
@@ -142,6 +144,7 @@ export default function FilaProyecto({
               <Fila
                 key={c.name}
                 datos={c}
+                anio={anio}
                 esBasado
                 atenuada={!c.cumple_filtro}
                 acciones={acciones}

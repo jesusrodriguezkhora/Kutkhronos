@@ -18,3 +18,6 @@ export const TIPOS_CON_FEE = ["Contrato", "Contrato basado", "Subvención"];
 
 // Estados en los que un proyecto tiene la pestaña Gastos (mismos que ESTADOS_CON_GASTOS en gastos.py)
 export const ESTADOS_CON_GASTOS = ["Aceptado", "En curso", "Cerrado"];
+
+// Estados que suman en la fila de total del Pipeline
+export const ESTADOS_SUMAN_TOTAL = ["Aceptado", "En curso"];

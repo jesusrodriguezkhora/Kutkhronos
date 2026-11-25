@@ -1,6 +1,7 @@
 import frappe
-from frappe.utils import flt
+from frappe.utils import cint, flt, getdate, nowdate
 
+from prototipo.prototipo.doctype.proyecto.proyecto import ESTADOS_COMPUTABLES
 from prototipo.roles import ROLES_GESTION, exigir_rol
 
 CAMPOS = [
@@ -34,15 +35,16 @@ FILTROS_EXACTOS = ("cliente", "tipo", "via", "estado")
 SIN_RESPONSABLE = "__sin_responsable__"
 
 
-def construir_condiciones(filtros):
-	"""Traduce los filtros recibidos a condiciones de Frappe, solo con campos permitidos."""
+def construir_condiciones(filtros, por_anio=False):
+	"""Traduce los filtros recibidos a condiciones de Frappe, solo con campos permitidos. En un año
+	concreto, el importe mínimo y máximo se aplican al importe de ese año (en obtener_proyectos)."""
 	condiciones = []
 	for campo in FILTROS_EXACTOS:
 		if filtros.get(campo):
 			condiciones.append([campo, "=", filtros[campo]])
-	if filtros.get("importe_min") not in (None, ""):
+	if not por_anio and filtros.get("importe_min") not in (None, ""):
 		condiciones.append(["importe", ">=", flt(filtros["importe_min"])])
-	if filtros.get("importe_max") not in (None, ""):
+	if not por_anio and filtros.get("importe_max") not in (None, ""):
 		condiciones.append(["importe", "<=", flt(filtros["importe_max"])])
 	responsable = filtros.get("responsable")
 	if responsable == SIN_RESPONSABLE:
@@ -98,12 +100,66 @@ def anadir_importes_anuales(proyectos):
 	for p in proyectos:
 		p["importes_anuales"] = por_proyecto.get(p.name, [])
 
+def importes_del_anio(anio):
+	"""{proyecto: importe de ese año} de todos los proyectos con importe en ese año."""
+	return {
+		f.parent: flt(f.importe)
+		for f in frappe.get_all(
+			"Importe Anual", filters={"parenttype": "Proyecto", "anio": anio}, fields=["parent", "importe"]
+		)
+	}
+
+
+def en_rango(valor, minimo, maximo):
+	return (minimo in (None, "") or valor >= flt(minimo)) and (maximo in (None, "") or valor <= flt(maximo))
+
+
+def anadir_importes_del_anio(proyectos, principales, del_anio):
+	"""Importe del año de cada proyecto y, en los acuerdos marco, su disponible en ese año: importe del
+	acuerdo ese año menos lo que tienen ese año sus contratos basados computables."""
+	for p in proyectos:
+		p["importe_anio"] = del_anio.get(p.name, 0)
+
+	acuerdos = [p.name for p in principales if p.tipo == "Acuerdo marco"]
+	consumido = {}
+	if acuerdos:
+		for c in frappe.get_all(
+			"Proyecto",
+			filters={"acuerdo_marco": ["in", acuerdos], "estado": ["in", ESTADOS_COMPUTABLES]},
+			fields=["name", "acuerdo_marco"],
+		):
+			consumido[c.acuerdo_marco] = consumido.get(c.acuerdo_marco, 0) + del_anio.get(c.name, 0)
+	for p in principales:
+		if p.tipo == "Acuerdo marco":
+			p["disponible_anio"] = flt(p["importe_anio"] - consumido.get(p.name, 0), 2)
+
+
+@frappe.whitelist()
+def anios_pipeline():
+	"""Años con algún importe registrado, más el actual, para el selector del Pipeline."""
+	exigir_rol(*ROLES_GESTION)
+	anios = set(frappe.get_all("Importe Anual", filters={"parenttype": "Proyecto"}, pluck="anio", distinct=True))
+	anios.add(getdate(nowdate()).year)
+	return sorted(cint(a) for a in anios)
+
 @frappe.whitelist()
 def obtener_proyectos(filtros=None):
 	"""Proyectos principales con sus contratos basados, aplicando las reglas de filtrado jerárquico."""
 	filtros = frappe.parse_json(filtros) or {}
-	condiciones = construir_condiciones(filtros)
+	# Año del Pipeline (sin año: "Total", importes completos)
+	anio = cint(filtros.get("anio")) or None
+	condiciones = construir_condiciones(filtros, por_anio=bool(anio))
 	busqueda = condiciones_busqueda(filtros)
+
+	# En un año concreto, solo los proyectos con importe ese año (y, si se pide, dentro del rango)
+	del_anio = {}
+	if anio:
+		del_anio = importes_del_anio(anio)
+		candidatos = [
+			p for p, importe in del_anio.items()
+			if en_rango(importe, filtros.get("importe_min"), filtros.get("importe_max"))
+		]
+		condiciones.append(["name", "in", candidatos or [""]])
 
 	# 1. Proyectos principales que cumplen el filtro
 	principales = listar([["acuerdo_marco", "is", "not set"], *condiciones], busqueda)
@@ -127,6 +183,8 @@ def obtener_proyectos(filtros=None):
 	por_acuerdo = {}
 	if ids_acuerdos:
 		for c in listar([["acuerdo_marco", "in", ids_acuerdos]], order_by="name asc"):
+			if anio and c.name not in del_anio:
+				continue  # en un año concreto, solo los basados con importe ese año
 			c["cumple_filtro"] = c.name in nombres_que_cumplen
 			por_acuerdo.setdefault(c.acuerdo_marco, []).append(c)
 
@@ -139,6 +197,9 @@ def obtener_proyectos(filtros=None):
 	todos = principales + [c for p in principales for c in p.get("contratos_basados", [])]
 	anadir_nombre_responsable(todos)
 	anadir_importes_anuales(todos)
+
+	if anio:
+		anadir_importes_del_anio(todos, principales, del_anio)
 
 	principales.sort(key=lambda p: p.creation, reverse=True)
 

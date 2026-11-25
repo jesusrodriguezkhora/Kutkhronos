@@ -9,6 +9,8 @@ import { ANCHO_MINIMO, GRID } from "./tabla";
 import { ESTILOS } from "../lib/estilos";
 import { useDebounced } from "../hooks/useDebounced";
 import { mensajeDeError } from "../lib/errores";
+import { ESTADOS_SUMAN_TOTAL } from "./opciones";
+import { formatearImporte } from "../lib/formato";
 
 const FILTROS_VACIOS = {
   cliente: "",
@@ -25,6 +27,22 @@ function soloActivos(filtros) {
   return Object.fromEntries(
     Object.entries(filtros).filter(([, valor]) => valor !== "" && valor != null)
   );
+}
+
+const TOTAL = "total";
+
+// Suma de la fila de total: proyectos aceptados y en curso que se ven. Los acuerdos marco cuentan con su
+// presupuesto y sus contratos basados no se suman (sería contar dos veces); si un acuerdo solo está como
+// contexto de un filtro, se suman los basados que cumplen.
+function totalVisible(proyectos, anio) {
+  const importe = (p) => Number(anio ? p.importe_anio : p.importe) || 0;
+  const suma = (p) => (ESTADOS_SUMAN_TOTAL.includes(p.estado) ? importe(p) : 0);
+  let total = 0;
+  for (const p of proyectos) {
+    if (p.cumple_filtro) total += suma(p);
+    else for (const c of p.contratos_basados ?? []) if (c.cumple_filtro) total += suma(c);
+  }
+  return total;
 }
 
 function IconoFiltro() {
@@ -45,6 +63,12 @@ export default function Proyectos() {
   const [panelAbierto, setPanelAbierto] = useState(false);
   const [desplegados, setDesplegados] = useState(() => new Set());
 
+  // Año del Pipeline: al entrar, el actual. TOTAL = importes completos de todos los proyectos
+  const [anio, setAnio] = useState(() => new Date().getFullYear());
+  const { data: datosAnios, mutate: recargarAnios } = useFrappeGetCall("prototipo.api.proyectos.anios_pipeline");
+  const anios = datosAnios?.message ?? [new Date().getFullYear()];
+  const anioFiltro = anio === TOTAL ? null : anio;
+
   // Ficha abierta: null (ninguna), {} (nuevo), { proyecto } (detalle), { proyecto, editar: true }
   // (edición directa con el botón Editar de la fila) o { acuerdoMarco } (nuevo contrato basado)
   const [ficha, setFicha] = useState(null);
@@ -58,7 +82,7 @@ export default function Proyectos() {
 
   const { data, error, isLoading, isValidating, mutate } = useFrappeGetCall(
     "prototipo.api.proyectos.obtener_proyectos",
-    hayFiltros ? { filtros: JSON.stringify(filtrosAplicados) } : undefined,
+    { filtros: JSON.stringify({ ...filtrosAplicados, ...(anioFiltro && { anio: anioFiltro }) }) },
     undefined,
     { keepPreviousData: true }
   );
@@ -70,6 +94,11 @@ export default function Proyectos() {
 
   const limpiarFiltros = () => {
     setFiltros(FILTROS_VACIOS);
+    setDesplegados(new Set());
+  };
+
+  const cambiarAnio = (valor) => {
+    setAnio(valor === TOTAL ? TOTAL : Number(valor));
     setDesplegados(new Set());
   };
 
@@ -99,7 +128,22 @@ export default function Proyectos() {
   return (
     <section>
       <div className="mb-6 flex items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Pipeline</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold tracking-tight">Pipeline</h1>
+          <select
+            aria-label="Año del pipeline"
+            value={anio}
+            onChange={(e) => cambiarAnio(e.target.value)}
+            className="rounded-full border-0 bg-salvia-900 px-4 py-1.5 text-sm font-semibold text-salvia-200 focus:ring-2 focus:ring-salvia"
+          >
+            {anios.map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+            <option value={TOTAL}>Total</option>
+          </select>
+        </div>
         <div className="flex items-center gap-3">
           <div className="relative w-72">
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-salvia-950/40">
@@ -159,7 +203,7 @@ export default function Proyectos() {
             <span>Descripción</span>
             <span>Tipo</span>
             <span>Vía</span>
-            <span className="text-right">Importe</span>
+            <span className="text-right">{anioFiltro ? `Importe ${anioFiltro}` : "Importe"}</span>
             <span>Estado</span>
             <span />
           </div>
@@ -176,7 +220,9 @@ export default function Proyectos() {
             <p className="px-4 py-6 text-sm text-salvia-950/50">
               {hayFiltros
                 ? "Ningún proyecto coincide con la búsqueda o los filtros."
-                : "No hay proyectos."}
+                : anioFiltro
+                  ? `No hay proyectos con importe en ${anioFiltro}.`
+                  : "No hay proyectos."}
             </p>
           )}
 
@@ -185,6 +231,7 @@ export default function Proyectos() {
               <FilaProyecto
                 key={p.name}
                 proyecto={p}
+                anio={anioFiltro}
                 desplegado={desplegados.has(p.name)}
                 onAlternar={() => alternar(p.name)}
                 acciones={acciones}
@@ -192,6 +239,19 @@ export default function Proyectos() {
               />
             ))}
           </div>
+
+          {proyectos.length > 0 && (
+            <div className={`${GRID} border-t border-salvia-900/15 bg-salvia-100 px-4 py-3 text-sm font-semibold`}>
+              <span />
+              <span className="col-span-5">
+                Total {anioFiltro ?? ""}
+                <span className="ml-2 text-xs font-normal text-salvia-950/60">aceptados y en curso</span>
+              </span>
+              <span className="text-right tabular-nums">{formatearImporte(totalVisible(proyectos, anioFiltro))}</span>
+              <span />
+              <span />
+            </div>
+          )}
         </div>
       </div>
 
@@ -204,6 +264,7 @@ export default function Proyectos() {
           onGuardado={() => {
             setFicha(null);
             mutate();
+            recargarAnios();
           }}
         />
       )}
