@@ -15,6 +15,7 @@ const FILTROS_VACIOS = {
   tipo: "",
   via: "",
   estado: "",
+  responsable: "",
   importe_min: "",
   importe_max: "",
 };

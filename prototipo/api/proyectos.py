@@ -28,6 +28,8 @@ CAMPOS = [
 
 # Filtros que aceptamos por igualdad exacta
 FILTROS_EXACTOS = ("cliente", "tipo", "via", "estado")
+# Valor del filtro de responsable para los proyectos que no tienen ninguno
+SIN_RESPONSABLE = "__sin_responsable__"
 
 
 def construir_condiciones(filtros):
@@ -40,6 +42,11 @@ def construir_condiciones(filtros):
 		condiciones.append(["importe", ">=", flt(filtros["importe_min"])])
 	if filtros.get("importe_max") not in (None, ""):
 		condiciones.append(["importe", "<=", flt(filtros["importe_max"])])
+	responsable = filtros.get("responsable")
+	if responsable == SIN_RESPONSABLE:
+		condiciones.append(["responsable", "is", "not set"])
+	elif responsable:
+		condiciones.append(["responsable", "=", responsable])
 	return condiciones
 
 
