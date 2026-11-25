@@ -22,7 +22,8 @@
   "lider_proyecto",
   "miembros_consorcio",
   "horas_planificadas",
-  "horas_imputadas"
+  "horas_imputadas",
+  "facturacion"
  ],
  "fields": [
   {
@@ -139,6 +140,12 @@
    "hidden": 1,
    "label": "Horas imputadas",
    "read_only": 1
+  },
+  {
+   "fieldname": "facturacion",
+   "fieldtype": "Data",
+   "label": "Facturaci\u00f3n",
+   "length": 140
   }
  ],
  "grid_page_length": 50,
@@ -150,7 +157,7 @@
    "link_fieldname": "acuerdo_marco"
   }
  ],
- "modified": "2026-10-23 11:32:14.498722",
+ "modified": "2026-11-25 10:34:18.955639",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Proyecto",

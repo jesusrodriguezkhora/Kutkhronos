@@ -25,6 +25,8 @@ function valoresIniciales(proyecto, acuerdoMarco) {
     fecha_inicio: proyecto?.fecha_inicio ?? "",
     fecha_fin: proyecto?.fecha_fin ?? "",
     responsable: proyecto?.responsable ?? "",
+    facturacion: proyecto?.facturacion ?? "",
+    canarias: !!proyecto?.canarias,
     lider_proyecto: proyecto?.lider_proyecto ?? "",
     miembros_consorcio: proyecto?.miembros_consorcio ?? "",
   };
@@ -239,6 +241,8 @@ export default function FichaProyecto({
       fecha_inicio: datos.fecha_inicio || null,
       fecha_fin: datos.fecha_fin || null,
       responsable: datos.responsable || null,
+      facturacion: datos.facturacion.trim() || null,
+      canarias: datos.canarias ? 1 : 0,
     };
     // Cliente y vía de un contrato basado los fija el servidor (herencia del acuerdo)
     if (!esBasado) {
@@ -289,6 +293,8 @@ export default function FichaProyecto({
       <Dato etiqueta="Fecha de inicio">{formatearFecha(proyecto.fecha_inicio)}</Dato>
       <Dato etiqueta="Fecha de fin">{formatearFecha(proyecto.fecha_fin)}</Dato>
       <Dato etiqueta="Responsable">{proyecto.responsable_nombre || proyecto.responsable}</Dato>
+      <Dato etiqueta="Facturación">{proyecto.facturacion}</Dato>
+      <Dato etiqueta="Canarias">{proyecto.canarias ? "Sí (factura sin IVA)" : "No"}</Dato>
 
       {proyecto.tipo === "Acuerdo marco" && (
         <>
@@ -411,6 +417,29 @@ export default function FichaProyecto({
         nombreActual={proyecto?.responsable_nombre}
         onChange={(v) => cambiar("responsable", v)}
       />
+
+      <label className="block">
+        <span className={clases.etiqueta}>Facturación</span>
+        <input
+          type="text"
+          className={clases.campo}
+          maxLength={140}
+          placeholder="Cada cuánto se factura (p. ej., mensual)"
+          value={datos.facturacion}
+          onChange={(e) => cambiar("facturacion", e.target.value)}
+        />
+      </label>
+
+      <label className="flex items-center gap-2 self-end pb-2 text-sm text-salvia-950">
+        <input
+          type="checkbox"
+          className="h-4 w-4 accent-salvia-900"
+          checked={datos.canarias}
+          onChange={(e) => cambiar("canarias", e.target.checked)}
+        />
+        Canarias
+        <span className="text-salvia-950/50">(factura sin IVA)</span>
+      </label>
 
       {esSubvencion && (
         <>

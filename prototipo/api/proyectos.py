@@ -21,6 +21,8 @@ CAMPOS = [
 	"responsable",
 	"lider_proyecto",
 	"miembros_consorcio",
+	"facturacion",
+	"canarias",
 ]
 
 # Filtros que aceptamos por igualdad exacta
