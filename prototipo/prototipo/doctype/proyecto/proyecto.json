@@ -18,12 +18,13 @@
   "fecha_inicio",
   "fecha_fin",
   "responsable",
+  "canarias",
+  "facturacion",
+  "horas_imputadas",
   "descripcion",
   "lider_proyecto",
   "miembros_consorcio",
-  "horas_planificadas",
-  "horas_imputadas",
-  "facturacion"
+  "horas_planificadas"
  ],
  "fields": [
   {
@@ -146,6 +147,12 @@
    "fieldtype": "Data",
    "label": "Facturaci\u00f3n",
    "length": 140
+  },
+  {
+   "default": "0",
+   "fieldname": "canarias",
+   "fieldtype": "Check",
+   "label": "Canarias"
   }
  ],
  "grid_page_length": 50,
@@ -157,7 +164,7 @@
    "link_fieldname": "acuerdo_marco"
   }
  ],
- "modified": "2026-11-25 10:34:18.955639",
+ "modified": "2026-11-25 10:46:20.630340",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Proyecto",
