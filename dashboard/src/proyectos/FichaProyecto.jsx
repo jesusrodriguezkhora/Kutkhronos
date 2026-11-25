@@ -543,6 +543,41 @@ export default function FichaProyecto({
         )}
       </div>
 
+      {anios.length > 0 && (
+        <div className="space-y-3 rounded-lg border border-salvia-900/10 p-4 sm:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className={clases.etiqueta}>Importe por año</span>
+            <span className={`text-xs tabular-nums ${anualNoCuadra ? "text-red-700" : "text-salvia-950/50"}`}>
+              Suma {formatearImporte(sumaAnual)} de {formatearImporte(Number(datos.importe) || 0)}
+            </span>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            {filasAnuales.map((f, i) => (
+              <div key={f.anio}>
+                <div className="mb-1 text-sm font-medium text-salvia-950">
+                  Año {i + 1} <span className="text-xs font-normal text-salvia-950/50">· {f.anio}</span>
+                </div>
+                <CampoImporte etiqueta="" valor={f.importe} onChange={(v) => cambiarAnual(f.anio, v)} clases={clases} />
+              </div>
+            ))}
+          </div>
+
+          {anualNoCuadra && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+              <span>La suma por año no coincide con el importe total. Ajusta los años o repártelo de nuevo.</span>
+              <button
+                type="button"
+                onClick={repartirAnual}
+                className="rounded-md bg-white px-3 py-1 font-semibold text-red-700 ring-1 ring-red-200 hover:bg-red-100"
+              >
+                Repartir a partes iguales
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       <SelectorResponsable
         valor={datos.responsable}
         opciones={responsables}
