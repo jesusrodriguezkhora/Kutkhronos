@@ -83,7 +83,6 @@ function Fila({ datos, flecha, indicador, esBasado, atenuada, acciones, anio }) 
         {datos.descripcion || "—"}
       </div>
       <div className={celda}>{datos.tipo}</div>
-      <div className={celda}>{datos.via || "—"}</div>
 
       <div className={`${celda} text-right tabular-nums`}>
         <div className="font-medium">{formatearImporte(anio ? datos.importe_anio : datos.importe)}</div>

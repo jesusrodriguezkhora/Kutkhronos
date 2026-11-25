@@ -202,7 +202,6 @@ export default function Proyectos() {
             <span>Cliente</span>
             <span>Descripción</span>
             <span>Tipo</span>
-            <span>Vía</span>
             <span className="text-right">{anioFiltro ? `Importe ${anioFiltro}` : "Importe"}</span>
             <span>Estado</span>
             <span />
@@ -243,7 +242,7 @@ export default function Proyectos() {
           {proyectos.length > 0 && (
             <div className={`${GRID} border-t border-salvia-900/15 bg-salvia-100 px-4 py-3 text-sm font-semibold`}>
               <span />
-              <span className="col-span-5">
+              <span className="col-span-4">
                 Total {anioFiltro ?? ""}
                 <span className="ml-2 text-xs font-normal text-salvia-950/60">aceptados y en curso</span>
               </span>
