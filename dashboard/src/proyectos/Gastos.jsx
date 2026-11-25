@@ -165,7 +165,7 @@ export default function Gastos({ proyecto }) {
         {g.acuerdo_marco && (
           <p className="rounded-lg border-l-4 border-salvia-900 bg-salvia-100 px-3 py-2 text-sm text-salvia-950">
             {g.basados.length
-              ? `Suma de ${g.basados.length} ${g.basados.length === 1 ? "contrato basado" : "contratos basados"} aceptados, en curso o cerrados.`
+              ? `Suma de ${g.basados.length} ${g.basados.length === 1 ? "contrato basado" : "contratos basados"} aceptados o cerrados.`
               : "Este acuerdo marco todavía no tiene contratos basados aceptados."}
           </p>
         )}

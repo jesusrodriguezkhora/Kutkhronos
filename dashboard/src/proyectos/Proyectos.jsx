@@ -15,7 +15,6 @@ import { formatearImporte } from "../lib/formato";
 const FILTROS_VACIOS = {
   cliente: "",
   tipo: "",
-  via: "",
   estado: "",
   responsable: "",
   importe_min: "",
@@ -31,7 +30,7 @@ function soloActivos(filtros) {
 
 const TOTAL = "total";
 
-// Suma de la fila de total: proyectos aceptados y en curso que se ven. Los acuerdos marco cuentan con su
+// Suma de la fila de total: proyectos aceptados que se ven. Los acuerdos marco cuentan con su
 // presupuesto y sus contratos basados no se suman (sería contar dos veces); si un acuerdo solo está como
 // contexto de un filtro, se suman los basados que cumplen.
 function totalVisible(proyectos, anio) {
@@ -244,7 +243,7 @@ export default function Proyectos() {
               <span />
               <span className="col-span-4">
                 Total {anioFiltro ?? ""}
-                <span className="ml-2 text-xs font-normal text-salvia-950/60">aceptados y en curso</span>
+                <span className="ml-2 text-xs font-normal text-salvia-950/60">aceptados</span>
               </span>
               <span className="text-right tabular-nums">{formatearImporte(totalVisible(proyectos, anioFiltro))}</span>
               <span />

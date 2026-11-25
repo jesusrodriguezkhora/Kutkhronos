@@ -249,7 +249,7 @@ def copiar_semana_anterior(lunes):
 
 
 def consultar_proyectos(texto=None):
-	"""Proyectos planificables (aceptados o en curso, sin acuerdos marco) que coinciden con el texto en
+	"""Proyectos planificables (aceptados, sin acuerdos marco) que coinciden con el texto en
 	código, descripción o cliente. Máximo 20. La usan los buscadores de planificación e imputación."""
 	o_filtros = None
 	texto = (texto or "").strip()
@@ -275,7 +275,7 @@ def buscar_proyectos(texto=None):
 
 def filas_de_semana(doc, editable):
 	"""Filas de proyecto que se muestran en una semana, ordenadas por código.
-	- Editable: todos los proyectos planificables (aceptados o en curso, sin acuerdos marco) más los que
+	- Editable: todos los proyectos planificables (aceptados, sin acuerdos marco) más los que
 	  ya tengan horas en la semana aunque hayan dejado de serlo, para no perder esas horas de vista.
 	- Cerrada: solo los proyectos con horas (lo que realmente se planificó)."""
 	con_horas = {a.proyecto for a in (doc.asignaciones if doc else []) if a.concepto == CONCEPTO_PROYECTO}

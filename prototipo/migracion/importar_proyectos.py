@@ -53,7 +53,7 @@ CAMPOS_NECESARIOS = ("descripcion", "fecha_fin", "responsable")
 
 # Valor de la columna TIPO -> tipo en Khronos
 TIPOS = {
-	"contrato": "Contrato",
+	"contrato": None,  # Licitación o Contrato menor, según la columna VIA (ver tipo_de_contrato)
 	"acuerdo marco": "Acuerdo marco",
 	"contrato basado": "Contrato basado",
 }
@@ -62,8 +62,15 @@ TIPOS = {
 # None = se quedan sin estado (y no consumen saldo del acuerdo marco).
 ESTADO_BASADO_SIN_ESTADO = None
 
-# Vía para las filas que no la traen. En los basados da igual: Khronos copia la del acuerdo.
-VIA_POR_DEFECTO = "Licitación pública"
+# Estados del Excel que ya no existen en Khronos -> estado actual
+ESTADOS_ANTIGUOS = {"En curso": "Aceptado"}
+
+
+def tipo_de_contrato(via):
+	"""Tipo de un "contrato" del Excel según su VIA: contrato menor o, si no, licitación (también la
+	contratación directa y las filas sin vía)."""
+	return "Contrato menor" if (via or "").strip().lower() == "contrato menor" else "Licitación"
+
 
 # Qué hacer si el nombre de RESPONSABLES no corresponde a ningún empleado activo:
 # False = es un error (no se importa nada); True = el proyecto queda sin responsable y se avisa.
@@ -188,7 +195,7 @@ def preparar(registro, responsables):
 	tipo_excel = (registro.get("tipo") or "").lower()
 	if tipo_excel not in TIPOS:
 		raise ValueError(f"tipo desconocido: {registro.get('tipo')}")
-	tipo = TIPOS[tipo_excel]
+	tipo = TIPOS[tipo_excel] or tipo_de_contrato(registro.get("via"))
 
 	if tipo == "Contrato basado" and not registro.get("acuerdo_padre"):
 		raise ValueError("contrato basado sin ACUERDO PADRE")
@@ -196,6 +203,7 @@ def preparar(registro, responsables):
 		raise ValueError("fila sin CLIENTE")
 
 	estado = registro.get("estado")
+	estado = ESTADOS_ANTIGUOS.get(estado, estado)
 	if not estado and tipo == "Contrato basado":
 		estado = ESTADO_BASADO_SIN_ESTADO
 
@@ -205,7 +213,6 @@ def preparar(registro, responsables):
 		"tipo": tipo,
 		"estado": estado,
 		"importe": a_importe(registro.get("importe")),
-		"via": registro.get("via") or VIA_POR_DEFECTO,
 		"fecha_alta": getdate(nowdate()),
 		"fecha_inicio": a_fecha(registro.get("fecha_inicio")),
 		"fecha_fin": a_fecha(registro.get("fecha_fin")),
@@ -283,7 +290,7 @@ def importar_fila(registro, datos, codigos, clientes):
 
 def importar(ruta, hoja=None, simular=True):
 	frappe.set_user("Administrator")
-	# Los proyectos del Excel ya estaban aceptados o en curso sin fee estimate: se importan tal cual
+	# Los proyectos del Excel ya estaban aceptados sin fee estimate: se importan tal cual
 	frappe.flags.importando_proyectos = True
 	simular = simular not in (False, 0, "0", "false", "False", "no")
 

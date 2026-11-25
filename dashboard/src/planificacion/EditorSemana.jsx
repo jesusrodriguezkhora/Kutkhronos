@@ -214,7 +214,7 @@ export default function EditorSemana({ info, lunes, onGuardado, onCambiosPendien
       });
       if (copia.proyectos_omitidos.length) {
         setAviso(
-          `No se han copiado ${copia.proyectos_omitidos.join(", ")}: ya no están aceptados ni en curso.`
+          `No se han copiado ${copia.proyectos_omitidos.join(", ")}: ya no están aceptados.`
         );
       }
     } catch (err) {

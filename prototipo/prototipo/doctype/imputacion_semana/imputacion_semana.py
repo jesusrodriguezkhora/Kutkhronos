@@ -171,14 +171,14 @@ class ImputacionSemana(Document):
 
 	def validar_proyectos(self, cambiadas, ahora):
 		"""Los proyectos con horas nuevas o cambiadas: los planificados para esta persona esta semana o
-		cualquier proyecto aceptado o en curso que no sea acuerdo marco."""
+		cualquier proyecto aceptado que no sea acuerdo marco."""
 		planificados = planificado_de(self.empleado, self.semana)["proyectos"]
 		proyectos = {p for c, p, f in cambiadas if c == CONCEPTO_PROYECTO and ahora.get((c, p, f))}
 		for proyecto in sorted(proyectos):
 			if proyecto not in planificados and not es_planificable(proyecto):
 				frappe.throw(
 					f"No se pueden imputar horas a {proyecto}: no está planificado para ti esta semana "
-					"y no está aceptado ni en curso."
+					"y no está aceptado."
 				)
 
 	def validar_maximo_diario(self, dias_cambiados, ahora):

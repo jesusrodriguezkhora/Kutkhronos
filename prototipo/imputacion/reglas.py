@@ -65,6 +65,6 @@ def dias_editables(empleado, semana):
 
 
 def es_planificable(proyecto):
-	"""Proyecto aceptado o en curso que no es acuerdo marco (lo que ofrece "Añadir proyecto")."""
+	"""Proyecto aceptado que no es acuerdo marco (lo que ofrece "Añadir proyecto")."""
 	datos = frappe.db.get_value("Proyecto", proyecto, ["tipo", "estado"], as_dict=True)
 	return bool(datos) and datos.tipo != "Acuerdo marco" and datos.estado in ESTADOS_PLANIFICABLES

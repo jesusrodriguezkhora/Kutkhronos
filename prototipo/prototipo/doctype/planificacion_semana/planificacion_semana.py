@@ -26,7 +26,7 @@ CONCEPTOS = (*CONCEPTOS_SEMANALES, CONCEPTO_VACACIONES)
 
 # Estados en los que un proyecto se puede añadir a la planificación (los acuerdos marco nunca:
 # se planifican sus contratos basados)
-ESTADOS_PLANIFICABLES = ("Aceptado", "En curso")
+ESTADOS_PLANIFICABLES = ("Aceptado",)
 
 # Longitud máxima del comentario de una celda (indicaciones para quien hace el trabajo)
 LONGITUD_MAXIMA_COMENTARIO = 500
@@ -163,7 +163,7 @@ class PlanificacionSemana(Document):
 	# --- Fase 2: reglas ---
 
 	def validar_proyectos_nuevos(self):
-		"""Las filas de proyecto que se añaden: proyectos aceptados o en curso, nunca acuerdos marco."""
+		"""Las filas de proyecto que se añaden: proyectos aceptados, nunca acuerdos marco."""
 		antes = self.get_doc_before_save()
 		previos = {f.proyecto for f in antes.proyectos} if antes else set()
 

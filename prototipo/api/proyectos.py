@@ -10,7 +10,6 @@ CAMPOS = [
 	"fecha_alta",
 	"cliente",
 	"tipo",
-	"via",
 	"importe",
 	"estado",
 	"importe_consumido",
@@ -30,7 +29,7 @@ CAMPOS = [
 ]
 
 # Filtros que aceptamos por igualdad exacta
-FILTROS_EXACTOS = ("cliente", "tipo", "via", "estado")
+FILTROS_EXACTOS = ("cliente", "tipo", "estado")
 # Valor del filtro de responsable para los proyectos que no tienen ninguno
 SIN_RESPONSABLE = "__sin_responsable__"
 

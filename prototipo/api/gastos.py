@@ -60,13 +60,13 @@ def fees(proyectos):
 
 @frappe.whitelist()
 def obtener_gastos(proyecto):
-	"""Gasto real y previsto de un proyecto aceptado, en curso o cerrado. Solo para los roles de gestión."""
+	"""Gasto real y previsto de un proyecto aceptado o cerrado. Solo para los roles de gestión."""
 	exigir_rol(*ROLES_GESTION)
 	datos = frappe.db.get_value("Proyecto", proyecto, ["name", "tipo", "estado"], as_dict=True)
 	if not datos:
 		frappe.throw("El proyecto no existe.")
 	if datos.estado not in ESTADOS_CON_GASTOS:
-		frappe.throw("Los gastos solo están disponibles en proyectos aceptados, en curso o cerrados.")
+		frappe.throw("Los gastos solo están disponibles en proyectos aceptados o cerrados.")
 
 	es_acuerdo = datos.tipo == "Acuerdo marco"
 	proyectos = proyectos_incluidos(proyecto, datos.tipo)

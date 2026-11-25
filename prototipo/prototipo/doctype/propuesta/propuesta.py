@@ -88,7 +88,7 @@ class Propuesta(Document):
 		self.margen_neto_pct = flt(porcentaje(self.margen_neto, honorarios), 2)
 
 	def validar_honorarios_obligatorios(self):
-		"""Un proyecto aceptado o en curso debe tener honorarios en su fee estimate."""
+		"""Un proyecto aceptado debe tener honorarios en su fee estimate."""
 		if flt(self.honorarios) > 0:
 			return
 		proyecto = frappe.db.get_value("Proyecto", self.proyecto, ["tipo", "estado"], as_dict=True)

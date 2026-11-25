@@ -6,7 +6,7 @@ from prototipo.gastos import ESTADOS_GASTOS_EDITABLES
 
 
 def comprobar_proyecto(proyecto):
-	"""Los gastos directos van en proyectos aceptados o en curso, nunca en un acuerdo marco (van en sus
+	"""Los gastos directos van en proyectos aceptados, nunca en un acuerdo marco (van en sus
 	contratos basados)."""
 	datos = frappe.db.get_value("Proyecto", proyecto, ["tipo", "estado"], as_dict=True)
 	if not datos:
@@ -16,7 +16,7 @@ def comprobar_proyecto(proyecto):
 	if datos.estado not in ESTADOS_GASTOS_EDITABLES:
 		frappe.throw(
 			f"{proyecto} está en estado {datos.estado or 'sin estado'}: solo se registran o cambian gastos "
-			"de proyectos aceptados o en curso."
+			"de proyectos aceptados."
 		)
 
 

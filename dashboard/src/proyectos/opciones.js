@@ -1,23 +1,19 @@
 // Todas las opciones: para filtrar y para mostrar
-export const TIPOS = ["Contrato", "Contrato basado", "Acuerdo marco", "Subvención"];
-export const VIAS = ["Heredada", "Contrato menor", "Licitación pública", "Subvención", "Contratación directa"];
-export const ESTADOS = ["Oportunidad", "Aceptado", "En curso", "Cerrado", "Rechazado"];
+export const TIPOS = ["Licitación", "Contrato menor", "Acuerdo marco", "Subvención", "Contrato basado"];
+export const ESTADOS = ["Oportunidad", "Propuesta", "Aceptado", "Cerrado", "Rechazado"];
 
 // Opciones al crear un proyecto suelto: un contrato basado solo nace de un acuerdo marco
-export const TIPOS_SUELTOS = ["Contrato", "Acuerdo marco", "Subvención"];
-
-// Vías que puede elegir un proyecto que no es subvención
-export const VIAS_NO_SUBVENCION = ["Contrato menor", "Licitación pública", "Contratación directa"];
+export const TIPOS_SUELTOS = ["Licitación", "Contrato menor", "Acuerdo marco", "Subvención"];
 
 // Estados en los que un acuerdo marco admite contratos basados (mismos que en proyecto.py)
-export const ESTADOS_ACUERDO_CON_BASADOS = ["Aceptado", "En curso", "Cerrado"];
+export const ESTADOS_ACUERDO_CON_BASADOS = ["Aceptado", "Cerrado"];
 
 // Para pasar a estos estados, los proyectos de estos tipos necesitan un fee estimate guardado (mismo que proyecto.py)
-export const ESTADOS_CON_FEE = ["Aceptado", "En curso"];
-export const TIPOS_CON_FEE = ["Contrato", "Contrato basado", "Subvención"];
+export const ESTADOS_CON_FEE = ["Aceptado"];
+export const TIPOS_CON_FEE = ["Licitación", "Contrato menor", "Contrato basado", "Subvención"];
 
 // Estados en los que un proyecto tiene la pestaña Gastos (mismos que ESTADOS_CON_GASTOS en gastos.py)
-export const ESTADOS_CON_GASTOS = ["Aceptado", "En curso", "Cerrado"];
+export const ESTADOS_CON_GASTOS = ["Aceptado", "Cerrado"];
 
 // Estados que suman en la fila de total del Pipeline
-export const ESTADOS_SUMAN_TOTAL = ["Aceptado", "En curso"];
+export const ESTADOS_SUMAN_TOTAL = ["Aceptado"];

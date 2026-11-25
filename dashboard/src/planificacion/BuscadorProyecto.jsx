@@ -4,7 +4,7 @@ import { useDebounced } from "../hooks/useDebounced";
 import { ESTILOS } from "../lib/estilos";
 
 // Botón "+ Añadir proyecto" que se convierte en un buscador de proyectos planificables
-// (aceptados o en curso, sin acuerdos marco). `excluir` son los que ya están en la tabla.
+// (aceptados, sin acuerdos marco). `excluir` son los que ya están en la tabla.
 export default function BuscadorProyecto({
   excluir,
   onElegir,
@@ -86,7 +86,7 @@ export default function BuscadorProyecto({
       >
         {isLoading && <li className="px-3 py-2 text-sm text-white/50">Buscando…</li>}
         {!isLoading && resultados.length === 0 && (
-          <li className="px-3 py-2 text-sm text-white/50">Sin proyectos aceptados o en curso que coincidan</li>
+          <li className="px-3 py-2 text-sm text-white/50">Sin proyectos aceptados que coincidan</li>
         )}
         {resultados.map((p, i) => (
           <li

@@ -1,5 +1,5 @@
 import { useFrappeGetCall } from "frappe-react-sdk";
-import { TIPOS, VIAS, ESTADOS } from "./opciones";
+import { TIPOS, ESTADOS } from "./opciones";
 import { ESTILOS } from "../lib/estilos";
 import BuscadorCliente from "../componentes/BuscadorCliente";
 import CampoImporte from "../componentes/CampoImporte";
@@ -39,14 +39,13 @@ export default function Filtros({ filtros, onCambiar, onLimpiar }) {
 
   return (
     <div className="mb-6 rounded-xl bg-salvia-900 p-5">
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-7">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
         <BuscadorCliente
           valor={filtros.cliente}
           onChange={(v) => onCambiar("cliente", v)}
           clases={clases}
         />
         <Selector etiqueta="Tipo" valor={filtros.tipo} opciones={TIPOS} onChange={(v) => onCambiar("tipo", v)} />
-        <Selector etiqueta="Vía" valor={filtros.via} opciones={VIAS} onChange={(v) => onCambiar("via", v)} />
         <Selector etiqueta="Estado" valor={filtros.estado} opciones={ESTADOS} onChange={(v) => onCambiar("estado", v)} />
         <Selector
           etiqueta="Responsable"

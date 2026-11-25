@@ -1,144 +1,148 @@
 import frappe
-from frappe.utils import add_months, flt, getdate, nowdate
+from frappe.utils import cint, flt, getdate, nowdate
 
-from prototipo.roles import ROLES_GESTION, exigir_rol
+from prototipo.roles import ROLES_DIRECCION, ROLES_GESTION, exigir_rol, tiene_rol
 
-# Estados en los que el proyecto se ha ganado (el cliente lo ha aceptado)
-ESTADOS_GANADOS = ("Aceptado", "En curso", "Cerrado")
-# Estados de la cartera viva: ganado y todavía sin terminar
-ESTADOS_VIVOS = ("Aceptado", "En curso")
-ESTADOS = ("Oportunidad", *ESTADOS_GANADOS, "Rechazado")
+# Cartera viva: proyectos aceptados que aún no se han cerrado
+ESTADOS_VIVOS = ("Aceptado",)
+# Lo conseguido en un año: lo aceptado, esté vivo o ya cerrado
+ESTADOS_GANADOS = ("Aceptado", "Cerrado")
 
-# Clientes que se muestran en el gráfico; el resto se agrupa en "Otros"
-MAX_CLIENTES = 8
-MESES = 12
+# Columnas del pipeline, en orden; "Aceptado" incluye los cerrados
+PIPELINE = ("Aceptado", "Propuesta", "Oportunidad", "Rechazado")
+COLUMNA_DE_ESTADO = {"Aceptado": "Aceptado", "Cerrado": "Aceptado"}
 
-CAMPOS = [
-	"name",
-	"cliente",
-	"tipo",
-	"via",
-	"estado",
-	"importe",
-	"importe_consumido",
-	"importe_disponible",
-	"acuerdo_marco",
-	"fecha_alta",
-]
+# Tipos del reparto por tipo, siempre en este orden (aunque no tengan importe)
+TIPOS = ("Subvención", "Acuerdo marco", "Licitación", "Contrato menor")
+
+CAMPOS = ["name", "cliente", "tipo", "estado", "importe", "fecha_alta"]
 
 
-def resumen(proyectos):
-	return {"num": len(proyectos), "importe": sum(flt(p.importe) for p in proyectos)}
+def importes_por_anio(nombres):
+	"""{proyecto: {año: importe}} de los proyectos indicados, desde su tabla Importe por año."""
+	por_proyecto = {}
+	if not nombres:
+		return por_proyecto
+	for f in frappe.get_all(
+		"Importe Anual",
+		filters={"parenttype": "Proyecto", "parent": ["in", nombres]},
+		fields=["parent", "anio", "importe"],
+	):
+		anios = por_proyecto.setdefault(f.parent, {})
+		anios[cint(f.anio)] = anios.get(cint(f.anio), 0) + flt(f.importe)
+	return por_proyecto
 
 
-def reparto(proyectos, campo, vacio="Sin especificar"):
-	"""Importe ganado y en oportunidad agrupado por un campo, de mayor a menor importe total."""
+def repartir_por_anio(proyectos):
+	"""Añade a cada proyecto `por_anio` ({año: importe}). Sin importe por año (no tiene fechas de
+	inicio y fin, algo habitual en oportunidades y propuestas), todo su importe va al año de alta."""
+	tabla = importes_por_anio([p.name for p in proyectos])
+	for p in proyectos:
+		p.por_anio = tabla.get(p.name) or (
+			{getdate(p.fecha_alta).year: flt(p.importe)} if p.fecha_alta else {}
+		)
+
+
+def objetivo_del_anio(anio):
+	valor = frappe.db.get_value("Objetivo Anual", {"anio": anio}, "importe")
+	return flt(valor) if valor is not None else None
+
+
+def reparto(proyectos, anio, clave, vacio):
+	"""Importe en el año y nº de proyectos agrupados por `clave(p)`, de mayor a menor importe."""
 	grupos = {}
 	for p in proyectos:
-		g = grupos.setdefault(p.get(campo) or vacio, {"num": 0, "ganado": 0, "oportunidad": 0})
+		importe = p.por_anio.get(anio, 0)
+		if not importe:
+			continue
+		g = grupos.setdefault(clave(p) or vacio, {"num": 0, "importe": 0})
 		g["num"] += 1
-		g["ganado" if p.estado in ESTADOS_GANADOS else "oportunidad"] += flt(p.importe)
-	filas = [{"clave": clave, **g} for clave, g in grupos.items()]
-	filas.sort(key=lambda f: f["ganado"] + f["oportunidad"], reverse=True)
+		g["importe"] += importe
+	filas = [{"clave": k, **g} for k, g in grupos.items()]
+	filas.sort(key=lambda f: f["importe"], reverse=True)
 	return filas
 
 
-def agrupar_resto(filas, maximo):
-	"""Deja las `maximo` primeras filas y suma las demás en una fila "Otros"."""
-	if len(filas) <= maximo:
-		return filas
-	resto = filas[maximo - 1 :]
-	otros = {
-		"clave": f"Otros ({len(resto)})",
-		"num": sum(f["num"] for f in resto),
-		"ganado": sum(f["ganado"] for f in resto),
-		"oportunidad": sum(f["oportunidad"] for f in resto),
-		"es_resto": True,
-	}
-	return [*filas[: maximo - 1], otros]
-
-
-def altas_por_mes(proyectos):
-	"""Número e importe de los proyectos dados de alta en cada uno de los últimos MESES meses."""
-	primero = getdate(add_months(nowdate(), -(MESES - 1))).replace(day=1)
-	meses = {}
-	for i in range(MESES):
-		mes = getdate(add_months(primero, i)).strftime("%Y-%m")
-		meses[mes] = {"mes": mes, "num": 0, "importe": 0}
-	for p in proyectos:
-		if not p.fecha_alta:
-			continue
-		mes = getdate(p.fecha_alta).strftime("%Y-%m")
-		if mes in meses:
-			meses[mes]["num"] += 1
-			meses[mes]["importe"] += flt(p.importe)
-	return list(meses.values())
-
-
 @frappe.whitelist()
-def obtener_panel():
-	"""Indicadores y repartos del pipeline de proyectos para el panel. Solo para los roles de gestión.
+def obtener_panel(anio=None):
+	"""Datos del panel. Solo para los roles de gestión.
 
-	Los importes suman los proyectos principales (contratos, acuerdos marco y subvenciones), como las
-	filas de la página Proyectos: el importe de los contratos basados ya está dentro del de su acuerdo
-	marco, y sumar los dos lo contaría dos veces."""
+	- Cartera viva (siempre del año actual): objetivo del año, importe total de los proyectos aceptados
+	  (sin límite de año), importe de este año de lo aceptado (vivo o cerrado) y % sobre el objetivo.
+	- Pipeline del año `anio` (por defecto, el actual): importe de ese año por estado, por cliente y por
+	  tipo. Los repartos por cliente y tipo son de lo aceptado, como el importe del año.
+
+	Los importes suman los proyectos principales, como las filas de la página Proyectos: el importe de
+	los contratos basados ya está dentro del de su acuerdo marco, y sumar los dos lo contaría dos veces."""
 	exigir_rol(*ROLES_GESTION)
 
-	proyectos = frappe.get_list("Proyecto", fields=CAMPOS, limit_page_length=0)
-	principales = [p for p in proyectos if not p.acuerdo_marco]
-	por_estado = {e: [p for p in principales if p.estado == e] for e in ESTADOS}
+	actual = getdate(nowdate()).year
+	anio = cint(anio) or actual
 
+	principales = frappe.get_list(
+		"Proyecto", filters=[["acuerdo_marco", "is", "not set"]], fields=CAMPOS, limit_page_length=0
+	)
+	repartir_por_anio(principales)
+
+	vivos = [p for p in principales if p.estado in ESTADOS_VIVOS]
 	ganados = [p for p in principales if p.estado in ESTADOS_GANADOS]
-	rechazados = por_estado["Rechazado"]
 
-	# Saldo de los acuerdos marco vivos: lo que aún se puede encargar con contratos basados
-	acuerdos = [p for p in principales if p.tipo == "Acuerdo marco" and p.estado != "Rechazado"]
-	acuerdos_vivos = [a for a in acuerdos if a.estado in ESTADOS_VIVOS]
-	basados_por_acuerdo = {}
-	for p in proyectos:
-		if p.acuerdo_marco:
-			basados_por_acuerdo[p.acuerdo_marco] = basados_por_acuerdo.get(p.acuerdo_marco, 0) + 1
+	# --- Cartera viva ---
+	objetivo = objetivo_del_anio(actual)
+	importe_actual = sum(p.por_anio.get(actual, 0) for p in ganados)
 
-	# Lo que está en juego o ganado; los rechazados solo cuentan en el estado y en la tasa de éxito
-	en_juego = [p for p in principales if p.estado != "Rechazado"]
+	# --- Pipeline del año ---
+	columnas = {c: {"estado": c, "num": 0, "importe": 0} for c in PIPELINE}
+	for p in principales:
+		columna = COLUMNA_DE_ESTADO.get(p.estado, p.estado)
+		importe = p.por_anio.get(anio, 0)
+		if columna in columnas and importe:
+			columnas[columna]["num"] += 1
+			columnas[columna]["importe"] += importe
+
+	por_tipo = {f["clave"]: f for f in reparto(ganados, anio, lambda p: p.tipo, "Sin tipo")}
+
+	anios = {actual}
+	for p in principales:
+		anios.update(p.por_anio)
 
 	return {
-		"indicadores": {
-			"oportunidad": resumen(por_estado["Oportunidad"]),
-			"cartera": resumen([p for p in principales if p.estado in ESTADOS_VIVOS]),
-			"cerrado": resumen(por_estado["Cerrado"]),
-			"rechazado": resumen(rechazados),
-			# Tasa de éxito: ganados frente a decididos (ganados + rechazados)
-			"tasa_exito": {
-				"ganados": len(ganados),
-				"decididos": len(ganados) + len(rechazados),
-			},
-			"acuerdos": {
-				"num": len(acuerdos_vivos),
-				"importe": sum(flt(a.importe) for a in acuerdos_vivos),
-				"consumido": sum(flt(a.importe_consumido) for a in acuerdos_vivos),
-				"disponible": sum(flt(a.importe_disponible) for a in acuerdos_vivos),
-			},
+		"cartera": {
+			"anio": actual,
+			"objetivo": objetivo,
+			"importe_total": sum(flt(p.importe) for p in vivos),
+			"num_total": len(vivos),
+			"importe_anio": importe_actual,
+			"num_anio": sum(1 for p in ganados if p.por_anio.get(actual)),
+			"puede_editar_objetivo": tiene_rol(*ROLES_DIRECCION),
 		},
-		"por_estado": [{"estado": e, **resumen(por_estado[e])} for e in ESTADOS],
-		"por_tipo": reparto(en_juego, "tipo"),
-		"por_via": reparto(en_juego, "via"),
-		"por_cliente": agrupar_resto(reparto(en_juego, "cliente", "Sin cliente"), MAX_CLIENTES),
-		"por_mes": altas_por_mes(principales),
-		"acuerdos_marco": sorted(
-			(
-				{
-					"name": a.name,
-					"cliente": a.cliente,
-					"estado": a.estado,
-					"importe": flt(a.importe),
-					"consumido": flt(a.importe_consumido),
-					"disponible": flt(a.importe_disponible),
-					"contratos_basados": basados_por_acuerdo.get(a.name, 0),
-				}
-				for a in acuerdos
-			),
-			key=lambda a: a["importe"],
-			reverse=True,
-		),
+		"pipeline": {
+			"anio": anio,
+			"anios": sorted(anios, reverse=True),
+			"objetivo": objetivo_del_anio(anio),
+			"por_estado": list(columnas.values()),
+			"por_cliente": reparto(ganados, anio, lambda p: p.cliente, "Sin cliente"),
+			"por_tipo": [
+				por_tipo.pop(t, {"clave": t, "num": 0, "importe": 0}) for t in TIPOS
+			]
+			+ list(por_tipo.values()),
+		},
 	}
+
+
+@frappe.whitelist(methods=["POST"])
+def guardar_objetivo(anio, importe):
+	"""Fija el budget goal de un año. Solo dirección."""
+	exigir_rol(*ROLES_DIRECCION)
+	anio, importe = cint(anio), flt(importe)
+	if anio < 2000 or anio > 2100:
+		frappe.throw("Año no válido.")
+	if frappe.db.exists("Objetivo Anual", {"anio": anio}):
+		doc = frappe.get_doc("Objetivo Anual", {"anio": anio})
+		doc.importe = importe
+		doc.save(ignore_permissions=True)
+	else:
+		frappe.get_doc({"doctype": "Objetivo Anual", "anio": anio, "importe": importe}).insert(
+			ignore_permissions=True
+		)
+	return importe

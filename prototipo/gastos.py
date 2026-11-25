@@ -5,10 +5,10 @@ from frappe.utils import flt
 from prototipo.prototipo.doctype.propuesta.propuesta import coste_hora_medio
 
 # Estados en los que un proyecto muestra su pestaña Gastos
-ESTADOS_CON_GASTOS = ("Aceptado", "En curso", "Cerrado")
+ESTADOS_CON_GASTOS = ("Aceptado", "Cerrado")
 
 # Estados en los que se pueden registrar o cambiar gastos directos (cerrado: solo lectura)
-ESTADOS_GASTOS_EDITABLES = ("Aceptado", "En curso")
+ESTADOS_GASTOS_EDITABLES = ("Aceptado",)
 
 
 def coste_actual(empleado):

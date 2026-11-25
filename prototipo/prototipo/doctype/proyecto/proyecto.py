@@ -10,14 +10,16 @@ from prototipo.api.responsables import responsables_posibles
 
 # Prefijos de los proyectos que se crean sueltos.
 # Los contratos basados no tienen prefijo propio: su código deriva del acuerdo marco.
+# Licitación y contrato menor comparten la serie CON (antes eran un único tipo, Contrato).
 PREFIJOS = {
-	"Contrato": "CON",
+	"Licitación": "CON",
+	"Contrato menor": "CON",
 	"Acuerdo marco": "AM",
 	"Subvención": "SUB",
 }
 
 # Estados de un contrato basado que consumen presupuesto del acuerdo marco
-ESTADOS_COMPUTABLES = ("Aceptado", "En curso", "Cerrado")
+ESTADOS_COMPUTABLES = ("Aceptado", "Cerrado")
 
 # Estados en los que un acuerdo marco admite contratos basados (ya ha sido aceptado)
 ESTADOS_ACUERDO_CON_BASADOS = ESTADOS_COMPUTABLES
@@ -25,16 +27,13 @@ ESTADOS_ACUERDO_CON_BASADOS = ESTADOS_COMPUTABLES
 # Campos que el contrato basado hereda de su acuerdo marco
 CAMPOS_HEREDADOS = ("cliente",)
 
-# Vía de todos los contratos basados (y solo de ellos)
-VIA_BASADO = "Heredada"
-
 # Campos exclusivos de las subvenciones
 CAMPOS_SUBVENCION = ("lider_proyecto", "miembros_consorcio")
 
 # Para pasar a estos estados, los proyectos de estos tipos necesitan un fee estimate (Propuesta)
 # guardado con honorarios
-ESTADOS_CON_FEE = ("Aceptado", "En curso")
-TIPOS_CON_FEE = ("Contrato", "Contrato basado", "Subvención")
+ESTADOS_CON_FEE = ("Aceptado",)
+TIPOS_CON_FEE = ("Licitación", "Contrato menor", "Contrato basado", "Subvención")
 
 
 def tiene_fee(proyecto):
@@ -158,20 +157,13 @@ class Proyecto(Document):
 			if not acuerdo or acuerdo.tipo != "Acuerdo marco":
 				frappe.throw(f"{self.acuerdo_marco} no es un acuerdo marco.")
 			self.tipo = "Contrato basado"
-			self.via = VIA_BASADO
 			for campo in CAMPOS_HEREDADOS:
 				self.set(campo, acuerdo.get(campo))
 
 		elif self.tipo == "Contrato basado":
 			frappe.throw("Un contrato basado solo puede crearse desde un acuerdo marco.")
 
-		if self.tipo == "Subvención":
-			self.via = "Subvención"
-		else:
-			if self.via == "Subvención":
-				frappe.throw("Solo las subvenciones pueden tener la vía Subvención.")
-			if self.via == VIA_BASADO and not self.acuerdo_marco:
-				frappe.throw("La vía Heredada solo es para contratos basados.")
+		if self.tipo != "Subvención":
 			for campo in CAMPOS_SUBVENCION:
 				self.set(campo, None)
 
@@ -242,7 +234,7 @@ class Proyecto(Document):
 			frappe.throw("El responsable debe ser un empleado o coordinador activo.")
 
 	def validar_fee_estimate(self):
-		"""Para pasar a aceptado o en curso hace falta un fee estimate guardado con honorarios.
+		"""Para pasar a aceptado hace falta un fee estimate guardado con honorarios.
 		Solo se comprueba al cambiar de estado: los proyectos que ya estaban así (p. ej., migrados) se
 		siguen pudiendo editar. La importación de proyectos se salta la regla."""
 		if frappe.flags.importando_proyectos:
@@ -338,7 +330,7 @@ class Proyecto(Document):
 			frappe.delete_doc("Propuesta", self.name, ignore_permissions=True)
 
 	def propagar_a_contratos_basados(self):
-		"""Copia cliente y vía del acuerdo a sus contratos basados si han cambiado."""
+		"""Copia el cliente del acuerdo a sus contratos basados si han cambiado."""
 		cambios = {c: self.get(c) for c in CAMPOS_HEREDADOS if self.has_value_changed(c)}
 		if not cambios:
 			return

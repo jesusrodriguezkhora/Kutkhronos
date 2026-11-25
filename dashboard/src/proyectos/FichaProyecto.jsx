@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useFrappeCreateDoc, useFrappeGetCall, useFrappeUpdateDoc } from "frappe-react-sdk";
-import { TIPOS_SUELTOS, VIAS_NO_SUBVENCION, ESTADOS, ESTADOS_CON_FEE, TIPOS_CON_FEE, ESTADOS_CON_GASTOS } from "./opciones";
+import { TIPOS_SUELTOS, ESTADOS, ESTADOS_CON_FEE, TIPOS_CON_FEE, ESTADOS_CON_GASTOS } from "./opciones";
 import { UNIDADES, duracionDesdeFechas, finDesdeDuracion, textoDuracion } from "./duracion";
 import { aniosDelProyecto, alinear, repartir, sumar } from "./importes";
 import { ESTILOS } from "../lib/estilos";
@@ -21,7 +21,6 @@ function valoresIniciales(proyecto, acuerdoMarco) {
   return {
     tipo: proyecto?.tipo ?? (esNuevoBasado ? "Contrato basado" : ""),
     cliente: proyecto?.cliente ?? acuerdoMarco?.cliente ?? "",
-    via: proyecto?.via ?? (esNuevoBasado ? "Heredada" : ""),
     importe: proyecto?.importe ?? "",
     importes_anuales: (proyecto?.importes_anuales ?? []).map((f) => ({ anio: f.anio, importe: f.importe })),
     estado: proyecto?.estado ?? "Oportunidad",
@@ -40,7 +39,7 @@ function valoresIniciales(proyecto, acuerdoMarco) {
 }
 
 // Pestañas bajo la cabecera. La propuesta solo existe para proyectos ya guardados; los gastos, solo
-// para proyectos aceptados, en curso o cerrados (si no, la pestaña no se muestra).
+// para proyectos aceptados o cerrados (si no, la pestaña no se muestra).
 const PESTANAS = [
   { clave: "datos", etiqueta: "Datos" },
   { clave: "propuesta", etiqueta: "Fee Estimate" },
@@ -196,7 +195,7 @@ export default function FichaProyecto({
     esRechazado && (esNuevo || proyecto.estado !== "Rechazado" || !!proyecto.motivo_rechazo);
   const faltaMotivo = motivoObligatorio && !datos.motivo_rechazo.trim();
 
-  // Un proyecto nuevo que necesita fee no puede nacer aceptado ni en curso (su fee aún no existe)
+  // Un proyecto nuevo que necesita fee no puede nacer aceptado (su fee aún no existe)
   const exigeFee = TIPOS_CON_FEE.includes(datos.tipo);
   const estadosPosibles = esNuevo && exigeFee ? ESTADOS.filter((e) => !ESTADOS_CON_FEE.includes(e)) : ESTADOS;
 
@@ -244,12 +243,11 @@ export default function FichaProyecto({
     cambiar("importes_anuales", filasAnuales.map((f) => (f.anio === anio ? { ...f, importe: valor } : f)));
   const repartirAnual = () => cambiar("importes_anuales", repartir(datos.importe, anios));
 
-  // Al elegir tipo, la vía sigue la regla Subvención ⟺ vía Subvención
+  // Un proyecto nuevo que pasa a necesitar fee vuelve a oportunidad si estaba aceptado
   const cambiarTipo = (tipo) =>
     setDatos((d) => ({
       ...d,
       tipo,
-      via: tipo === "Subvención" ? "Subvención" : d.via === "Subvención" ? "" : d.via,
       estado:
         esNuevo && TIPOS_CON_FEE.includes(tipo) && ESTADOS_CON_FEE.includes(d.estado) ? "Oportunidad" : d.estado,
     }));
@@ -301,10 +299,9 @@ export default function FichaProyecto({
       canarias: datos.canarias ? 1 : 0,
       motivo_rechazo: esRechazado ? datos.motivo_rechazo.trim() || null : null,
     };
-    // Cliente y vía de un contrato basado los fija el servidor (herencia del acuerdo)
+    // El cliente de un contrato basado lo fija el servidor (herencia del acuerdo)
     if (!esBasado) {
       valores.cliente = datos.cliente || null;
-      valores.via = datos.via || null;
     }
     if (esSubvencion) {
       valores.lider_proyecto = datos.lider_proyecto || null;
@@ -334,7 +331,7 @@ export default function FichaProyecto({
 
   const subtitulo = esNuevo ? null : editando ? "Editando" : proyecto.tipo;
   const etiquetaCliente = esSubvencion ? "Donante" : "Cliente";
-  const puedeGuardar = !guardando && datos.tipo && datos.via && !faltaMotivo && !anualNoCuadra;
+  const puedeGuardar = !guardando && datos.tipo && !faltaMotivo && !anualNoCuadra;
 
   // --- Cuerpo en modo detalle ---
   const vistaDetalle = !esNuevo && (
@@ -343,7 +340,6 @@ export default function FichaProyecto({
       <Dato etiqueta={proyecto.tipo === "Subvención" ? "Donante" : "Cliente"}>
         {proyecto.cliente}
       </Dato>
-      <Dato etiqueta="Vía">{proyecto.via}</Dato>
       <Dato etiqueta="Estado">{proyecto.estado}</Dato>
       <Dato etiqueta="Importe">{formatearImporte(proyecto.importe)}</Dato>
       <Dato etiqueta="Fecha de alta">{formatearFecha(proyecto.fecha_alta)}</Dato>
@@ -429,19 +425,6 @@ export default function FichaProyecto({
           clases={clases}
           etiqueta={etiquetaCliente}
           placeholder={`Selecciona un ${etiquetaCliente.toLowerCase()}`}
-        />
-      )}
-
-      {/* Vía: heredada en contratos basados, fija en subvenciones */}
-      {esBasado || esSubvencion ? (
-        <CampoLectura etiqueta="Vía" valor={datos.via} />
-      ) : (
-        <Selector
-          etiqueta="Vía"
-          valor={datos.via}
-          opciones={VIAS_NO_SUBVENCION}
-          onChange={(v) => cambiar("via", v)}
-          vacio="Selecciona una vía"
         />
       )}
 
@@ -647,19 +630,19 @@ export default function FichaProyecto({
         {esNuevo && "El código se generará automáticamente al guardar. "}
         {exigeFee &&
           (esNuevo
-            ? "Para pasarlo a aceptado o en curso, guárdalo primero y prepara su fee estimate. "
-            : "Para pasar a aceptado o en curso hace falta un fee estimate guardado con honorarios. ")}
+            ? "Para pasarlo a aceptado, guárdalo primero y prepara su fee estimate. "
+            : "Para pasar a aceptado hace falta un fee estimate guardado con honorarios. ")}
         {esBasado && (
           <>
             Contrato basado del acuerdo marco{" "}
             <span className="font-mono font-semibold text-salvia-950">
               {acuerdoMarco?.name ?? proyecto?.acuerdo_marco}
             </span>
-            : tipo, cliente y vía se heredan del acuerdo.{" "}
+            : tipo y cliente se heredan del acuerdo.{" "}
           </>
         )}
         {esNuevoBasado &&
-          "Solo restan del saldo los contratos basados aceptados, en curso o cerrados."}
+          "Solo restan del saldo los contratos basados aceptados o cerrados."}
       </p>
     </div>
   );

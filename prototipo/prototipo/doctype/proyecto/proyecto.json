@@ -8,7 +8,6 @@
  "field_order": [
   "cliente",
   "tipo",
-  "via",
   "importe",
   "importes_anuales",
   "importe_consumido",
@@ -44,24 +43,16 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Estado",
-   "options": "Oportunidad\nAceptado\nEn curso\nCerrado\nRechazado"
+   "options": "Oportunidad\nPropuesta\nAceptado\nCerrado\nRechazado"
   },
   {
    "fieldname": "tipo",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Tipo ",
-   "options": "Contrato\nContrato basado\nAcuerdo marco\nSubvenci\u00f3n",
+   "options": "Licitaci\u00f3n\nContrato menor\nAcuerdo marco\nSubvenci\u00f3n\nContrato basado",
    "read_only_depends_on": "eval:doc.acuerdo_marco",
    "reqd": 1
-  },
-  {
-   "fieldname": "via",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "V\u00eda",
-   "options": "Heredada\nContrato menor\nLicitaci\u00f3n p\u00fablica\nSubvenci\u00f3n\nContrataci\u00f3n directa",
-   "read_only_depends_on": "eval:doc.acuerdo_marco || doc.tipo==\"Subvenci\u00f3n\""
   },
   {
    "fieldname": "importe",
@@ -193,7 +184,7 @@
    "link_fieldname": "acuerdo_marco"
   }
  ],
- "modified": "2026-11-25 12:53:30.604174",
+ "modified": "2026-11-25 17:36:33.540121",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Proyecto",

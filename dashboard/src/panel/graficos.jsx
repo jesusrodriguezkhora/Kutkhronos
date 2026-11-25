@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { formatearImporte, formatearImporteCompacto } from "../lib/formato";
-import { SERIES, etiquetaMes, maximoRedondo } from "./series";
+import { formatearImporte, formatearImporteCompacto, formatearPorcentaje } from "../lib/formato";
+import { SERIES } from "./series";
 
 // --- Piezas comunes ---
 
@@ -131,7 +131,8 @@ export function Medidor({ parte, total, etiqueta, className = "mt-3" }) {
 
 // Una fila por categoría; cada barra suma sus segmentos (series), separados por un hueco de 2 px.
 // filas: [{ clave, num, segmentos: { serie: importe } }]
-export function BarrasHorizontales({ filas, series, anchoEtiqueta = "w-32" }) {
+// Con `total`, al lado del importe va su % sobre ese total; sin él, el nº de proyectos.
+export function BarrasHorizontales({ filas, series, total: totalReferencia, anchoEtiqueta = "w-32" }) {
   const total = (f) => series.reduce((s, serie) => s + (f.segmentos[serie] || 0), 0);
   const maximo = Math.max(0, ...filas.map(total));
 
@@ -162,9 +163,11 @@ export function BarrasHorizontales({ filas, series, anchoEtiqueta = "w-32" }) {
                 />
               ))}
             </div>
-            <span className="w-24 shrink-0 text-right tabular-nums">
+            <span className={`${totalReferencia ? "w-32" : "w-24"} shrink-0 text-right tabular-nums`}>
               <span className="font-medium">{formatearImporteCompacto(suma)}</span>
-              <span className="ml-1.5 text-xs text-salvia-950/50">{f.num}</span>
+              <span className="ml-1.5 inline-block min-w-[2rem] text-xs text-salvia-950/50">
+                {totalReferencia ? formatearPorcentaje(suma, totalReferencia) : f.num}
+              </span>
             </span>
 
             <Globo className="bottom-full left-1/3 mb-1">
@@ -185,88 +188,5 @@ export function BarrasHorizontales({ filas, series, anchoEtiqueta = "w-32" }) {
         );
       })}
     </ul>
-  );
-}
-
-// --- Columnas por mes ---
-
-const ALTO_GRAFICO = 160; // px del área de dibujo, sin contar las etiquetas de los meses
-
-export function ColumnasMes({ meses }) {
-  const maximo = maximoRedondo(Math.max(0, ...meses.map((m) => m.importe)));
-  const destacado = meses.reduce((a, b) => (b.importe > a.importe ? b : a), meses[0]);
-
-  return (
-    // pt-6: hueco para la etiqueta de la columna más alta, que va encima de ella
-    <div className="flex gap-2 pt-6">
-      {/* Eje: 0, mitad y máximo */}
-      <div
-        className="relative w-14 shrink-0 text-right text-xs tabular-nums text-salvia-950/50"
-        style={{ height: ALTO_GRAFICO }}
-      >
-        {[1, 0.5, 0].map((f) => (
-          <span
-            key={f}
-            className="absolute right-0 -translate-y-1/2"
-            style={{ top: (1 - f) * ALTO_GRAFICO }}
-          >
-            {formatearImporteCompacto(maximo * f)}
-          </span>
-        ))}
-      </div>
-
-      <div className="flex-1">
-        <div className="relative" style={{ height: ALTO_GRAFICO }}>
-          {[1, 0.5, 0].map((f) => (
-            <div
-              key={f}
-              className="absolute inset-x-0 border-t border-salvia-900/10"
-              style={{ top: (1 - f) * ALTO_GRAFICO }}
-            />
-          ))}
-          <div className="absolute inset-0 flex">
-            {meses.map((m) => {
-              const alto = (m.importe / maximo) * ALTO_GRAFICO;
-              return (
-                <div
-                  key={m.mes}
-                  tabIndex={0}
-                  className="group relative flex flex-1 items-end justify-center outline-none focus-visible:bg-salvia/10 hover:bg-salvia/10"
-                >
-                  {m === destacado && m.importe > 0 && (
-                    <span
-                      className="absolute text-xs font-medium tabular-nums"
-                      style={{ bottom: alto + 4 }}
-                    >
-                      {formatearImporteCompacto(m.importe)}
-                    </span>
-                  )}
-                  {m.importe > 0 && (
-                    <div
-                      className="w-full max-w-[24px] rounded-t bg-salvia-700"
-                      style={{ height: Math.max(alto, 2) }}
-                    />
-                  )}
-                  <Globo className="bottom-full mb-1">
-                    <p className="font-semibold">{etiquetaMes(m.mes, true)}</p>
-                    <p className="tabular-nums">{formatearImporte(m.importe)}</p>
-                    <p className="text-white/60">
-                      {m.num} {m.num === 1 ? "alta" : "altas"}
-                    </p>
-                  </Globo>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        <div className="mt-1.5 flex text-xs text-salvia-950/50">
-          {meses.map((m, i) => (
-            <span key={m.mes} className="flex-1 text-center">
-              {etiquetaMes(m.mes, i === 0)}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
