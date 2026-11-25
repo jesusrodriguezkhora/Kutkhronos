@@ -10,6 +10,7 @@
   "tipo",
   "via",
   "importe",
+  "importes_anuales",
   "importe_consumido",
   "importe_disponible",
   "estado",
@@ -183,6 +184,12 @@
    "fieldtype": "Select",
    "label": "Unidad",
    "options": "Meses\nA\u00f1os"
+  },
+  {
+   "fieldname": "importes_anuales",
+   "fieldtype": "Table",
+   "label": "Importe por a\u00f1o",
+   "options": "Importe Anual"
   }
  ],
  "grid_page_length": 50,
@@ -194,7 +201,7 @@
    "link_fieldname": "acuerdo_marco"
   }
  ],
- "modified": "2026-11-25 12:20:47.231718",
+ "modified": "2026-11-25 12:33:49.883792",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Proyecto",

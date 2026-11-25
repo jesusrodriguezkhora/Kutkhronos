@@ -1,9 +1,10 @@
 import math
+from datetime import timedelta
 
 import frappe
 from frappe.model.document import Document
 from frappe.model.naming import getseries, make_autoname
-from frappe.utils import add_months, flt, fmt_money, getdate, nowdate
+from frappe.utils import add_months, cint, flt, fmt_money, getdate, nowdate
 
 from prototipo.api.responsables import responsables_posibles
 
@@ -90,6 +91,24 @@ def a_meses(duracion, unidad):
 	return math.ceil(meses - 1e-9)
 
 
+def anios_del_proyecto(inicio, fin):
+	"""Años naturales que toca el proyecto. La fecha de fin no cuenta como día trabajado (un
+	proyecto de 12 meses del 01/01/2026 al 01/01/2027 es solo de 2026). Sin fechas: []."""
+	if not inicio or not fin or getdate(fin) < getdate(inicio):
+		return []
+	inicio, fin = getdate(inicio), getdate(fin)
+	ultimo = fin - timedelta(days=1) if fin > inicio else fin
+	return list(range(inicio.year, ultimo.year + 1))
+
+
+def repartir_importe(importe, anios):
+	"""Reparto por defecto: importe / número de años, en céntimos; la diferencia del redondeo va al
+	último año, para que la suma sea exactamente el importe. [(año, importe), …]"""
+	centimos = round(flt(importe) * 100)
+	base = centimos // len(anios)
+	resto = centimos - base * len(anios)
+	return [(a, (base + (resto if i == len(anios) - 1 else 0)) / 100) for i, a in enumerate(anios)]
+
 class Proyecto(Document):
 	# begin: auto-generated types
 	# ... (conserva aquí el bloque de tu fichero)
@@ -119,6 +138,7 @@ class Proyecto(Document):
 		self.normalizar()
 		self.calcular_duracion()
 		self.validar_fechas()
+		self.validar_importes_anuales()
 		self.validar_responsable()
 		self.validar_fee_estimate()
 		self.validar_motivo_rechazo()
@@ -183,6 +203,39 @@ class Proyecto(Document):
 		# terminado antes. La regla que importa es entre inicio y fin.
 		if self.fecha_fin and self.fecha_inicio and getdate(self.fecha_fin) < getdate(self.fecha_inicio):
 			frappe.throw("La fecha de fin no puede ser anterior a la fecha de inicio.")
+
+	def validar_importes_anuales(self):
+		"""Una fila por año natural del proyecto y, entre todas, el importe total. Si llega vacía, se
+		pone el reparto por defecto. Sin fechas de inicio y fin, no hay filas."""
+		anios = anios_del_proyecto(self.fecha_inicio, self.fecha_fin)
+		if not anios:
+			self.set("importes_anuales", [])
+			return
+		if not self.importes_anuales:
+			self.set("importes_anuales", [{"anio": a, "importe": i} for a, i in repartir_importe(self.importe, anios)])
+			return
+
+		por_anio = {}
+		for fila in self.importes_anuales:
+			anio = cint(fila.anio)
+			if anio in por_anio:
+				frappe.throw(f"El año {anio} está repetido en el importe por año.")
+			if flt(fila.importe) < 0:
+				frappe.throw(f"El importe de {anio} no puede ser negativo.")
+			por_anio[anio] = flt(fila.importe, 2)
+
+		if sorted(por_anio) != anios:
+			frappe.throw(
+				f"El importe por año debe tener una fila por cada año del proyecto ({anios[0]} a {anios[-1]})."
+			)
+		suma = sum(por_anio.values())
+		if abs(suma - flt(self.importe)) > 0.005:
+			frappe.throw(
+				f"La suma del importe por año ({fmt_money(suma, currency='EUR')}) debe ser igual al importe "
+				f"total ({fmt_money(self.importe, currency='EUR')})."
+			)
+		# Ordenadas por año
+		self.set("importes_anuales", [{"anio": a, "importe": por_anio[a]} for a in anios])
 
 	def validar_responsable(self):
 		# Solo se comprueba al ponerlo o cambiarlo: si un empleado se da de baja más tarde,

@@ -7,3 +7,4 @@
 prototipo.patches.renombrar_observaciones_a_descripcion
 prototipo.patches.renombrar_posiciones
 prototipo.patches.congelar_coste_imputacion
+prototipo.patches.rellenar_importes_anuales

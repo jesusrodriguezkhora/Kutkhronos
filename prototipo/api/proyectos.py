@@ -85,6 +85,19 @@ def anadir_nombre_responsable(proyectos):
 	for p in proyectos:
 		p["responsable_nombre"] = nombres.get(p.responsable)
 
+def anadir_importes_anuales(proyectos):
+	"""Añade importes_anuales ([{anio, importe}], por año) a cada proyecto, en una sola consulta."""
+	nombres = [p.name for p in proyectos]
+	por_proyecto = {}
+	for f in frappe.get_all(
+		"Importe Anual",
+		filters={"parenttype": "Proyecto", "parent": ["in", nombres or [""]]},
+		fields=["parent", "anio", "importe"],
+		order_by="anio asc",
+	):
+		por_proyecto.setdefault(f.parent, []).append({"anio": f.anio, "importe": f.importe})
+	for p in proyectos:
+		p["importes_anuales"] = por_proyecto.get(p.name, [])
 
 @frappe.whitelist()
 def obtener_proyectos(filtros=None):
@@ -124,7 +137,9 @@ def obtener_proyectos(filtros=None):
 			# Si el acuerdo solo está como contexto, mostramos únicamente los que cumplen
 			p["contratos_basados"] = basados if p.cumple_filtro else [c for c in basados if c.cumple_filtro]
 
-	anadir_nombre_responsable(principales + [c for p in principales for c in p.get("contratos_basados", [])])
+	todos = principales + [c for p in principales for c in p.get("contratos_basados", [])]
+	anadir_nombre_responsable(todos)
+	anadir_importes_anuales(todos)
 
 	principales.sort(key=lambda p: p.creation, reverse=True)
 

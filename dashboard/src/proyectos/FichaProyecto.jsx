@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useFrappeCreateDoc, useFrappeGetCall, useFrappeUpdateDoc } from "frappe-react-sdk";
 import { TIPOS_SUELTOS, VIAS_NO_SUBVENCION, ESTADOS, ESTADOS_CON_FEE, TIPOS_CON_FEE, ESTADOS_CON_GASTOS } from "./opciones";
 import { POR_DURACION, POR_FECHA_FIN, UNIDADES, duracionDesdeFechas, finDesdeDuracion, textoDuracion } from "./duracion";
+import { aniosDelProyecto, alinear, repartir, sumar } from "./importes";
 import { ESTILOS } from "../lib/estilos";
 import { mensajeDeError } from "../lib/errores";
 import { formatearImporte, formatearFecha } from "../lib/formato";
@@ -21,6 +22,7 @@ function valoresIniciales(proyecto, acuerdoMarco) {
     cliente: proyecto?.cliente ?? acuerdoMarco?.cliente ?? "",
     via: proyecto?.via ?? (esNuevoBasado ? "Heredada" : ""),
     importe: proyecto?.importe ?? "",
+    importes_anuales: (proyecto?.importes_anuales ?? []).map((f) => ({ anio: f.anio, importe: f.importe })),
     estado: proyecto?.estado ?? "Oportunidad",
     descripcion: proyecto?.descripcion ?? "",
     fecha_inicio: proyecto?.fecha_inicio ?? "",
@@ -213,6 +215,19 @@ export default function FichaProyecto({
     : duracionDesdeFechas(datos.fecha_inicio, datos.fecha_fin, datos.unidad_duracion);
   const faltaInicioParaDuracion = porDuracion && !datos.fecha_inicio;
 
+  // Importe por año: una fila por año natural. Sin filas guardadas (o sin tocar), el reparto por
+  // defecto sigue al importe; con filas, se conservan y solo se avisa si no cuadran.
+  const anios = aniosDelProyecto(datos.fecha_inicio, finCalculado);
+  const filasAnuales = datos.importes_anuales.length
+    ? alinear(datos.importes_anuales, anios)
+    : repartir(datos.importe, anios);
+  const sumaAnual = sumar(filasAnuales);
+  const anualNoCuadra = anios.length > 0 && Math.abs(sumaAnual - (Number(datos.importe) || 0)) > 0.005;
+
+  const cambiarAnual = (anio, valor) =>
+    cambiar("importes_anuales", filasAnuales.map((f) => (f.anio === anio ? { ...f, importe: valor } : f)));
+  const repartirAnual = () => cambiar("importes_anuales", repartir(datos.importe, anios));
+
   // Al elegir tipo, la vía sigue la regla Subvención ⟺ vía Subvención
   const cambiarTipo = (tipo) =>
     setDatos((d) => ({
@@ -265,6 +280,7 @@ export default function FichaProyecto({
       calculo_duracion: datos.calculo_duracion,
       duracion: duracionCalculada === "" ? null : Number(duracionCalculada),
       unidad_duracion: datos.unidad_duracion,
+      importes_anuales: filasAnuales.map((f) => ({ anio: f.anio, importe: Number(f.importe) || 0 })),
       responsable: datos.responsable || null,
       facturacion: datos.facturacion.trim() || null,
       canarias: datos.canarias ? 1 : 0,
@@ -303,7 +319,7 @@ export default function FichaProyecto({
 
   const subtitulo = esNuevo ? null : editando ? "Editando" : proyecto.tipo;
   const etiquetaCliente = esSubvencion ? "Donante" : "Cliente";
-  const puedeGuardar = !guardando && datos.tipo && datos.via && !faltaMotivo && !faltaInicioParaDuracion;
+  const puedeGuardar = !guardando && datos.tipo && datos.via && !faltaMotivo && !faltaInicioParaDuracion && !anualNoCuadra;
 
   // --- Cuerpo en modo detalle ---
   const vistaDetalle = !esNuevo && (
@@ -322,6 +338,14 @@ export default function FichaProyecto({
       <Dato etiqueta="Responsable">{proyecto.responsable_nombre || proyecto.responsable}</Dato>
       <Dato etiqueta="Facturación">{proyecto.facturacion}</Dato>
       <Dato etiqueta="Canarias">{proyecto.canarias ? "Sí (factura sin IVA)" : "No"}</Dato>
+
+      {proyecto.importes_anuales?.length > 0 && (
+        <Dato etiqueta="Importe por año" ancho>
+          {proyecto.importes_anuales
+            .map((f, i) => `Año ${i + 1} (${f.anio}): ${formatearImporte(f.importe)}`)
+            .join("\n")}
+        </Dato>
+      )}
 
       {proyecto.tipo === "Acuerdo marco" && (
         <>
@@ -468,6 +492,41 @@ export default function FichaProyecto({
             </label>
           ))}
         </div>
+
+        {anios.length > 0 && (
+        <div className="space-y-3 rounded-lg border border-salvia-900/10 p-4 sm:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className={clases.etiqueta}>Importe por año</span>
+            <span className={`text-xs tabular-nums ${anualNoCuadra ? "text-red-700" : "text-salvia-950/50"}`}>
+              Suma {formatearImporte(sumaAnual)} de {formatearImporte(Number(datos.importe) || 0)}
+            </span>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            {filasAnuales.map((f, i) => (
+              <div key={f.anio}>
+                <div className="mb-1 text-sm font-medium text-salvia-950">
+                  Año {i + 1} <span className="text-xs font-normal text-salvia-950/50">· {f.anio}</span>
+                </div>
+                <CampoImporte etiqueta="" valor={f.importe} onChange={(v) => cambiarAnual(f.anio, v)} clases={clases} />
+              </div>
+            ))}
+          </div>
+
+          {anualNoCuadra && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+              <span>La suma por año no coincide con el importe total. Ajusta los años o repártelo de nuevo.</span>
+              <button
+                type="button"
+                onClick={repartirAnual}
+                className="rounded-md bg-white px-3 py-1 font-semibold text-red-700 ring-1 ring-red-200 hover:bg-red-100"
+              >
+                Repartir a partes iguales
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
         <div className="grid gap-4 sm:grid-cols-3">
           <label className="block">
