@@ -28,7 +28,7 @@ ESTADOS_ACUERDO_CON_BASADOS = ESTADOS_COMPUTABLES
 CAMPOS_HEREDADOS = ("cliente",)
 
 # Campos exclusivos de las subvenciones
-CAMPOS_SUBVENCION = ("lider_proyecto", "miembros_consorcio")
+CAMPOS_SUBVENCION = ("lider_proyecto", "miembros_consorcio", "subtipo")
 
 # Para pasar a estos estados, los proyectos de estos tipos necesitan un fee estimate (Propuesta)
 # guardado con honorarios

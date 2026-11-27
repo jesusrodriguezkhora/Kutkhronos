@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useFrappeCreateDoc, useFrappeGetCall, useFrappeGetList, useFrappeUpdateDoc } from "frappe-react-sdk";
+import { useFrappeCreateDoc, useFrappeGetCall, useFrappeGetDocList, useFrappeUpdateDoc } from "frappe-react-sdk";
 import { TIPOS_SUELTOS, ESTADOS, ESTADOS_CON_FEE, TIPOS_CON_FEE, ESTADOS_CON_GASTOS } from "./opciones";
 import { UNIDADES, duracionDesdeFechas, finDesdeDuracion, textoDuracion } from "./duracion";
 import { aniosDelProyecto, alinear, repartir, sumar } from "./importes";
@@ -190,9 +190,9 @@ export default function FichaProyecto({
   const esSubvencion = datos.tipo === "Subvención";
 
   // Subtipos de subvención (los mantiene un administrador desde el Desk). Solo se piden al editar una subvención.
-  const { data: subtipos } = useFrappeGetList(
+  const { data: subtipos } = useFrappeGetDocList(
     "Subtipo Subvencion",
-    { fields: ["name"], orderBy: { field: "name", order: "asc" }, limit: 0 },
+    { fields: ["name"], orderBy: { field: "name", order: "asc" }, limit: 100 },
     editando && esSubvencion ? undefined : null
   );
 
@@ -383,13 +383,6 @@ export default function FichaProyecto({
       {proyecto.tipo === "Subvención" && (
         <>
           <TituloSeccion>Datos de la subvención</TituloSeccion>
-          <Selector
-            etiqueta="Subtipo"
-            valor={datos.subtipo}
-            opciones={(subtipos ?? []).map((s) => s.name)}
-            onChange={(v) => cambiar("subtipo", v)}
-            vacio="Sin subtipo"
-          />
           <Dato etiqueta="Subtipo">{proyecto.subtipo}</Dato>
           <Dato etiqueta="Líder del proyecto" ancho>
             {proyecto.lider_proyecto}
@@ -611,6 +604,13 @@ export default function FichaProyecto({
       {esSubvencion && (
         <>
           <TituloSeccion>Datos de la subvención</TituloSeccion>
+          <Selector
+            etiqueta="Subtipo"
+            valor={datos.subtipo}
+            opciones={(subtipos ?? []).map((s) => s.name)}
+            onChange={(v) => cambiar("subtipo", v)}
+            vacio="Sin subtipo"
+          />
           <label className="block sm:col-span-2">
             <span className={clases.etiqueta}>Líder del proyecto</span>
             <input
