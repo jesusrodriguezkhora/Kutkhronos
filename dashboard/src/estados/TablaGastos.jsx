@@ -25,12 +25,12 @@ function Fila({ categoria, detalle, planificadas, horas, gasto, previsto }) {
         <div className="font-medium text-salvia-950">{categoria}</div>
         {detalle && <div className="text-xs text-salvia-950/50">{detalle}</div>}
       </td>
-      <td className="py-2 pr-3 text-right tabular-nums text-salvia-950/60">
+      <td className="py-2 px-2 text-center tabular-nums text-salvia-950/60">
         {planificadas ?? <span className="text-salvia-950/30">—</span>}
       </td>
-      <td className="py-2 pr-3 text-right tabular-nums">{horas ?? <span className="text-salvia-950/30">—</span>}</td>
-      <td className="py-2 pr-3 text-right tabular-nums">{gasto}</td>
-      <td className="py-2 text-right tabular-nums text-salvia-950/50">{previsto}</td>
+      <td className="py-2 px-2 text-center tabular-nums">{horas ?? <span className="text-salvia-950/30">—</span>}</td>
+      <td className="py-2 px-2 text-center tabular-nums">{gasto}</td>
+      <td className="py-2 px-2 text-center tabular-nums text-salvia-950/50">{previsto}</td>
     </tr>
   );
 }
@@ -56,10 +56,10 @@ function FilaDirectos({ directos, mostrarProyecto }) {
             {n === 0 ? "Sin gastos registrados" : `${n} ${n === 1 ? "gasto registrado" : "gastos registrados"}`}
           </div>
         </td>
-        <td className="py-2 pr-3 text-right text-salvia-950/30">—</td>
-        <td className="py-2 pr-3 text-right text-salvia-950/30">—</td>
-        <td className="py-2 pr-3 text-right tabular-nums">{formatearImporte(directos.coste)}</td>
-        <td className="py-2 text-right tabular-nums text-salvia-950/50">{formatearImporte(directos.coste_previsto)}</td>
+        <td className="py-2 px-2 text-center text-salvia-950/30">—</td>
+        <td className="py-2 px-2 text-center text-salvia-950/30">—</td>
+        <td className="py-2 px-2 text-center tabular-nums">{formatearImporte(directos.coste)}</td>
+        <td className="py-2 px-2 text-center tabular-nums text-salvia-950/50">{formatearImporte(directos.coste_previsto)}</td>
       </tr>
 
       {abierta && (
@@ -123,14 +123,14 @@ export default function TablaGastos({ gastos: g }) {
         <thead>
           <tr className="border-b border-salvia-900/10 text-left">
             <th className={th}>Categoría</th>
-            <th className={`${th} w-28 pr-3 text-right`} title="Horas planificadas hasta hoy">
+            <th className={`${th} w-28 px-2 text-center`} title="Horas planificadas hasta hoy">
               Planificadas
             </th>
-            <th className={`${th} w-20 pr-3 text-right`} title="Horas cargadas en la carga de horas">
+            <th className={`${th} w-28 px-2 text-center`} title="Horas cargadas en la carga de horas">
               Cargadas
             </th>
-            <th className={`${th} w-28 pr-3 text-right`}>Gasto</th>
-            <th className={`${th} w-28 text-right`}>Previsto</th>
+            <th className={`${th} w-28 px-2 text-center`}>Gasto</th>
+            <th className={`${th} w-28 px-2 text-center`}>Previsto</th>
           </tr>
         </thead>
 
@@ -160,16 +160,16 @@ export default function TablaGastos({ gastos: g }) {
         <tfoot>
           <tr className="border-t-2 border-salvia-900/15">
             <td className="pt-3 font-bold text-salvia-950">Gasto total</td>
-            <td className="pt-3 pr-3 text-right font-bold tabular-nums text-salvia-950/60">
+            <td className="pt-3 px-2 text-center font-bold tabular-nums text-salvia-950/60">
               {g.personal.horas_planificadas ? `${horasTexto.format(g.personal.horas_planificadas)} h` : ""}
             </td>
-            <td className="pt-3 pr-3 text-right font-bold tabular-nums text-salvia-950">
+            <td className="pt-3 px-2 text-center font-bold tabular-nums text-salvia-950">
               {g.personal.horas ? `${horasTexto.format(g.personal.horas)} h` : ""}
             </td>
-            <td className="pt-3 pr-3 text-right font-bold tabular-nums text-salvia-950">
+            <td className="pt-3 px-2 text-center font-bold tabular-nums text-salvia-950">
               {formatearImporte(g.total.real)}
             </td>
-            <td className="pt-3 text-right font-bold tabular-nums text-salvia-950/50">
+            <td className="pt-3 px-2 text-center font-bold tabular-nums text-salvia-950/50">
               {g.total.previsto ? formatearImporte(g.total.previsto) : "—"}
             </td>
           </tr>
