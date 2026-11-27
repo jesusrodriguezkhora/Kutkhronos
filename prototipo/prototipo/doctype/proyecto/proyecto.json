@@ -43,7 +43,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Estado",
-   "options": "Oportunidad\nPropuesta\nAceptado\nCerrado\nRechazado"
+   "options": "Oportunidad\nPropuesta\nAceptado\nRechazado"
   },
   {
    "fieldname": "tipo",
@@ -184,7 +184,7 @@
    "link_fieldname": "acuerdo_marco"
   }
  ],
- "modified": "2026-11-25 17:36:33.540121",
+ "modified": "2026-11-27 11:05:55.792068",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Proyecto",

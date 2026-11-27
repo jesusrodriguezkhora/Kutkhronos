@@ -3,14 +3,14 @@ from frappe.utils import cint, flt, getdate, nowdate
 
 from prototipo.roles import ROLES_DIRECCION, ROLES_GESTION, exigir_rol, tiene_rol
 
-# Cartera viva: proyectos aceptados que aún no se han cerrado
+# Cartera viva: proyectos aceptados
 ESTADOS_VIVOS = ("Aceptado",)
-# Lo conseguido en un año: lo aceptado, esté vivo o ya cerrado
-ESTADOS_GANADOS = ("Aceptado", "Cerrado")
+# Lo conseguido en un año: lo aceptado
+ESTADOS_GANADOS = ("Aceptado",)
 
-# Columnas del pipeline, en orden; "Aceptado" incluye los cerrados
+# Columnas del pipeline, en orden
 PIPELINE = ("Aceptado", "Propuesta", "Oportunidad", "Rechazado")
-COLUMNA_DE_ESTADO = {"Aceptado": "Aceptado", "Cerrado": "Aceptado"}
+COLUMNA_DE_ESTADO = {"Aceptado": "Aceptado"}
 
 # Tipos del reparto por tipo, siempre en este orden (aunque no tengan importe)
 TIPOS = ("Subvención", "Acuerdo marco", "Licitación", "Contrato menor")

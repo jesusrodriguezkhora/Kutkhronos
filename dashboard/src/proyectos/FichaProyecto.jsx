@@ -39,7 +39,7 @@ function valoresIniciales(proyecto, acuerdoMarco) {
 }
 
 // Pestañas bajo la cabecera. La propuesta solo existe para proyectos ya guardados; los gastos, solo
-// para proyectos aceptados o cerrados (si no, la pestaña no se muestra).
+// para proyectos aceptados (si no, la pestaña no se muestra).
 const PESTANAS = [
   { clave: "datos", etiqueta: "Datos" },
   { clave: "propuesta", etiqueta: "Fee Estimate" },
@@ -642,7 +642,7 @@ export default function FichaProyecto({
           </>
         )}
         {esNuevoBasado &&
-          "Solo restan del saldo los contratos basados aceptados o cerrados."}
+          "Solo restan del saldo los contratos basados aceptados."}
       </p>
     </div>
   );

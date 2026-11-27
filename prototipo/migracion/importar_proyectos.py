@@ -63,7 +63,7 @@ TIPOS = {
 ESTADO_BASADO_SIN_ESTADO = None
 
 # Estados del Excel que ya no existen en Khronos -> estado actual
-ESTADOS_ANTIGUOS = {"En curso": "Aceptado"}
+ESTADOS_ANTIGUOS = {"En curso": "Aceptado", "Cerrado": "Aceptado"}
 
 
 def tipo_de_contrato(via):

@@ -7,7 +7,6 @@ const ESTILOS_ESTADO = {
   Oportunidad: "border border-salvia-900/30 text-salvia-950",
   Propuesta: "bg-salvia/40 text-salvia-950",
   Aceptado: "bg-salvia text-salvia-950",
-  Cerrado: "bg-salvia-900/10 text-salvia-950",
   Rechazado: "border border-salvia-900/15 text-salvia-950/40 line-through",
 };
 

@@ -10,16 +10,16 @@ from prototipo.api.responsables import responsables_posibles
 
 # Prefijos de los proyectos que se crean sueltos.
 # Los contratos basados no tienen prefijo propio: su código deriva del acuerdo marco.
-# Licitación y contrato menor comparten la serie CON (antes eran un único tipo, Contrato).
+# Los proyectos que ya tienen código CON- lo conservan; los nuevos usan LIC- o CM-.
 PREFIJOS = {
-	"Licitación": "CON",
-	"Contrato menor": "CON",
+	"Licitación": "LIC",
+	"Contrato menor": "CM",
 	"Acuerdo marco": "AM",
 	"Subvención": "SUB",
 }
 
 # Estados de un contrato basado que consumen presupuesto del acuerdo marco
-ESTADOS_COMPUTABLES = ("Aceptado", "Cerrado")
+ESTADOS_COMPUTABLES = ("Aceptado",)
 
 # Estados en los que un acuerdo marco admite contratos basados (ya ha sido aceptado)
 ESTADOS_ACUERDO_CON_BASADOS = ESTADOS_COMPUTABLES

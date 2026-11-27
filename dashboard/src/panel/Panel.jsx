@@ -12,7 +12,7 @@ const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 
 // Qué cuenta cada columna del pipeline (para el subtítulo y la tabla)
 const DESCRIPCION_ESTADO = {
-  Aceptado: "Aceptados y cerrados",
+  Aceptado: "Aceptados",
   Propuesta: "Presentadas, pendientes de decisión",
   Oportunidad: "Identificadas, sin presentar",
   Rechazado: "Oportunidades o propuestas que no siguen adelante",
@@ -143,7 +143,7 @@ function CarteraViva({ cartera, onObjetivoGuardado }) {
         <Indicador
           etiqueta={`Importe ${anio}`}
           valor={formatearImporte(importe_anio)}
-          detalle={`Parte de ${anio} de ${plural(num_anio, "proyecto aceptado o cerrado", "proyectos aceptados o cerrados")}`}
+          detalle={`Parte de ${anio} de ${plural(num_anio, "proyecto aceptado", "proyectos aceptados")}`}
         />
         <Indicador
           etiqueta="% de previsión"
