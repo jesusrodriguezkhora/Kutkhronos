@@ -8,6 +8,7 @@
  "field_order": [
   "cliente",
   "tipo",
+  "subtipo",
   "importe",
   "importes_anuales",
   "importe_consumido",
@@ -173,6 +174,13 @@
    "fieldtype": "Table",
    "label": "Importe por a\u00f1o",
    "options": "Importe Anual"
+  },
+  {
+   "depends_on": "eval:doc.tipo==\"Subvenci\u00f3n\"",
+   "fieldname": "subtipo",
+   "fieldtype": "Link",
+   "label": "Subtipo",
+   "options": "Subtipo Subvencion"
   }
  ],
  "grid_page_length": 50,
@@ -184,7 +192,7 @@
    "link_fieldname": "acuerdo_marco"
   }
  ],
- "modified": "2026-11-27 11:05:55.792068",
+ "modified": "2026-11-27 11:23:04.887982",
  "modified_by": "Administrator",
  "module": "Prototipo",
  "name": "Proyecto",

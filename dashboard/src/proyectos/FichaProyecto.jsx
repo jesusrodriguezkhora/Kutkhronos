@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useFrappeCreateDoc, useFrappeGetCall, useFrappeUpdateDoc } from "frappe-react-sdk";
+import { useFrappeCreateDoc, useFrappeGetCall, useFrappeGetList, useFrappeUpdateDoc } from "frappe-react-sdk";
 import { TIPOS_SUELTOS, ESTADOS, ESTADOS_CON_FEE, TIPOS_CON_FEE, ESTADOS_CON_GASTOS } from "./opciones";
 import { UNIDADES, duracionDesdeFechas, finDesdeDuracion, textoDuracion } from "./duracion";
 import { aniosDelProyecto, alinear, repartir, sumar } from "./importes";
@@ -33,6 +33,7 @@ function valoresIniciales(proyecto, acuerdoMarco) {
     facturacion: proyecto?.facturacion ?? "",
     canarias: !!proyecto?.canarias,
     motivo_rechazo: proyecto?.motivo_rechazo ?? "",
+    subtipo: proyecto?.subtipo ?? "",
     lider_proyecto: proyecto?.lider_proyecto ?? "",
     miembros_consorcio: proyecto?.miembros_consorcio ?? "",
   };
@@ -188,6 +189,13 @@ export default function FichaProyecto({
 
   const esSubvencion = datos.tipo === "Subvención";
 
+  // Subtipos de subvención (los mantiene un administrador desde el Desk). Solo se piden al editar una subvención.
+  const { data: subtipos } = useFrappeGetList(
+    "Subtipo Subvencion",
+    { fields: ["name"], orderBy: { field: "name", order: "asc" }, limit: 0 },
+    editando && esSubvencion ? undefined : null
+  );
+
   // El motivo de rechazo solo existe en Rechazado. Es obligatorio al pasar a Rechazado (o si ya tenía
   // uno); los que ya estaban rechazados sin motivo se pueden seguir editando (mismo criterio que el servidor).
   const esRechazado = datos.estado === "Rechazado";
@@ -304,6 +312,7 @@ export default function FichaProyecto({
       valores.cliente = datos.cliente || null;
     }
     if (esSubvencion) {
+      valores.subtipo = datos.subtipo || null;
       valores.lider_proyecto = datos.lider_proyecto || null;
       valores.miembros_consorcio = datos.miembros_consorcio || null;
     }
@@ -374,6 +383,14 @@ export default function FichaProyecto({
       {proyecto.tipo === "Subvención" && (
         <>
           <TituloSeccion>Datos de la subvención</TituloSeccion>
+          <Selector
+            etiqueta="Subtipo"
+            valor={datos.subtipo}
+            opciones={(subtipos ?? []).map((s) => s.name)}
+            onChange={(v) => cambiar("subtipo", v)}
+            vacio="Sin subtipo"
+          />
+          <Dato etiqueta="Subtipo">{proyecto.subtipo}</Dato>
           <Dato etiqueta="Líder del proyecto" ancho>
             {proyecto.lider_proyecto}
           </Dato>

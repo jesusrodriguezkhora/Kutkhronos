@@ -26,6 +26,7 @@ CAMPOS = [
 	"motivo_rechazo",
 	"duracion",
 	"unidad_duracion",
+	"subtipo",
 ]
 
 # Filtros que aceptamos por igualdad exacta

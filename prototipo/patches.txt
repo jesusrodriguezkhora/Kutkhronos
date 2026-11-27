@@ -10,3 +10,4 @@ prototipo.patches.congelar_coste_imputacion
 prototipo.patches.rellenar_importes_anuales
 prototipo.patches.nuevos_estados_y_tipos
 prototipo.patches.objetivo_2026
+prototipo.patches.crear_subtipos_subvencion
