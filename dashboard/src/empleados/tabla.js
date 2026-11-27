@@ -1,5 +1,5 @@
 // Plantillas de columnas compartidas por cabecera y filas, con el ancho mínimo de la tabla
-// (suma de columnas, huecos y relleno). Ambas caben en el ancho de la página (max-w-7xl).
+// (suma de columnas, huecos y relleno). Si la página es más estrecha, la tabla se desplaza en horizontal.
 
 // nombre | correo | teléfono | rol | estado | alta | acciones
 export const GRID =

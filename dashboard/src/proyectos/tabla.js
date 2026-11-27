@@ -1,5 +1,5 @@
 // Plantilla de columnas compartida por cabecera, filas y subcontratos, con el ancho mínimo de la
-// tabla (suma de columnas, huecos y relleno), que cabe en el ancho de la página (max-w-7xl):
+// tabla (suma de columnas, huecos y relleno), con desplazamiento horizontal si la página es más estrecha:
 // flecha | código | cliente | descripción | tipo | importe | estado | acciones
 
 export const GRID =

@@ -257,6 +257,8 @@ function Pipeline({ pipeline, onCambiarAnio }) {
   );
 }
 
+// Contenido del dashboard del CEO (antes, página "Panel"): cartera viva y pipeline del año.
+// El título lo pone la plantilla del dashboard (dashboard/PlantillaDashboard.jsx).
 export default function Panel() {
   const [anio, setAnio] = useState(null);
   const { data, error, isLoading, mutate } = useFrappeGetCall(
@@ -270,21 +272,19 @@ export default function Panel() {
   const datos = data ?? anteriores;
 
   if (!datos && isLoading) {
-    return <p className="text-sm text-salvia-950/50">Cargando panel…</p>;
+    return <p className="text-sm text-salvia-950/50">Cargando dashboard…</p>;
   }
 
   if (error) {
-    return <p className="text-sm text-red-600">Error al cargar el panel: {mensajeDeError(error)}</p>;
+    return <p className="text-sm text-red-600">Error al cargar el dashboard: {mensajeDeError(error)}</p>;
   }
 
   const { cartera, pipeline } = datos.message;
 
   return (
-    <section className="space-y-8">
-      <h1 className="text-3xl font-bold tracking-tight">Panel</h1>
-
+    <div className="space-y-8">
       <CarteraViva cartera={cartera} onObjetivoGuardado={() => mutate()} />
       <Pipeline pipeline={pipeline} onCambiarAnio={setAnio} />
-    </section>
+    </div>
   );
 }

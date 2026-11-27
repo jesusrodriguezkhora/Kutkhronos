@@ -2,17 +2,36 @@ import { useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useFrappeAuth, useFrappeGetCall } from "frappe-react-sdk";
 import Login from "./auth/Login";
-import Cabecera from "./layout/Cabecera";
+import Layout from "./layout/Layout";
 import SinModulos from "./layout/SinModulos";
-import { MODULOS } from "./modulos";
+import { navegacionDisponible, paginasDe } from "./navegacion";
+import { ETIQUETA_PERFIL } from "./dashboard/perfiles";
 import { useEsMovil } from "./hooks/useEsMovil";
+
+// Rutas de la SPA a partir del menú disponible (ver navegacion.jsx): cada página, las direcciones
+// antiguas que redirigen a ella y la de cada categoría, que lleva a su primera página
+function rutasDe(navegacion) {
+  const paginas = paginasDe(navegacion);
+  const ocupadas = new Set(paginas.map((p) => p.ruta));
+  const redirecciones = [];
+  const redirigir = (desde, hacia) => {
+    if (ocupadas.has(desde)) return;
+    ocupadas.add(desde);
+    redirecciones.push({ desde, hacia });
+  };
+
+  paginas.forEach((p) => (p.antiguas ?? []).forEach((a) => redirigir(a, p.ruta)));
+  navegacion.filter((e) => e.hijos).forEach((e) => redirigir(e.ruta, e.hijos[0].ruta));
+
+  return { paginas, redirecciones };
+}
 
 function Aplicacion({ onCerrarSesion }) {
   const esMovil = useEsMovil();
   const { data, error, isLoading } = useFrappeGetCall("prototipo.api.sesion.mi_perfil");
 
-  // Reserva el hueco de la barra de desplazamiento: así la cabecera y el contenido miden lo mismo
-  // en páginas cortas (sin barra) y largas (con barra)
+  // Reserva el hueco de la barra de desplazamiento: así el contenido mide lo mismo en páginas cortas
+  // (sin barra) y largas (con barra)
   useEffect(() => {
     document.documentElement.classList.add("con-aplicacion");
     return () => document.documentElement.classList.remove("con-aplicacion");
@@ -34,32 +53,35 @@ function Aplicacion({ onCerrarSesion }) {
   }
 
   const perfil = data.message;
-  // En móvil, solo los módulos marcados como "movil" (por ahora, Carga de horas)
-  const disponibles = MODULOS.filter((m) => perfil.modulos.includes(m.clave) && (!esMovil || m.movil));
+  // En móvil, solo las páginas marcadas como "movil" (por ahora, Carga de horas)
+  const navegacion = navegacionDisponible(perfil.modulos, esMovil);
+  const { paginas, redirecciones } = rutasDe(navegacion);
 
   return (
-    <div className="min-h-screen bg-salvia-50 text-salvia-950">
-      <Cabecera nombre={perfil.nombre} modulos={disponibles} onCerrarSesion={onCerrarSesion} />
-
-      <main className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10">
-        <Routes>
-          {disponibles.map((m) => (
-            <Route key={m.clave} path={m.ruta} element={<m.Componente />} />
-          ))}
-          {/* Cualquier otra ruta: al primer módulo disponible o a la pantalla vacía */}
-          <Route
-            path="*"
-            element={
-              disponibles.length > 0 ? (
-                <Navigate to={disponibles[0].ruta} replace />
-              ) : (
-                <SinModulos />
-              )
-            }
+    <Routes>
+      <Route
+        element={
+          <Layout
+            navegacion={navegacion}
+            nombre={perfil.nombre}
+            rol={ETIQUETA_PERFIL[perfil.dashboard]}
+            onCerrarSesion={onCerrarSesion}
           />
-        </Routes>
-      </main>
-    </div>
+        }
+      >
+        {paginas.map((p) => (
+          <Route key={p.ruta} path={p.ruta} element={<p.Componente />} />
+        ))}
+        {redirecciones.map((r) => (
+          <Route key={r.desde} path={r.desde} element={<Navigate to={r.hacia} replace />} />
+        ))}
+        {/* Cualquier otra ruta: a la primera página disponible o a la pantalla vacía */}
+        <Route
+          path="*"
+          element={paginas.length > 0 ? <Navigate to={paginas[0].ruta} replace /> : <SinModulos />}
+        />
+      </Route>
+    </Routes>
   );
 }
 

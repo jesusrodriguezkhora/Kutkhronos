@@ -16,3 +16,24 @@ html.con-aplicacion {
     font-size: 16px;
   }
 }
+/* Barra de desplazamiento fina y discreta (menú lateral). Solo aparece si el contenido no cabe */
+.scroll-discreto {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.18) transparent;
+}
+.scroll-discreto::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll-discreto::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-discreto::-webkit-scrollbar-thumb {
+  background-color: rgb(255 255 255 / 0.18);
+  border-radius: 9999px;
+}
+.scroll-discreto::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(255 255 255 / 0.32);
+}
+.scroll-discreto::-webkit-scrollbar-button {
+  display: none;
+}

@@ -57,3 +57,23 @@ def roles_asignables():
 	if tiene_rol(*ROLES_DIRECCION):
 		return [ROL_EMPLEADO, ROL_COORDINADOR, ROL_ADMINISTRACION]
 	return [ROL_EMPLEADO]
+
+# Dashboard de la SPA según el perfil del usuario. Se evalúa en este orden: una cuenta con varios
+# roles (por ejemplo, CEO y coordinador a la vez) ve el dashboard del primero que tenga.
+# Sin ninguno de estos roles, ve el dashboard general.
+DASHBOARD_CEO = "ceo"
+DASHBOARD_ADMINISTRACION = "administracion"
+DASHBOARD_COORDINACION = "coordinacion"
+DASHBOARD_GENERAL = "general"
+
+DASHBOARDS_POR_ROL = (
+	(ROL_CEO, DASHBOARD_CEO),
+	(ROL_ADMINISTRACION, DASHBOARD_ADMINISTRACION),
+	(ROL_COORDINADOR, DASHBOARD_COORDINACION),
+)
+
+
+def dashboard_del_usuario(roles=None):
+	"""Clave del dashboard que corresponde a unos roles (por defecto, los del usuario de la sesión)."""
+	roles = set(frappe.get_roles() if roles is None else roles)
+	return next((d for rol, d in DASHBOARDS_POR_ROL if rol in roles), DASHBOARD_GENERAL)
