@@ -44,7 +44,7 @@ function Aplicacion({ onCerrarSesion }) {
       <main className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10">
         <Routes>
           {disponibles.map((m) => (
-            <Route key={m.clave} path={m.ruta} element={<m.Componente />} />
+            <Route key={m.clave} path={`${m.ruta}/*`} element={<m.Componente />} />
           ))}
           {/* Cualquier otra ruta: al primer módulo disponible o a la pantalla vacía */}
           <Route

@@ -20,7 +20,7 @@ def mi_perfil():
 	modulos = []
 	if es_gestion:
 		# El orden del menú y la página de entrada los decide MODULOS en la SPA
-		modulos += ["panel", "proyectos", "planificacion", "clientes", "empleados"]
+		modulos += ["panel", "proyectos", "estados", "planificacion", "clientes", "empleados"]
 	if imputa_horas or es_gestion:
 		# Carga: empleados y coordinadores imputan sus horas; la gestión entra también para supervisar
 		modulos.append("imputacion")

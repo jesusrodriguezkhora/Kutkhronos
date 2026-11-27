@@ -4,6 +4,7 @@ import Clientes from "./clientes/Clientes";
 import Empleados from "./empleados/Empleados";
 import Planificacion from "./planificacion/Planificacion";
 import Imputacion from "./imputacion/Imputacion";
+import Estados from "./estados/Estados";
 
 // Módulos de la SPA. El orden es el del menú; el primero disponible es la página de entrada.
 // "clave" debe coincidir con los valores que devuelve prototipo.api.sesion.mi_perfil.
@@ -11,6 +12,7 @@ import Imputacion from "./imputacion/Imputacion";
 export const MODULOS = [
   { clave: "panel", ruta: "/panel", etiqueta: "Panel", Componente: Panel },
   { clave: "proyectos", ruta: "/pipeline", etiqueta: "Pipeline", Componente: Proyectos },
+  { clave: "estados", ruta: "/estados", etiqueta: "Estados", Componente: Estados },
   { clave: "planificacion", ruta: "/planificacion", etiqueta: "Planificación", Componente: Planificacion },
   { clave: "clientes", ruta: "/clientes", etiqueta: "Clientes", Componente: Clientes },
   { clave: "empleados", ruta: "/empleados", etiqueta: "Empleados", Componente: Empleados },
