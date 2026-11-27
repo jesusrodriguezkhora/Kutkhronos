@@ -48,7 +48,7 @@ def fees(proyectos):
 	propuestas = frappe.get_all(
 		"Propuesta",
 		filters={"proyecto": ["in", proyectos]},
-		fields=["name", "proyecto", "honorarios", "coste_total", *DIRECTOS_FEE],
+		fields=["name", "proyecto", "honorarios", "coste_total", "margen_bruto", "margen_neto", *DIRECTOS_FEE],
 	)
 	lineas = frappe.get_all(
 		"Linea Propuesta",
@@ -58,10 +58,9 @@ def fees(proyectos):
 	return propuestas, lineas
 
 
-@frappe.whitelist()
-def obtener_gastos(proyecto):
-	"""Gasto real y previsto de un proyecto aceptado. Solo para los roles de gestión."""
-	exigir_rol(*ROLES_GESTION)
+def calcular_gastos(proyecto):
+	"""Gasto real y previsto de un proyecto aceptado (en un acuerdo marco, la suma de sus contratos
+	basados). Lo usan la pestaña Gastos y el módulo Estados; el permiso lo comprueba cada endpoint."""
 	datos = frappe.db.get_value("Proyecto", proyecto, ["name", "tipo", "estado"], as_dict=True)
 	if not datos:
 		frappe.throw("El proyecto no existe.")
@@ -143,4 +142,14 @@ def obtener_gastos(proyecto):
 			"porcentaje": flt(diferencia / total_previsto * 100, 1) if total_previsto else None,
 			"supera": bool(total_previsto) and total_real > total_previsto + 0.005,
 		},
+		# Para el módulo Estados: ingresos (honorarios del fee) y márgenes previstos en el fee
+		"honorarios": flt(honorarios, 2),
+		"fee_margen_bruto": flt(sum(flt(p.margen_bruto) for p in propuestas), 2),
+		"fee_margen_neto": flt(sum(flt(p.margen_neto) for p in propuestas), 2),
 	}
+
+@frappe.whitelist()
+def obtener_gastos(proyecto):
+	"""Pestaña Gastos de la ficha (desaparece al pasar al módulo Estados)."""
+	exigir_rol(*ROLES_GESTION)
+	return calcular_gastos(proyecto)
