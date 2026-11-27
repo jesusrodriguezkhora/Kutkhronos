@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { useFrappeGetCall } from "frappe-react-sdk";
 import TablaGastos from "./TablaGastos";
+import { GraficoGasto, GraficoHoras } from "./GraficosMensuales";
 import { mensajeDeError } from "../lib/errores";
 import { formatearFecha, formatearImporte } from "../lib/formato";
 
@@ -81,17 +82,6 @@ function Margenes({ margenes }) {
   );
 }
 
-// Hueco para una gráfica (se llena en el paso 4)
-function HuecoGrafica({ titulo }) {
-  return (
-    <Tarjeta titulo={titulo}>
-      <div className="grid h-48 place-items-center rounded-lg border border-dashed border-salvia-900/15 text-sm text-salvia-950/40">
-        Próximamente
-      </div>
-    </Tarjeta>
-  );
-}
-
 // Estado de un proyecto (/estados/<código>): cabecera, gastos, márgenes y evolución mensual
 export default function EstadoProyecto() {
   const { codigo } = useParams();
@@ -147,10 +137,10 @@ export default function EstadoProyecto() {
             </Tarjeta>
           </div>
 
-          {/* Evolución mensual (paso 4) */}
+          {/* Evolución mensual */}
           <div className="grid gap-6 lg:grid-cols-2">
-            <HuecoGrafica titulo="Horas dedicadas por mes" />
-            <HuecoGrafica titulo="Gasto por mes" />
+            <GraficoHoras mensual={estado.mensual} />
+            <GraficoGasto mensual={estado.mensual} />
           </div>
         </>
       )}

@@ -11,7 +11,6 @@ from prototipo.prototipo.doctype.propuesta.propuesta import (
 	PORCENTAJE_INDIRECTOS,
 	POSICIONES,
 )
-from prototipo.roles import ROLES_GESTION, exigir_rol
 
 SIN_POSICION = "Sin posición"
 
