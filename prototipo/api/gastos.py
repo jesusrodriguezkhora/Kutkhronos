@@ -1,7 +1,7 @@
 """Pestaña Gastos de un proyecto: gasto real (carga de horas + gastos directos + indirectos) frente al
 previsto en su fee estimate. En un acuerdo marco, la suma de sus contratos basados."""
 import frappe
-from frappe.utils import flt
+from frappe.utils import flt, getdate, today
 
 from prototipo.gastos import ESTADOS_CON_GASTOS, ESTADOS_GASTOS_EDITABLES
 from prototipo.prototipo.doctype.planificacion_semana.planificacion_semana import (
@@ -42,6 +42,53 @@ def personal_real(proyectos):
 	return {(p or SIN_POSICION): (flt(h), flt(c, 2)) for p, h, c in filas}
 
 
+def planificado_hasta_hoy(proyectos):
+	"""{posición: horas} planificadas en esos proyectos en las semanas que ya han empezado.
+	La planificación va por persona: cada semana cuenta en la posición que la persona tenía entonces,
+	que es la que quedó congelada en su carga de horas de esa semana. Si esa semana no cargó horas, se
+	usa su posición actual."""
+	hoy = today()
+	filas = frappe.db.sql(
+		"""select a.empleado, p.semana, sum(a.horas)
+		from `tabAsignacion Planificacion` a
+		join `tabPlanificacion Semana` p on p.name = a.parent
+		where a.parenttype = 'Planificacion Semana' and a.concepto = %(concepto)s
+			and a.proyecto in %(proyectos)s and p.semana <= %(hoy)s
+		group by a.empleado, p.semana""",
+		{"concepto": CONCEPTO_PROYECTO, "proyectos": tuple(proyectos), "hoy": hoy},
+	)
+	if not filas:
+		return {}
+
+	empleados = tuple({empleado for empleado, _, _ in filas})
+	# Posición congelada en la carga de horas de cada persona y semana
+	congeladas = {
+		(empleado, getdate(semana)): posicion
+		for empleado, semana, posicion in frappe.db.sql(
+			"""select i.empleado, i.semana, max(l.posicion)
+			from `tabImputacion Semana` i
+			join `tabLinea Imputacion` l on l.parent = i.name and l.parenttype = 'Imputacion Semana'
+			where i.empleado in %(empleados)s and i.semana <= %(hoy)s and ifnull(l.posicion, '') != ''
+			group by i.empleado, i.semana""",
+			{"empleados": empleados, "hoy": hoy},
+		)
+	}
+	actuales = dict(
+		frappe.get_all(
+			"Datos Laborales",
+			filters={"usuario": ["in", empleados]},
+			fields=["usuario", "posicion"],
+			as_list=True,
+		)
+	)
+
+	resultado = {}
+	for empleado, semana, horas in filas:
+		posicion = congeladas.get((empleado, getdate(semana))) or actuales.get(empleado) or SIN_POSICION
+		resultado[posicion] = resultado.get(posicion, 0) + flt(horas)
+	return resultado
+
+
 def fees(proyectos):
 	"""Fee estimates de esos proyectos (los que tengan) y sus líneas de personal."""
 	propuestas = frappe.get_all(
@@ -72,12 +119,13 @@ def calcular_gastos(proyecto):
 
 	# --- Personal: una fila por posición (las del fee, en su orden) y, si hay, otras al final ---
 	real = personal_real(proyectos) if proyectos else {}
+	planificado = planificado_hasta_hoy(proyectos) if proyectos else {}
 	previsto = {}
 	for l in lineas_fee:
 		h, c = previsto.get(l.categoria, (0, 0))
 		previsto[l.categoria] = (h + flt(l.horas), c + flt(l.coste))
 
-	posiciones = list(POSICIONES) + sorted(p for p in set(real) | set(previsto) if p not in POSICIONES)
+	posiciones = list(POSICIONES) + sorted(p for p in set(real) | set(previsto) | set(planificado) if p not in POSICIONES)
 	filas_personal = [
 		{
 			"posicion": p,
@@ -85,6 +133,7 @@ def calcular_gastos(proyecto):
 			"coste": real.get(p, (0, 0))[1],
 			"horas_previstas": previsto.get(p, (0, 0))[0],
 			"coste_previsto": flt(previsto.get(p, (0, 0))[1], 2),
+			"horas_planificadas": flt(planificado.get(p, 0), 2),
 		}
 		for p in posiciones
 	]
@@ -93,6 +142,7 @@ def calcular_gastos(proyecto):
 		"horas": sum(f["horas"] for f in filas_personal),
 		"coste": flt(sum(f["coste"] for f in filas_personal), 2),
 		"horas_previstas": sum(f["horas_previstas"] for f in filas_personal),
+		"horas_planificadas": flt(sum(f["horas_planificadas"] for f in filas_personal), 2),
 		"coste_previsto": flt(sum(f["coste_previsto"] for f in filas_personal), 2),
 	}
 

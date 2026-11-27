@@ -18,12 +18,15 @@ function Flecha({ abierta }) {
   );
 }
 
-function Fila({ categoria, detalle, horas, gasto, previsto }) {
+function Fila({ categoria, detalle, planificadas, horas, gasto, previsto }) {
   return (
     <tr>
       <td className="py-2 pr-3">
         <div className="font-medium text-salvia-950">{categoria}</div>
         {detalle && <div className="text-xs text-salvia-950/50">{detalle}</div>}
+      </td>
+      <td className="py-2 pr-3 text-right tabular-nums text-salvia-950/60">
+        {planificadas ?? <span className="text-salvia-950/30">—</span>}
       </td>
       <td className="py-2 pr-3 text-right tabular-nums">{horas ?? <span className="text-salvia-950/30">—</span>}</td>
       <td className="py-2 pr-3 text-right tabular-nums">{gasto}</td>
@@ -54,13 +57,14 @@ function FilaDirectos({ directos, mostrarProyecto }) {
           </div>
         </td>
         <td className="py-2 pr-3 text-right text-salvia-950/30">—</td>
+        <td className="py-2 pr-3 text-right text-salvia-950/30">—</td>
         <td className="py-2 pr-3 text-right tabular-nums">{formatearImporte(directos.coste)}</td>
         <td className="py-2 text-right tabular-nums text-salvia-950/50">{formatearImporte(directos.coste_previsto)}</td>
       </tr>
 
       {abierta && (
         <tr>
-          <td colSpan={4} className="pb-3">
+          <td colSpan={5} className="pb-3">
             {n === 0 ? (
               <p className="rounded-lg bg-salvia-900/[0.03] px-3 py-2 text-xs text-salvia-950/50">
                 Todavía no se ha registrado ningún gasto directo en este proyecto.
@@ -98,12 +102,12 @@ function FilaDirectos({ directos, mostrarProyecto }) {
   );
 }
 
-// Tabla de gastos de un proyecto: personal por posición (horas cargadas y su coste congelado),
-// gastos directos (desplegables), indirectos y total, frente a lo previsto en el fee.
+// Tabla de gastos de un proyecto: personal por posición (horas planificadas hasta hoy, horas cargadas y
+// su coste congelado), gastos directos (desplegables), indirectos y total, frente a lo previsto en el fee.
 // `gastos` es la parte "gastos" de prototipo.api.estados.obtener_estado.
 export default function TablaGastos({ gastos: g }) {
   // Las posiciones del fee siempre (la API las devuelve primero); las demás solo si tienen horas
-  const filas = g.personal.filas.filter((f, i) => i < 5 || f.horas || f.horas_previstas);
+  const filas = g.personal.filas.filter((f, i) => i < 5 || f.horas || f.horas_previstas || f.horas_planificadas);
 
   return (
     <div className="space-y-4">
@@ -119,7 +123,12 @@ export default function TablaGastos({ gastos: g }) {
         <thead>
           <tr className="border-b border-salvia-900/10 text-left">
             <th className={th}>Categoría</th>
-            <th className={`${th} w-20 pr-3 text-right`}>Horas</th>
+            <th className={`${th} w-28 pr-3 text-right`} title="Horas planificadas hasta hoy">
+              Planificadas
+            </th>
+            <th className={`${th} w-20 pr-3 text-right`} title="Horas cargadas en la carga de horas">
+              Cargadas
+            </th>
             <th className={`${th} w-28 pr-3 text-right`}>Gasto</th>
             <th className={`${th} w-28 text-right`}>Previsto</th>
           </tr>
@@ -131,6 +140,7 @@ export default function TablaGastos({ gastos: g }) {
               key={f.posicion}
               categoria={f.posicion}
               detalle={f.horas_previstas ? `Fee: ${horasTexto.format(f.horas_previstas)} h` : undefined}
+              planificadas={f.horas_planificadas ? `${horasTexto.format(f.horas_planificadas)} h` : undefined}
               horas={f.horas ? `${horasTexto.format(f.horas)} h` : undefined}
               gasto={formatearImporte(f.coste)}
               previsto={formatearImporte(f.coste_previsto)}
@@ -150,6 +160,9 @@ export default function TablaGastos({ gastos: g }) {
         <tfoot>
           <tr className="border-t-2 border-salvia-900/15">
             <td className="pt-3 font-bold text-salvia-950">Gasto total</td>
+            <td className="pt-3 pr-3 text-right font-bold tabular-nums text-salvia-950/60">
+              {g.personal.horas_planificadas ? `${horasTexto.format(g.personal.horas_planificadas)} h` : ""}
+            </td>
             <td className="pt-3 pr-3 text-right font-bold tabular-nums text-salvia-950">
               {g.personal.horas ? `${horasTexto.format(g.personal.horas)} h` : ""}
             </td>
