@@ -159,8 +159,6 @@ export default function FichaProyecto({
   const esNuevoBasado = esNuevo && !!acuerdoMarco;
   const esBasado = esNuevoBasado || !!proyecto?.acuerdo_marco;
 
-  const gastosDisponibles = !esNuevo && ESTADOS_CON_GASTOS.includes(proyecto.estado);
-
   const [editando, setEditando] = useState(esNuevo || editarAlAbrir);
   const [datos, setDatos] = useState(() => valoresIniciales(proyecto, acuerdoMarco));
   const [error, setError] = useState(null);
