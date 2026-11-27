@@ -147,9 +147,3 @@ def calcular_gastos(proyecto):
 		"fee_margen_bruto": flt(sum(flt(p.margen_bruto) for p in propuestas), 2),
 		"fee_margen_neto": flt(sum(flt(p.margen_neto) for p in propuestas), 2),
 	}
-
-@frappe.whitelist()
-def obtener_gastos(proyecto):
-	"""Pestaña Gastos de la ficha (desaparece al pasar al módulo Estados)."""
-	exigir_rol(*ROLES_GESTION)
-	return calcular_gastos(proyecto)

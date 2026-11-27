@@ -1,85 +1,159 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useFrappeGetCall } from "frappe-react-sdk";
-import IconoBuscar from "../componentes/IconoBuscar";
-import { ESTILOS } from "../lib/estilos";
-import { useDebounced } from "../hooks/useDebounced";
+import TablaGastos from "./TablaGastos";
 import { mensajeDeError } from "../lib/errores";
+import { formatearFecha, formatearImporte } from "../lib/formato";
 
-// Buscador de proyectos aceptados: busca mientras se escribe (código, descripción o cliente)
-export default function Buscador() {
-  const [texto, setTexto] = useState("");
-  const buscado = useDebounced(texto.trim(), 300);
+const numero = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 });
+const pct = (v) => (v == null ? "—" : `${numero.format(v)} %`);
+const conSigno = (v, texto) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${texto}`;
 
-  const { data, error, isLoading } = useFrappeGetCall(
-    "prototipo.api.estados.buscar_proyectos",
-    { texto: buscado },
-    undefined,
-    { keepPreviousData: true }
+function Tarjeta({ titulo, subtitulo, className = "", children }) {
+  return (
+    <section className={`rounded-xl border border-salvia-900/10 bg-white p-5 ${className}`}>
+      <h2 className="text-sm font-bold">{titulo}</h2>
+      {subtitulo && <p className="mt-0.5 text-xs text-salvia-950/50">{subtitulo}</p>}
+      <div className="mt-4">{children}</div>
+    </section>
   );
-  const resultados = data?.message ?? [];
+}
+
+// Margen bruto y neto: real (con los gastos reales) frente al previsto en el fee y al objetivo
+function Margenes({ margenes }) {
+  if (!margenes.real) {
+    return (
+      <p className="rounded-lg bg-salvia-900/[0.03] px-3 py-3 text-sm text-salvia-950/60">
+        Sin fee estimate: no hay honorarios con los que calcular los márgenes.
+      </p>
+    );
+  }
+
+  const filas = [
+    { etiqueta: "Margen bruto", clave: "bruto" },
+    { etiqueta: "Margen neto", clave: "neto" },
+  ];
 
   return (
-    <section className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Estados</h1>
-        <p className="mt-1 text-sm text-salvia-950/60">
-          Gastos reales y márgenes de los proyectos aceptados.
-        </p>
-      </div>
+    <div className="space-y-4">
+      {filas.map(({ etiqueta, clave }) => {
+        const real = margenes.real[clave];
+        const realPct = margenes.real[`${clave}_pct`];
+        const previsto = margenes.previsto[clave];
+        const previstoPct = margenes.previsto[`${clave}_pct`];
+        const objetivo = margenes.objetivo[`${clave}_pct`];
+        const cumple = realPct != null && realPct >= objetivo;
+        const diferencia = real - previsto;
 
-      <div className="relative">
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-salvia-950/40">
-          <IconoBuscar />
-        </span>
-        <input
-          type="search"
-          autoFocus
-          aria-label="Buscar proyecto"
-          placeholder="Busca por código, descripción o cliente"
-          className={`${ESTILOS.claro.campo} py-3 pl-9 text-base`}
-          value={texto}
-          onChange={(e) => setTexto(e.target.value)}
-        />
-      </div>
+        return (
+          <div key={clave} className="rounded-lg border border-salvia-900/10 p-4">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-salvia-950/60">{etiqueta}</span>
+              <span className={`text-xs font-semibold ${cumple ? "text-salvia-800" : "text-red-700"}`}>
+                {cumple ? "✓" : "✗"} Objetivo {objetivo} %
+              </span>
+            </div>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span className={`text-2xl font-semibold tabular-nums ${cumple ? "text-salvia-950" : "text-red-700"}`}>
+                {pct(realPct)}
+              </span>
+              <span className="tabular-nums text-salvia-950/60">{formatearImporte(real)}</span>
+            </div>
+            <dl className="mt-2 grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <dt className="text-salvia-950/50">Previsto en el fee</dt>
+                <dd className="tabular-nums text-salvia-950">
+                  {pct(previstoPct)} · {formatearImporte(previsto)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-salvia-950/50">Diferencia</dt>
+                <dd className={`tabular-nums ${diferencia < 0 ? "text-red-700" : "text-salvia-950"}`}>
+                  {conSigno(diferencia, formatearImporte(Math.abs(diferencia)))}
+                  {realPct != null && previstoPct != null &&
+                    ` · ${conSigno(realPct - previstoPct, `${numero.format(Math.abs(realPct - previstoPct))} p.p.`)}`}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
+// Hueco para una gráfica (se llena en el paso 4)
+function HuecoGrafica({ titulo }) {
+  return (
+    <Tarjeta titulo={titulo}>
+      <div className="grid h-48 place-items-center rounded-lg border border-dashed border-salvia-900/15 text-sm text-salvia-950/40">
+        Próximamente
+      </div>
+    </Tarjeta>
+  );
+}
+
+// Estado de un proyecto (/estados/<código>): cabecera, gastos, márgenes y evolución mensual
+export default function EstadoProyecto() {
+  const { codigo } = useParams();
+  const { data, error, isLoading } = useFrappeGetCall("prototipo.api.estados.obtener_estado", { proyecto: codigo });
+  const estado = data?.message;
+  const p = estado?.proyecto;
+
+  return (
+    <section className="space-y-6">
+      <Link to="/estados" className="text-sm font-medium text-salvia-950/60 hover:text-salvia-950">
+        ← Volver al buscador
+      </Link>
+
+      {isLoading && <p className="text-sm text-salvia-950/50">Cargando estado…</p>}
       {error && <p className="text-sm text-red-600">{mensajeDeError(error)}</p>}
 
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-salvia-950/50">
-          {buscado ? "Resultados" : "Últimos proyectos aceptados"}
-        </p>
+      {estado && (
+        <>
+          {/* Cabecera */}
+          <div>
+            <p className="font-mono text-sm text-salvia-950/60">{p.name}</p>
+            <h1 className="text-3xl font-bold tracking-tight">{p.descripcion || p.name}</h1>
+            <p className="mt-1 text-lg text-salvia-950/80">{p.cliente || "—"}</p>
+            <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-salvia-950/60">
+              <span>{p.tipo}</span>
+              {p.responsable_nombre && <span>Responsable: {p.responsable_nombre}</span>}
+              {(p.fecha_inicio || p.fecha_fin) && (
+                <span>
+                  {formatearFecha(p.fecha_inicio)} → {formatearFecha(p.fecha_fin)}
+                </span>
+              )}
+              <span>Importe: {formatearImporte(p.importe)}</span>
+            </p>
+          </div>
 
-        {isLoading ? (
-          <p className="text-sm text-salvia-950/50">Buscando…</p>
-        ) : resultados.length === 0 ? (
-          <p className="rounded-xl border border-salvia-900/10 bg-white px-4 py-6 text-sm text-salvia-950/50">
-            {buscado ? `Ningún proyecto aceptado coincide con «${buscado}».` : "Todavía no hay proyectos aceptados."}
-          </p>
-        ) : (
-          <ul className="divide-y divide-salvia-900/10 overflow-hidden rounded-xl border border-salvia-900/10 bg-white">
-            {resultados.map((p) => (
-              <li key={p.name}>
-                <Link
-                  to={encodeURIComponent(p.name)}
-                  className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-salvia-50"
-                >
-                  <span className="w-36 shrink-0 font-mono text-sm font-medium">{p.name}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm text-salvia-950">{p.descripcion || "—"}</span>
-                    <span className="block truncate text-xs text-salvia-950/50">
-                      {[p.cliente, p.tipo].filter(Boolean).join(" · ")}
-                    </span>
-                  </span>
-                  <span aria-hidden="true" className="text-salvia-950/30">
-                    →
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+          {/* Gastos y márgenes */}
+          <div className="grid gap-6 lg:grid-cols-5">
+            <Tarjeta
+              titulo="Gastos"
+              subtitulo="Horas de la carga de horas, con el coste/hora medio de cada posición al cargarlas."
+              className="lg:col-span-3"
+            >
+              <TablaGastos gastos={estado.gastos} />
+            </Tarjeta>
+            <Tarjeta
+              titulo="Márgenes"
+              subtitulo={
+                estado.margenes.real ? `Sobre los honorarios del fee: ${formatearImporte(estado.margenes.ingresos)}` : undefined
+              }
+              className="lg:col-span-2"
+            >
+              <Margenes margenes={estado.margenes} />
+            </Tarjeta>
+          </div>
+
+          {/* Evolución mensual (paso 4) */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <HuecoGrafica titulo="Horas dedicadas por mes" />
+            <HuecoGrafica titulo="Gasto por mes" />
+          </div>
+        </>
+      )}
     </section>
   );
 }

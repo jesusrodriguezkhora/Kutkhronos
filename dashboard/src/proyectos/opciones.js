@@ -12,8 +12,5 @@ export const ESTADOS_ACUERDO_CON_BASADOS = ["Aceptado"];
 export const ESTADOS_CON_FEE = ["Aceptado"];
 export const TIPOS_CON_FEE = ["Licitación", "Contrato menor", "Contrato basado", "Subvención"];
 
-// Estados en los que un proyecto tiene la pestaña Gastos (mismos que ESTADOS_CON_GASTOS en gastos.py)
-export const ESTADOS_CON_GASTOS = ["Aceptado"];
-
 // Estados que suman en la fila de total del Pipeline
 export const ESTADOS_SUMAN_TOTAL = ["Aceptado"];
